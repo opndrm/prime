@@ -23,6 +23,15 @@ function Refresh-Path {
   $env:Path = "$machinePath;$userPath"
 }
 
+$currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
+$currentPrincipal = [Security.Principal.WindowsPrincipal]::new($currentIdentity)
+$isAdministrator = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $isAdministrator) {
+  Write-Host 'Open Dream Prime needs Windows administrator approval to install its system tools.'
+  Start-Process -FilePath 'powershell.exe' -Verb RunAs -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $PSCommandPath, '-Lane', $Lane)
+  exit
+}
+
 if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
   Write-Step 'Opening Microsoft Store for Windows App Installer'
   Start-Process 'ms-windows-store://pdp/?ProductId=9NBLGGH4NNS1'

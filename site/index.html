@@ -36,7 +36,7 @@
         <h2>ONE CLICK.<br>ONE WORKSPACE.</h2>
         <p class="lead" id="install-lead">Create a fresh Open Dream App workspace, copy the command, and paste it into Terminal.</p>
         <div class="platform-tabs" aria-label="Choose your computer"><button class="button" type="button" data-platform="mac" aria-pressed="true">MAC</button><button class="button" type="button" data-platform="windows" aria-pressed="false">WINDOWS</button></div>
-        <pre class="install-copy"><code id="install-command">curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- OPNDRM-APP</code></pre>
+        <pre class="install-copy"><code id="install-command">sudo -v && curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- OPNDRM-APP</code></pre>
         <button class="button" type="button" id="copy-install">COPY MAC INSTALL</button><a class="button button--quiet" id="read-guide" href="/guide/?platform=mac">READ THE GUIDE</a>
       </section>
       <section class="grid">
@@ -53,7 +53,7 @@
       function setTheme(theme) { document.documentElement.dataset.theme = theme; themeButton.setAttribute('aria-pressed', String(theme === 'dark')); themeButton.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'); localStorage.setItem('opndrm-theme-v2', theme); }
       setTheme(localStorage.getItem('opndrm-theme-v2') === 'light' ? 'light' : 'dark');
       themeButton.addEventListener('click', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
-      const platforms = { mac: { status: 'MAC · AVAILABLE NOW', copy: 'COPY MAC INSTALL', lead: 'Create a fresh Open Dream App workspace, copy the command, and paste it into Terminal.', command: () => 'curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- OPNDRM-APP' }, windows: { status: 'WINDOWS · FIRST-DEVICE PREVIEW', copy: 'COPY WINDOWS INSTALL', lead: 'Create a fresh Open Dream App workspace, copy the command, and paste it into PowerShell.', command: () => '& ([scriptblock]::Create((irm https://opndrm.com/install-windows.ps1))) -Lane OPNDRM-APP' } };
+      const platforms = { mac: { status: 'MAC · AVAILABLE NOW', copy: 'COPY MAC INSTALL', lead: 'Create a fresh Open Dream App workspace, copy the command, enter your Mac administrator password when asked, and paste it into Terminal.', command: () => 'sudo -v && curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- OPNDRM-APP' }, windows: { status: 'WINDOWS · FIRST-DEVICE PREVIEW', copy: 'COPY WINDOWS INSTALL', lead: 'Create a fresh Open Dream App workspace, copy the command, and paste it into PowerShell.', command: () => '& ([scriptblock]::Create((irm https://opndrm.com/install-windows.ps1))) -Lane OPNDRM-APP' } };
       let selectedPlatform = 'mac';
       function renderInstall() { const selected = platforms[selectedPlatform]; document.querySelectorAll('[data-platform]').forEach((item) => item.setAttribute('aria-pressed', String(item.dataset.platform === selectedPlatform))); document.querySelector('#install-status').textContent = selected.status; document.querySelector('#install-command').textContent = selected.command(); document.querySelector('#copy-install').textContent = selected.copy; document.querySelector('#install-lead').textContent = selected.lead; document.querySelector('#read-guide').href = `/guide/?platform=${selectedPlatform}&lane=OPNDRM-APP`; }
       document.querySelectorAll('[data-platform]').forEach((button) => button.addEventListener('click', () => { selectedPlatform = button.dataset.platform; renderInstall(); }));
