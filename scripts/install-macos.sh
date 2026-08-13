@@ -9,6 +9,20 @@ say() { printf '\n==> %s\n' "$*"; }
 fail() { printf '\nOpen Dream Prime stopped: %s\n' "$*" >&2; exit 1; }
 case "$LANE" in ADAM|FRNKLY.ONE|OPNDRM-APP) ;; *) fail "Choose a valid Open Dream Prime workspace." ;; esac
 [[ "$(uname -s)" == "Darwin" ]] || fail "This is the Mac installer."
+
+ensure_developer_tools() {
+  xcode-select -p >/dev/null 2>&1 && return
+  say "Starting Apple Command Line Tools installation"
+  xcode-select --install >/dev/null 2>&1 || true
+  printf 'Approve the Apple Command Line Tools dialog if it appears. Open Dream Prime will continue automatically when it finishes.\n'
+  for _ in {1..1800}; do
+    xcode-select -p >/dev/null 2>&1 && return
+    sleep 1
+  done
+  fail "Apple Command Line Tools did not finish within 30 minutes. Run this installer again after the Apple install completes."
+}
+
+ensure_developer_tools
 [[ -f "$TEAM_CONFIG" ]] || TEAM_CONFIG="$ROOT/config/team.example.json"
 issue_tracker_url="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["issueTrackerUrl"])' "$TEAM_CONFIG")"
 buzz_relay_url="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("buzzRelayUrl", ""))' "$TEAM_CONFIG")"
