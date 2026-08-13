@@ -8,7 +8,7 @@ TEAM_CONFIG="${OPNDRM_TEAM_CONFIG:-$ROOT/config/team.json}"
 LANE="${1:-}"
 say() { printf '\n==> %s\n' "$*"; }
 fail() { printf '\nOpen Dream Prime stopped: %s\n' "$*" >&2; exit 1; }
-case "$LANE" in ADAM|FRNKLY.ONE) ;; *) fail "Choose ADAM or FRNKLY.ONE." ;; esac
+case "$LANE" in ADAM|FRNKLY.ONE|OPNDRM-APP) ;; *) fail "Choose ADAM, FRNKLY.ONE, or OPNDRM APP." ;; esac
 [[ "$(uname -s)" == "Darwin" ]] || fail "This is the Mac installer."
 [[ -f "$TEAM_CONFIG" ]] || TEAM_CONFIG="$ROOT/config/team.example.json"
 issue_tracker_url="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["issueTrackerUrl"])' "$TEAM_CONFIG")"
@@ -43,10 +43,19 @@ for _ in {1..30}; do curl -fsS http://127.0.0.1:11434/api/tags >/dev/null 2>&1 &
 curl -fsS http://127.0.0.1:11434/api/tags >/dev/null || fail "Ollama did not become available."
 python3 "$ROOT/scripts/configure-ollama.py" "$ROOT/config/ollama-models.json" "$PRIME_CONFIG_DIR"
 
-mkdir -p "$PROJECTS_DIR"
-case "$LANE" in ADAM) repo='https://github.com/opndrm/ADAM.git'; target="$PROJECTS_DIR/ADAM" ;; FRNKLY.ONE) repo='https://github.com/frnklyone/frnkly-one-v2.git'; target="$PROJECTS_DIR/FRNKLY.ONE" ;; esac
-[[ ! -e "$target" ]] || fail "Checkout already exists at $target."
-say "Cloning the selected fresh project"; git clone "$repo" "$target"
+case "$LANE" in
+  ADAM) repo='https://github.com/opndrm/ADAM.git'; target="$PROJECTS_DIR/ADAM" ;;
+  FRNKLY.ONE) repo='https://github.com/frnklyone/frnkly-one-v2.git'; target="$PROJECTS_DIR/FRNKLY.ONE" ;;
+  OPNDRM-APP) target="$HOME/Desktop/OPNDRM APP" ;;
+esac
+[[ ! -e "$target" ]] || fail "Workspace already exists at $target."
+if [[ "$LANE" == 'OPNDRM-APP' ]]; then
+  say "Creating a fresh Open Dream App workspace on the Desktop"
+  mkdir -p "$target"
+  printf '# Open Dream App\n\nA fresh Open Dream Prime workspace.\n' > "$target/README.md"
+else
+  say "Cloning the selected fresh project"; git clone "$repo" "$target"
+fi
 say "Creating the visible PRIME workspace and reserved Gate"
 session_name="opndrm-$(printf '%s' "$LANE" | tr '[:upper:].' '[:lower:]-')"
 herdr --session "$session_name" workspace create --cwd "$target" --label "$LANE — PRIME" --focus

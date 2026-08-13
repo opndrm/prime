@@ -3,8 +3,8 @@ set -euo pipefail
 
 lane="${1:-}"
 case "$lane" in
-  ADAM|FRNKLY.ONE) ;;
-  *) printf 'Choose your assigned project: ADAM or FRNKLY.ONE.\n' >&2; exit 1 ;;
+  ADAM|FRNKLY.ONE|OPNDRM-APP) ;;
+  *) printf 'Choose ADAM, FRNKLY.ONE, or OPNDRM APP.\n' >&2; exit 1 ;;
 esac
 
 work_dir="$(mktemp -d)"

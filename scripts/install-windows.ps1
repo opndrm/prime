@@ -1,5 +1,5 @@
 param(
-  [ValidateSet('ADAM', 'FRNKLY.ONE')]
+  [ValidateSet('ADAM', 'FRNKLY.ONE', 'OPNDRM-APP')]
   [Parameter(Mandatory = $true)]
   [string]$Lane
 )
@@ -83,12 +83,19 @@ for ($try = 0; $try -lt 30; $try++) {
 try { Invoke-RestMethod 'http://127.0.0.1:11434/api/tags' | Out-Null } catch { Stop-Install 'Ollama did not become available.' }
 
 Write-Step 'Getting the assigned project and creating the workspace'
-$repo = if ($Lane -eq 'ADAM') { 'https://github.com/opndrm/ADAM.git' } else { 'https://github.com/frnklyone/frnkly-one-v2.git' }
-$target = Join-Path $PrimeRoot $Lane
-if (Test-Path -LiteralPath $target) { Stop-Install "Checkout already exists at $target." }
-New-Item -ItemType Directory -Path $PrimeRoot -Force | Out-Null
-git clone $repo $target
-if ($LASTEXITCODE -ne 0) { Stop-Install 'Could not clone the assigned project.' }
+if ($Lane -eq 'OPNDRM-APP') {
+  $target = Join-Path ([Environment]::GetFolderPath('Desktop')) 'OPNDRM APP'
+  if (Test-Path -LiteralPath $target) { Stop-Install "Workspace already exists at $target." }
+  New-Item -ItemType Directory -Path $target | Out-Null
+  Set-Content -LiteralPath (Join-Path $target 'README.md') -Value "# Open Dream App`n`nA fresh Open Dream Prime workspace." -Encoding utf8
+} else {
+  $repo = if ($Lane -eq 'ADAM') { 'https://github.com/opndrm/ADAM.git' } else { 'https://github.com/frnklyone/frnkly-one-v2.git' }
+  $target = Join-Path $PrimeRoot $Lane
+  if (Test-Path -LiteralPath $target) { Stop-Install "Checkout already exists at $target." }
+  New-Item -ItemType Directory -Path $PrimeRoot -Force | Out-Null
+  git clone $repo $target
+  if ($LASTEXITCODE -ne 0) { Stop-Install 'Could not clone the assigned project.' }
+}
 
 $providerFile = Join-Path $PrimeConfig 'models.json'
 New-Item -ItemType Directory -Path $PrimeConfig -Force | Out-Null

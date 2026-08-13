@@ -1,5 +1,5 @@
 param(
-  [ValidateSet('ADAM', 'FRNKLY.ONE')]
+  [ValidateSet('ADAM', 'FRNKLY.ONE', 'OPNDRM-APP')]
   [Parameter(Mandatory = $true)]
   [string]$Lane
 )
