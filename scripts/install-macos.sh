@@ -31,6 +31,13 @@ atomic_vault_url="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1
 
 say "Installing WezTerm, HERDR, Git, GitHub CLI, and Ollama"
 command -v brew >/dev/null 2>&1 || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -x /usr/local/bin/brew ]]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+elif ! command -v brew >/dev/null 2>&1; then
+  fail "Homebrew finished without becoming available in this Terminal. Open a new Terminal window and run the same OPNDRM command again."
+fi
 brew install git gh python herdr
 brew install --cask wezterm ollama
 
