@@ -23,7 +23,11 @@ function Refresh-Path {
   $env:Path = "$machinePath;$userPath"
 }
 
-if (-not (Get-Command winget -ErrorAction SilentlyContinue)) { Stop-Install 'Windows App Installer is required before setup can continue.' }
+if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+  Write-Step 'Opening Microsoft Store for Windows App Installer'
+  Start-Process 'ms-windows-store://pdp/?ProductId=9NBLGGH4NNS1'
+  Stop-Install 'Install or update Windows App Installer in Microsoft Store, reopen PowerShell, and run this same Open Dream Prime command again.'
+}
 
 Write-Step 'Installing Git Bash, Node, GitHub CLI, WezTerm, and Ollama'
 Install-Winget 'Git.Git'
@@ -70,6 +74,7 @@ $asset = $release.assets | Where-Object { $_.name -match '_x64.*\.exe$' } | Sele
 if (-not $asset) { Stop-Install 'A Windows Buzz installer was not found in the latest official release.' }
 $buzzInstaller = Join-Path $env:TEMP $asset.name
 Invoke-WebRequest $asset.browser_download_url -OutFile $buzzInstaller
+Write-Host 'The official Buzz installer window is opening now. Complete it, then this installer continues.'
 Start-Process -FilePath $buzzInstaller -Wait
 
 Write-Step 'Configuring local Ollama'
