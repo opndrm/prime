@@ -50,6 +50,15 @@ Buzz is the conversation layer for OPNDRM Prime. It supports people and named ag
 4. Store the approved Buzz agent identifier only in that teammate’s Atomic Vault OPNDRM entry. Never write it to the repository, a shared file, a public website, or another person’s Vault.
 5. Report the onboarding state plainly: **installed**, **waiting for owner**, **connected**, or **blocked**. “Connected” requires visible Buzz access, the approved named agent, and Vault confirmation.
 
+### Private OPNDRM team access
+
+The OPNDRM Buzz community is private. An approved teammate opens the OPNDRM Team page, authenticates, and selects **OPEN OPNDRM BUZZ**. They complete the invitation and Buzz sign-in on their own device before any agent setup begins.
+
+- Treat a relay-membership denial as an access state: the identity has not joined the private OPNDRM community yet. Do not delete the profile, create a replacement identity, or retry agent setup until the person has joined through the approved Team invitation.
+- Once the person can visibly open the private OPNDRM channel, confirm their human membership first. A human may participate without an AI agent.
+- Only after the owner explicitly approves it, create or connect that person's named agent and store its approved identifier in that person's Atomic Vault entry.
+- Never copy, reveal, request, embed, or use a Buzz invite URL, channel identifier, relay credential, API token, private key, or Vault value in a prompt, repository, installer, shared configuration, public page, or chat message. The Team page is the controlled handoff surface.
+
 Use Buzz for discussion and handoffs; use Wayfinder/GitHub Issues for plan and decisions; use GitHub for code, branches, and reviews. Never post credentials, private keys, recovery codes, or Vault contents to Buzz.
 
 ## Onboarding rules
