@@ -56,6 +56,8 @@ if ($Lane -ne 'OPNDRM-APP') {
     gh auth status --hostname github.com *> $null
     if ($LASTEXITCODE -ne 0) { Stop-Install 'GitHub is not signed in for this Windows account.' }
   }
+  gh auth setup-git --hostname github.com
+  if ($LASTEXITCODE -ne 0) { Stop-Install 'GitHub could not configure secure Git access for this Windows account.' }
 }
 
 Write-Step 'Installing HERDR Windows preview'

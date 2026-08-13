@@ -48,6 +48,7 @@ ensure_github_access() {
   printf 'Your browser will open for GitHub sign-in. Use the account that has access to %s. No team password or token is used.\n' "$LANE"
   gh auth login --hostname github.com --git-protocol https --web || fail "GitHub sign-in was not completed."
   gh auth status --hostname github.com >/dev/null 2>&1 || fail "GitHub is not signed in for this Mac account."
+  gh auth setup-git --hostname github.com || fail "GitHub could not configure secure Git access for this Mac account."
 }
 
 ensure_github_access
