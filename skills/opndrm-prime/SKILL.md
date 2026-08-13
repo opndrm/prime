@@ -21,8 +21,8 @@ When the teammate says “open ADAM,” “open FRNKLY.ONE,” “open OPNDRM AP
 | Request | Mac folder | Windows folder | HERDR session |
 | --- | --- | --- | --- |
 | OPNDRM APP / new app | `~/Desktop/OPNDRM APP` | Desktop `OPNDRM APP` | `opndrm-opndrm-app` |
-| ADAM | `~/OpenDream/ADAM` | `%USERPROFILE%\\OpenDream\\ADAM` | `opndrm-adam` |
-| FRNKLY.ONE | `~/OpenDream/FRNKLY.ONE` | `%USERPROFILE%\\OpenDream\\FRNKLY.ONE` | `opndrm-frnkly-one` |
+| ADAM | `~/OPNDRM/ADAM` | `%USERPROFILE%\\OPNDRM\\ADAM` | `opndrm-adam` |
+| FRNKLY.ONE | `~/OPNDRM/FRNKLY.ONE` | `%USERPROFILE%\\OPNDRM\\FRNKLY.ONE` | `opndrm-frnkly-one` |
 
 1. Confirm the named folder exists. Never overwrite it or rerun an installer as a daily-start action.
 2. Attach the matching named HERDR session. This restores the last saved workspace for that app on both Mac and Windows.
@@ -40,20 +40,33 @@ Mac and Windows use the same HERDR session names after installation. The Windows
 4. Use Buzz for conversation, Wayfinder/GitHub Issues for plan and decisions, and GitHub for branches, reviews, and code.
 5. Record verified result, uncertainty, and next owner before moving to another card.
 
+## OPNDRM Buzz
+
+Buzz is the conversation layer for OPNDRM Prime. It supports people and named agents; it does not replace the repository, Wayfinder/GitHub Issues, Prime Agent, or the No Mistakes Gate.
+
+1. During one-click setup, install and launch Buzz where the operating system supports it, then write a per-person onboarding record with the workspace, suggested agent name, role, and issue-tracker destination.
+2. The teammate completes their own Buzz sign-in. After that owner action, create or connect only the named agent they approve—for example, `PRIME — ADAM`, `PRIME — FRNKLY.ONE`, or `PRIME — OPNDRM APP`.
+3. Give each agent one bounded responsibility, a clear evidence source, read/write limits, an accountable human owner, and a safe first action. Treat its report as reviewable evidence, not official state.
+4. Store the approved Buzz agent identifier only in that teammate’s Atomic Vault OPNDRM entry. Never write it to the repository, a shared file, a public website, or another person’s Vault.
+5. Report the onboarding state plainly: **installed**, **waiting for owner**, **connected**, or **blocked**. “Connected” requires visible Buzz access, the approved named agent, and Vault confirmation.
+
+Use Buzz for discussion and handoffs; use Wayfinder/GitHub Issues for plan and decisions; use GitHub for code, branches, and reviews. Never post credentials, private keys, recovery codes, or Vault contents to Buzz.
+
 ## Onboarding rules
 
 - Direct a new Mac teammate to the website-hosted Mac installer and guide at `opndrm.com`.
-- If a Mac lacks Apple Command Line Tools, the installer opens Software Update directly. The teammate installs Apple Command Line Tools there, leaves the original Terminal window open, and the installer resumes automatically. Do not tell them to search for an invisible dialog.
+- If a Mac lacks Apple Command Line Tools, the installer opens Software Update directly. If Apple requires a macOS update first, the teammate completes it, restarts if asked, and reruns the same OPNDRM command. Otherwise they install Apple Command Line Tools there and the installer resumes automatically. Do not tell them to search for an invisible dialog.
 - Treat Windows as a first-device preview until it passes a real-device health check. Do not describe it as equivalent to Mac before that evidence exists.
 - If Windows lacks Windows App Installer, the installer opens Microsoft Store directly, then asks the teammate to reopen PowerShell and run the same command again. The official Buzz installer opens in a visible window; the teammate completes that window and the installer continues.
 - Keep a named local HERDR workspace per teammate and repository. Never use a shared terminal session as team collaboration.
 - Configure Ollama per person. DeepSeek Flash and MiniMax M3 may be ready; discover the teammate's installed local Ollama models before promising availability.
 - Create No Mistakes as a visible, inactive Gate only. Never start, approve, rerun, abort, or repair it from onboarding.
 - Install Atomic Vault and CBF Remote only through the approved package source. Never copy, request, expose, or share credentials; Vault trust is completed by the individual owner.
+- Install Buzz in the same one-click setup and stage a local Buzz onboarding record. After the teammate completes their own Buzz sign-in, create or connect only their named Buzz agents. Store each approved agent identifier in that teammate’s Atomic Vault under an OPNDRM entry, never in a repository, shared configuration, or another person’s Vault. Report Buzz as **waiting for owner** until sign-in, visible named agents, and Vault confirmation are all complete.
 
 ## Decision and safety boundaries
 
-- Do not overwrite a checkout, alter a credential, invite a Buzz member, create a shared identity, spend money, push code, deploy, or publish an official issue update without explicit approval.
+- Do not overwrite a checkout, alter a credential, invite a Buzz member, create a shared identity, spend money, push code, deploy, or publish an official issue update without explicit approval. Do not create a Buzz account, agent, or Vault record until the teammate has completed their own sign-in and approves that exact action.
 - Do not mix OPNDRM APP, ADAM, and FRNKLY.ONE repository evidence, branches, or release authority.
 - Treat a child report as evidence to review, not proof.
 - Explain blockers plainly and offer the smallest safe next step.

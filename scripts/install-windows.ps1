@@ -95,7 +95,7 @@ if ($Lane -eq 'OPNDRM-APP') {
 } else {
   Write-Step 'Getting the team project and creating the workspace'
   $repo = if ($Lane -eq 'ADAM') { 'https://github.com/opndrm/ADAM.git' } else { 'https://github.com/frnklyone/frnkly-one-v2.git' }
-  $target = Join-Path $env:USERPROFILE "OpenDream\$Lane"
+  $target = Join-Path $env:USERPROFILE "OPNDRM\$Lane"
   if (Test-Path -LiteralPath $target) { Stop-Install "Workspace already exists at $target." }
   New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
   git clone $repo $target
@@ -112,6 +112,27 @@ $session = "opndrm-$($Lane.ToLower().Replace('.', '-'))"
 herdr --session $session workspace create --cwd $target --label "$Lane — PRIME" --focus
 herdr --session $session tab create --cwd $target --label 'NO MISTAKES GATE' --no-focus
 
+Write-Step 'Preparing personal Buzz onboarding'
+$buzzStateDirectory = Join-Path $env:APPDATA 'OPNDRM\Prime'
+New-Item -ItemType Directory -Path $buzzStateDirectory -Force | Out-Null
+$buzzStateFile = Join-Path $buzzStateDirectory "$session-buzz-onboarding.json"
+$buzzState = [ordered]@{
+  status = 'waiting-for-owner'
+  workspace = $Lane
+  suggested_agent_name = "PRIME — $Lane"
+  suggested_agent_role = 'root workspace agent'
+  issue_tracker = 'https://github.com/opndrm/prime/issues'
+  next_owner_action = 'Sign in to Buzz, create or connect the named agent, then save its approved identifier in your Atomic Vault OPNDRM entry.'
+}
+$buzzState | ConvertTo-Json | Set-Content -LiteralPath $buzzStateFile -Encoding utf8
+$buzzApp = Get-StartApps | Where-Object { $_.Name -eq 'Buzz' } | Select-Object -First 1
+if ($buzzApp) {
+  Start-Process "shell:AppsFolder\$($buzzApp.AppID)"
+  Write-Host 'Buzz has opened. Complete your personal Buzz sign-in, then use the prepared onboarding record to create or connect your named agent.'
+} else {
+  Write-Host 'Buzz is installed. Open Buzz from Start, complete your personal sign-in, then use the prepared onboarding record to create or connect your named agent.'
+}
+
 Write-Step 'Atomic Vault boundary'
 Write-Host 'Atomic Vault is not installed from an unknown public source. The employee completes the team-approved Atomic Vault and CBF Remote owner-trust step directly.'
-Write-Host "`nReady: $Lane workspace created. HERDR is Windows preview; No Mistakes is installed but no Gate run was started. Run /reload in Prime Agent to refresh the Open Dream Prime skill."
+Write-Host "`nReady: $Lane workspace created. HERDR is Windows preview; No Mistakes is installed but no Gate run was started. Buzz onboarding is waiting for the employee’s personal sign-in and Vault approval. Run /reload in Prime Agent to refresh the Open Dream Prime skill."

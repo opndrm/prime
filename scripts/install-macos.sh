@@ -58,8 +58,8 @@ curl -fsS http://127.0.0.1:11434/api/tags >/dev/null || fail "Ollama did not bec
 python3 "$ROOT/scripts/configure-ollama.py" "$ROOT/config/ollama-models.json" "$PRIME_CONFIG_DIR"
 
 case "$LANE" in
-  ADAM) repo='https://github.com/opndrm/ADAM.git'; target="${OPNDRM_PROJECTS_DIR:-$HOME/OpenDream}/ADAM" ;;
-  FRNKLY.ONE) repo='https://github.com/frnklyone/frnkly-one-v2.git'; target="${OPNDRM_PROJECTS_DIR:-$HOME/OpenDream}/FRNKLY.ONE" ;;
+  ADAM) repo='https://github.com/opndrm/ADAM.git'; target="${OPNDRM_PROJECTS_DIR:-$HOME/OPNDRM}/ADAM" ;;
+  FRNKLY.ONE) repo='https://github.com/frnklyone/frnkly-one-v2.git'; target="${OPNDRM_PROJECTS_DIR:-$HOME/OPNDRM}/FRNKLY.ONE" ;;
   OPNDRM-APP) target="$HOME/Desktop/OPNDRM APP" ;;
 esac
 [[ ! -e "$target" ]] || fail "Workspace already exists at $target."
@@ -76,5 +76,23 @@ say "Creating the visible PRIME workspace and reserved Gate"
 session_name="opndrm-$(printf '%s' "$LANE" | tr '[:upper:].' '[:lower:]-')"
 herdr --session "$session_name" workspace create --cwd "$target" --label "$LANE — PRIME" --focus
 herdr --session "$session_name" tab create --cwd "$target" --label "NO MISTAKES GATE" --no-focus
+say "Preparing personal Buzz onboarding"
+buzz_state_dir="${XDG_CONFIG_HOME:-$HOME/.config}/opndrm/prime"
+mkdir -p "$buzz_state_dir"
+python3 - "$buzz_state_dir/${session_name}-buzz-onboarding.json" "$LANE" "$issue_tracker_url" "$buzz_relay_url" <<'PY'
+import json, pathlib, sys
+path, lane, issue_tracker, relay = sys.argv[1:]
+record = {
+    "status": "waiting-for-owner",
+    "workspace": lane,
+    "suggested_agent_name": f"PRIME — {lane}",
+    "suggested_agent_role": "root workspace agent",
+    "issue_tracker": issue_tracker,
+    "buzz_relay": relay or None,
+    "next_owner_action": "Sign in to Buzz, create or connect the named agent, then save its approved identifier in your Atomic Vault OPNDRM entry.",
+}
+pathlib.Path(path).write_text(json.dumps(record, indent=2) + "\n")
+PY
+open -a Buzz >/dev/null 2>&1 || printf 'Buzz is installed. Open it when ready to complete your personal sign-in.\n'
 open "$issue_tracker_url"
-printf '\nReady. No Mistakes is installed but inactive. Atomic Vault/CBF Remote requires the employee to complete the official owner-trust step.\n'
+printf '\nReady. No Mistakes is installed but inactive. Buzz onboarding is waiting for the employee’s personal sign-in and Vault approval. Atomic Vault/CBF Remote requires the employee to complete the official owner-trust step.\n'
