@@ -49,7 +49,7 @@
     <script>
       const platforms = {
         mac: { status: 'MAC · AVAILABLE NOW', command: 'curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- ADAM', copy: 'COPY MAC INSTALL', lead: 'Choose your assigned project, copy the command, and paste it into Terminal. Open Dream Prime installs the workspace from here.', note: 'Assigned to FRNKLY.ONE? Replace ADAM with FRNKLY.ONE. Windows onboarding is being built after this Mac installation passes its first team test.' },
-        windows: { status: 'WINDOWS · FIRST-DEVICE PREVIEW', command: "& ([scriptblock]::Create((irm https://opndrm.com/install-windows.ps1))) -Lane ADAM", copy: 'COPY WINDOWS INSTALL', lead: 'Choose your assigned project, copy the command, and paste it into PowerShell. The installer checks every required component before it changes your workspace.', note: 'Assigned to FRNKLY.ONE? Replace ADAM with FRNKLY.ONE. This preview becomes team-ready only after the first Windows device passes its health check.' }
+        windows: { status: 'WINDOWS · FIRST-DEVICE PREVIEW', command: "& ([scriptblock]::Create((irm https://opndrm.com/install-windows.ps1))) -Lane ADAM", copy: 'COPY WINDOWS INSTALL', lead: 'Choose your assigned project, copy the command, and paste it into PowerShell. The installer sets up the core Windows workspace, then reports its health.', note: 'Assigned to FRNKLY.ONE? Replace ADAM with FRNKLY.ONE. This preview becomes team-ready only after the first Windows device passes its health check.' }
       };
       document.querySelectorAll('[data-platform]').forEach((button) => button.addEventListener('click', () => {
         const selected = platforms[button.dataset.platform];

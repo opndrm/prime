@@ -1,22 +1,19 @@
 param(
   [ValidateSet('ADAM', 'FRNKLY.ONE')]
+  [Parameter(Mandatory = $true)]
   [string]$Lane
 )
 
 $ErrorActionPreference = 'Stop'
-if (-not $Lane) { throw 'Choose your assigned project: ADAM or FRNKLY.ONE.' }
-if (-not (Get-Command winget -ErrorAction SilentlyContinue)) { throw 'Windows App Installer is required before Open Dream Prime can continue.' }
-
-function Install-OpenDreamPackage([string]$Id) {
-  winget install --exact --id $Id --accept-source-agreements --accept-package-agreements
-  if ($LASTEXITCODE -ne 0) { throw "Could not install $Id." }
+$workspace = Join-Path ([System.IO.Path]::GetTempPath()) "opndrm-prime-$([Guid]::NewGuid().ToString('N'))"
+New-Item -ItemType Directory -Path $workspace | Out-Null
+try {
+  $archive = Join-Path $workspace 'prime.tar.gz'
+  Invoke-WebRequest 'https://codeload.github.com/opndrm/prime/tar.gz/refs/heads/main' -OutFile $archive
+  tar.exe -xzf $archive -C $workspace
+  $source = Get-ChildItem -LiteralPath $workspace -Directory | Where-Object { $_.Name -like 'prime-*' } | Select-Object -First 1
+  if (-not $source) { throw 'The Open Dream Prime package could not be unpacked.' }
+  & (Join-Path $source.FullName 'scripts\install-windows.ps1') -Lane $Lane
+} finally {
+  Remove-Item -LiteralPath $workspace -Recurse -Force -ErrorAction SilentlyContinue
 }
-
-Write-Host 'Open Dream Prime — Windows first-device preview'
-Install-OpenDreamPackage 'Git.Git'
-Install-OpenDreamPackage 'GitHub.cli'
-Install-OpenDreamPackage 'wez.wezterm'
-Install-OpenDreamPackage 'Ollama.Ollama'
-
-Write-Host 'Baseline tools are ready. Prime Agent, HERDR, Buzz, No Mistakes, and Atomic Vault require their approved Windows compatibility sources before this preview creates a workspace.'
-Write-Host "No project checkout or credential trust state was changed for $Lane."
