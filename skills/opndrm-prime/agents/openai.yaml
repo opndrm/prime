@@ -1,0 +1,4 @@
+interface:
+  display_name: "Open Dream Prime"
+  short_description: "Operate the Open Dream Prime team workflow."
+  default_prompt: "Set up or operate an Open Dream Prime workspace safely."

@@ -22,6 +22,7 @@ brew install --cask wezterm ollama
 
 say "Installing Prime Agent, No Mistakes, and Buzz"
 curl -fsSL https://app.primeintellect.ai/prime-agent/install.sh | sh
+prime-agent package install git:github.com/opndrm/prime
 curl -fsSL https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.sh | sh
 arch="$(uname -m)"; [[ "$arch" == arm64 ]] && asset='Buzz_*_aarch64.dmg' || asset='Buzz_*_x64.dmg'
 download_dir="$(mktemp -d)"; gh release download --repo block/buzz --pattern "$asset" --dir "$download_dir"
