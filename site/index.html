@@ -50,8 +50,8 @@
     </main>
     <script>
       const themeButton = document.querySelector('#theme-toggle');
-      function setTheme(theme) { document.documentElement.dataset.theme = theme; themeButton.setAttribute('aria-pressed', String(theme === 'dark')); themeButton.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'); localStorage.setItem('opndrm-theme', theme); }
-      setTheme(localStorage.getItem('opndrm-theme') === 'dark' ? 'dark' : 'light');
+      function setTheme(theme) { document.documentElement.dataset.theme = theme; themeButton.setAttribute('aria-pressed', String(theme === 'dark')); themeButton.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'); localStorage.setItem('opndrm-theme-v2', theme); }
+      setTheme(localStorage.getItem('opndrm-theme-v2') === 'light' ? 'light' : 'dark');
       themeButton.addEventListener('click', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
       const platforms = { mac: { status: 'MAC · AVAILABLE NOW', copy: 'COPY MAC INSTALL', lead: 'Create a fresh Open Dream App workspace, copy the command, and paste it into Terminal.', command: () => 'curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- OPNDRM-APP' }, windows: { status: 'WINDOWS · FIRST-DEVICE PREVIEW', copy: 'COPY WINDOWS INSTALL', lead: 'Create a fresh Open Dream App workspace, copy the command, and paste it into PowerShell.', command: () => '& ([scriptblock]::Create((irm https://opndrm.com/install-windows.ps1))) -Lane OPNDRM-APP' } };
       let selectedPlatform = 'mac';
