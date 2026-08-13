@@ -2,13 +2,12 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PROJECTS_DIR="${OPNDRM_PROJECTS_DIR:-$HOME/OpenDream}"
 PRIME_CONFIG_DIR="${PRIME_AGENT_CONFIG_DIR:-$HOME/.prime/agent}"
 TEAM_CONFIG="${OPNDRM_TEAM_CONFIG:-$ROOT/config/team.json}"
 LANE="${1:-}"
 say() { printf '\n==> %s\n' "$*"; }
 fail() { printf '\nOpen Dream Prime stopped: %s\n' "$*" >&2; exit 1; }
-case "$LANE" in ADAM|FRNKLY.ONE|OPNDRM-APP) ;; *) fail "Choose ADAM, FRNKLY.ONE, or OPNDRM APP." ;; esac
+case "$LANE" in ADAM|FRNKLY.ONE|OPNDRM-APP) ;; *) fail "Choose a valid Open Dream Prime workspace." ;; esac
 [[ "$(uname -s)" == "Darwin" ]] || fail "This is the Mac installer."
 [[ -f "$TEAM_CONFIG" ]] || TEAM_CONFIG="$ROOT/config/team.example.json"
 issue_tracker_url="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["issueTrackerUrl"])' "$TEAM_CONFIG")"
@@ -44,8 +43,8 @@ curl -fsS http://127.0.0.1:11434/api/tags >/dev/null || fail "Ollama did not bec
 python3 "$ROOT/scripts/configure-ollama.py" "$ROOT/config/ollama-models.json" "$PRIME_CONFIG_DIR"
 
 case "$LANE" in
-  ADAM) repo='https://github.com/opndrm/ADAM.git'; target="$PROJECTS_DIR/ADAM" ;;
-  FRNKLY.ONE) repo='https://github.com/frnklyone/frnkly-one-v2.git'; target="$PROJECTS_DIR/FRNKLY.ONE" ;;
+  ADAM) repo='https://github.com/opndrm/ADAM.git'; target="${OPNDRM_PROJECTS_DIR:-$HOME/OpenDream}/ADAM" ;;
+  FRNKLY.ONE) repo='https://github.com/frnklyone/frnkly-one-v2.git'; target="${OPNDRM_PROJECTS_DIR:-$HOME/OpenDream}/FRNKLY.ONE" ;;
   OPNDRM-APP) target="$HOME/Desktop/OPNDRM APP" ;;
 esac
 [[ ! -e "$target" ]] || fail "Workspace already exists at $target."
@@ -54,7 +53,9 @@ if [[ "$LANE" == 'OPNDRM-APP' ]]; then
   mkdir -p "$target"
   printf '# Open Dream App\n\nA fresh Open Dream Prime workspace.\n' > "$target/README.md"
 else
-  say "Cloning the selected fresh project"; git clone "$repo" "$target"
+  say "Cloning the selected team project"
+  mkdir -p "$(dirname "$target")"
+  git clone "$repo" "$target"
 fi
 say "Creating the visible PRIME workspace and reserved Gate"
 session_name="opndrm-$(printf '%s' "$LANE" | tr '[:upper:].' '[:lower:]-')"

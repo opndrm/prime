@@ -2,10 +2,7 @@
 set -euo pipefail
 
 lane="${1:-}"
-case "$lane" in
-  ADAM|FRNKLY.ONE|OPNDRM-APP) ;;
-  *) printf 'Choose ADAM, FRNKLY.ONE, or OPNDRM APP.\n' >&2; exit 1 ;;
-esac
+case "$lane" in ADAM|FRNKLY.ONE|OPNDRM-APP) ;; *) printf 'Choose a valid Open Dream Prime workspace.\n' >&2; exit 1 ;; esac
 
 work_dir="$(mktemp -d)"
 trap 'rm -rf "$work_dir"' EXIT

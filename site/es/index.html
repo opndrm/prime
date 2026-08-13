@@ -31,10 +31,9 @@
       <section id="instalar">
         <p class="eyebrow" id="install-status">MAC · DISPONIBLE AHORA</p>
         <h2>UN CLIC.<br>UN ESPACIO.</h2>
-        <p class="lead" id="install-lead">Elige tu proyecto asignado, copia el comando y pégalo en Terminal. Open Dream Prime instala el espacio desde aquí.</p>
+        <p class="lead" id="install-lead">Crea un espacio nuevo de Open Dream App, copia el comando y pégalo en Terminal.</p>
         <div class="platform-tabs" aria-label="Elige tu computadora"><button class="button" type="button" data-platform="mac" aria-pressed="true">MAC</button><button class="button" type="button" data-platform="windows" aria-pressed="false">WINDOWS</button></div>
-        <div class="lane-tabs" aria-label="Elige tu proyecto asignado o un nuevo proyecto"><button class="button" type="button" data-lane="ADAM" aria-pressed="true">ADAM</button><button class="button" type="button" data-lane="FRNKLY.ONE" aria-pressed="false">FRNKLY.ONE</button><button class="button" type="button" data-lane="OPNDRM-APP" aria-pressed="false">OPNDRM APP</button></div>
-        <pre class="install-copy"><code id="install-command">curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- ADAM</code></pre>
+        <pre class="install-copy"><code id="install-command">curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- OPNDRM-APP</code></pre>
         <button class="button" type="button" id="copy-install">COPIAR INSTALACIÓN MAC</button><a class="button button--quiet" id="read-guide" href="/es/guide/?platform=mac">LEER LA GUÍA</a>
       </section>
       <section class="grid">
@@ -47,11 +46,10 @@
       <footer><span>OPEN DREAM PRIME</span><a href="/">ENGLISH</a><a href="/es/">ESPAÑOL</a></footer>
     </main>
     <script>
-      const platforms = { mac: { status: 'MAC · DISPONIBLE AHORA', copy: 'COPIAR INSTALACIÓN MAC', lead: 'Elige tu computadora y proyecto asignado, copia el comando y pégalo en Terminal.', command: (lane) => `curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- ${lane}` }, windows: { status: 'WINDOWS · VISTA PREVIA DE PRIMER EQUIPO', copy: 'COPIAR INSTALACIÓN WINDOWS', lead: 'Elige tu computadora y proyecto asignado, copia el comando y pégalo en PowerShell.', command: (lane) => `& ([scriptblock]::Create((irm https://opndrm.com/install-windows.ps1))) -Lane ${lane}` } };
-      let selectedPlatform = 'mac'; let selectedLane = 'ADAM';
-      function renderInstall() { const selected = platforms[selectedPlatform]; document.querySelectorAll('[data-platform]').forEach((item) => item.setAttribute('aria-pressed', String(item.dataset.platform === selectedPlatform))); document.querySelectorAll('[data-lane]').forEach((item) => item.setAttribute('aria-pressed', String(item.dataset.lane === selectedLane))); document.querySelector('#install-status').textContent = selected.status; document.querySelector('#install-command').textContent = selected.command(selectedLane); document.querySelector('#copy-install').textContent = selected.copy; document.querySelector('#install-lead').textContent = selected.lead; document.querySelector('#read-guide').href = `/es/guide/?platform=${selectedPlatform}&lane=${encodeURIComponent(selectedLane)}`; }
+      const platforms = { mac: { status: 'MAC · DISPONIBLE AHORA', copy: 'COPIAR INSTALACIÓN MAC', lead: 'Crea un espacio nuevo de Open Dream App, copia el comando y pégalo en Terminal.', command: () => 'curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- OPNDRM-APP' }, windows: { status: 'WINDOWS · VISTA PREVIA DE PRIMER EQUIPO', copy: 'COPIAR INSTALACIÓN WINDOWS', lead: 'Crea un espacio nuevo de Open Dream App, copia el comando y pégalo en PowerShell.', command: () => '& ([scriptblock]::Create((irm https://opndrm.com/install-windows.ps1))) -Lane OPNDRM-APP' } };
+      let selectedPlatform = 'mac';
+      function renderInstall() { const selected = platforms[selectedPlatform]; document.querySelectorAll('[data-platform]').forEach((item) => item.setAttribute('aria-pressed', String(item.dataset.platform === selectedPlatform))); document.querySelector('#install-status').textContent = selected.status; document.querySelector('#install-command').textContent = selected.command(); document.querySelector('#copy-install').textContent = selected.copy; document.querySelector('#install-lead').textContent = selected.lead; document.querySelector('#read-guide').href = `/es/guide/?platform=${selectedPlatform}&lane=OPNDRM-APP`; }
       document.querySelectorAll('[data-platform]').forEach((button) => button.addEventListener('click', () => { selectedPlatform = button.dataset.platform; renderInstall(); }));
-      document.querySelectorAll('[data-lane]').forEach((button) => button.addEventListener('click', () => { selectedLane = button.dataset.lane; renderInstall(); }));
       document.querySelector('#copy-install').addEventListener('click', async () => {
         await navigator.clipboard.writeText(document.querySelector('#install-command').textContent);
         document.querySelector('#copy-install').textContent = selectedPlatform === 'windows' ? 'COPIADO — PEGAR EN POWERSHELL' : 'COPIADO — PEGAR EN TERMINAL';
