@@ -3,3 +3,4 @@
 config/team.json
 __pycache__/
 *.pyc
+.vercel
