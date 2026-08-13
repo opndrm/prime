@@ -26,7 +26,7 @@ module.exports = async (request, response) => {
   }
   const form = new URLSearchParams(await readBody(request));
   const supplied = Buffer.from(form.get('passcode') || '');
-  const expected = Buffer.from(passcode);
+  const expected = Buffer.from(passcode.trim());
   const valid = supplied.length === expected.length && crypto.timingSafeEqual(supplied, expected);
   if (!valid) {
     response.writeHead(303, { Location: '/admin/login?error=1' });
