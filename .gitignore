@@ -1,0 +1,5 @@
+.DS_Store
+.opndrm-prime/
+config/team.json
+__pycache__/
+*.pyc

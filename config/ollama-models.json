@@ -1,0 +1,7 @@
+{
+  "starterModels": [
+    {"id": "deepseek-v4-flash:0731-cloud", "name": "DeepSeek V4 Flash (Ollama)"},
+    {"id": "minimax-m3:cloud", "name": "MiniMax M3 (Ollama)"}
+  ],
+  "defaultModel": "deepseek-v4-flash:0731-cloud"
+}
