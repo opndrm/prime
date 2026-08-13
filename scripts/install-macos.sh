@@ -41,6 +41,17 @@ fi
 brew install git gh python herdr
 brew install --cask wezterm ollama
 
+ensure_github_access() {
+  [[ "$LANE" == 'OPNDRM-APP' ]] && return
+  gh auth status --hostname github.com >/dev/null 2>&1 && return
+  say "Sign in to your own GitHub account"
+  printf 'Your browser will open for GitHub sign-in. Use the account that has access to %s. No team password or token is used.\n' "$LANE"
+  gh auth login --hostname github.com --git-protocol https --web || fail "GitHub sign-in was not completed."
+  gh auth status --hostname github.com >/dev/null 2>&1 || fail "GitHub is not signed in for this Mac account."
+}
+
+ensure_github_access
+
 say "Installing Prime Agent, No Mistakes, and Buzz"
 curl -fsSL https://app.primeintellect.ai/prime-agent/install.sh | sh
 prime-agent package install git:github.com/opndrm/prime

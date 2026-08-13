@@ -46,6 +46,18 @@ Install-Winget 'wez.wezterm'
 Install-Winget 'Ollama.Ollama'
 Refresh-Path
 
+if ($Lane -ne 'OPNDRM-APP') {
+  gh auth status --hostname github.com *> $null
+  if ($LASTEXITCODE -ne 0) {
+    Write-Step 'Sign in to your own GitHub account'
+    Write-Host "Your browser will open for GitHub sign-in. Use the account that has access to $Lane. No team password or token is used."
+    gh auth login --hostname github.com --git-protocol https --web
+    if ($LASTEXITCODE -ne 0) { Stop-Install 'GitHub sign-in was not completed.' }
+    gh auth status --hostname github.com *> $null
+    if ($LASTEXITCODE -ne 0) { Stop-Install 'GitHub is not signed in for this Windows account.' }
+  }
+}
+
 Write-Step 'Installing HERDR Windows preview'
 Invoke-RestMethod 'https://herdr.dev/install.ps1' | Invoke-Expression
 Refresh-Path
