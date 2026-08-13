@@ -43,7 +43,9 @@ Mac and Windows use the same HERDR session names after installation. The Windows
 ## Onboarding rules
 
 - Direct a new Mac teammate to the website-hosted Mac installer and guide at `opndrm.com`.
+- If a Mac lacks Apple Command Line Tools, the installer opens Software Update directly. The teammate installs Apple Command Line Tools there, leaves the original Terminal window open, and the installer resumes automatically. Do not tell them to search for an invisible dialog.
 - Treat Windows as a first-device preview until it passes a real-device health check. Do not describe it as equivalent to Mac before that evidence exists.
+- If Windows lacks Windows App Installer, the installer opens Microsoft Store directly, then asks the teammate to reopen PowerShell and run the same command again. The official Buzz installer opens in a visible window; the teammate completes that window and the installer continues.
 - Keep a named local HERDR workspace per teammate and repository. Never use a shared terminal session as team collaboration.
 - Configure Ollama per person. DeepSeek Flash and MiniMax M3 may be ready; discover the teammate's installed local Ollama models before promising availability.
 - Create No Mistakes as a visible, inactive Gate only. Never start, approve, rerun, abort, or repair it from onboarding.
