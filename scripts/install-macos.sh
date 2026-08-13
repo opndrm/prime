@@ -45,7 +45,7 @@ ensure_github_access() {
   [[ "$LANE" == 'OPNDRM-APP' ]] && return
   gh auth status --hostname github.com >/dev/null 2>&1 && return
   say "Sign in to your own GitHub account"
-  printf 'GitHub’s sign-in page is opening now. Use the account that has access to %s. No team password or token is used.\n' "$LANE"
+  printf 'GitHub’s sign-in page is opening now. First sign in with the account that has access to %s; GitHub then takes you to the page where you enter the one-time code shown here. No team password or token is used.\n' "$LANE"
   open 'https://github.com/login/device' >/dev/null 2>&1 || true
   gh auth login --hostname github.com --git-protocol https --web || fail "GitHub sign-in was not completed."
   gh auth status --hostname github.com >/dev/null 2>&1 || fail "GitHub is not signed in for this Mac account."
