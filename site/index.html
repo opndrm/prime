@@ -35,7 +35,7 @@
         <div class="platform-tabs" aria-label="Choose your computer"><button class="button" type="button" data-platform="mac" aria-pressed="true">MAC</button><button class="button" type="button" data-platform="windows" aria-pressed="false">WINDOWS</button></div>
         <pre class="install-copy"><code id="install-command">curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- ADAM</code></pre>
         <button class="button" type="button" id="copy-install">COPY MAC INSTALL</button><a class="button button--quiet" href="/guide/">READ THE GUIDE</a>
-        <p id="install-note">Assigned to FRNKLY.ONE? Replace <strong>ADAM</strong> with <strong>FRNKLY.ONE</strong>. Windows onboarding is being built after this Mac installation passes its first team test.</p>
+        <p id="install-note">Assigned to FRNKLY.ONE? Replace <strong>ADAM</strong> with <strong>FRNKLY.ONE</strong>. Windows is available as a first-device preview and becomes team-ready after its health check passes.</p>
       </section>
       <section class="grid">
         <article><p class="eyebrow">PRIME</p><h2>BUILD</h2><p>Prime Agent with DeepSeek Flash, MiniMax M3, and the local Ollama catalog.</p></article>
@@ -48,7 +48,7 @@
     </main>
     <script>
       const platforms = {
-        mac: { status: 'MAC · AVAILABLE NOW', command: 'curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- ADAM', copy: 'COPY MAC INSTALL', lead: 'Choose your assigned project, copy the command, and paste it into Terminal. Open Dream Prime installs the workspace from here.', note: 'Assigned to FRNKLY.ONE? Replace ADAM with FRNKLY.ONE. Windows onboarding is being built after this Mac installation passes its first team test.' },
+        mac: { status: 'MAC · AVAILABLE NOW', command: 'curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- ADAM', copy: 'COPY MAC INSTALL', lead: 'Choose your assigned project, copy the command, and paste it into Terminal. Open Dream Prime installs the workspace from here.', note: 'Assigned to FRNKLY.ONE? Replace ADAM with FRNKLY.ONE. Windows is available as a first-device preview and becomes team-ready after its health check passes.' },
         windows: { status: 'WINDOWS · FIRST-DEVICE PREVIEW', command: "& ([scriptblock]::Create((irm https://opndrm.com/install-windows.ps1))) -Lane ADAM", copy: 'COPY WINDOWS INSTALL', lead: 'Choose your assigned project, copy the command, and paste it into PowerShell. The installer sets up the core Windows workspace, then reports its health.', note: 'Assigned to FRNKLY.ONE? Replace ADAM with FRNKLY.ONE. This preview becomes team-ready only after the first Windows device passes its health check.' }
       };
       document.querySelectorAll('[data-platform]').forEach((button) => button.addEventListener('click', () => {
