@@ -50,7 +50,8 @@ if ($Lane -ne 'OPNDRM-APP') {
   gh auth status --hostname github.com *> $null
   if ($LASTEXITCODE -ne 0) {
     Write-Step 'Sign in to your own GitHub account'
-    Write-Host "Your browser will open for GitHub sign-in. Use the account that has access to $Lane. No team password or token is used."
+    Write-Host "GitHub’s sign-in page is opening now. Use the account that has access to $Lane. No team password or token is used."
+    Start-Process 'https://github.com/login/device'
     gh auth login --hostname github.com --git-protocol https --web
     if ($LASTEXITCODE -ne 0) { Stop-Install 'GitHub sign-in was not completed.' }
     gh auth status --hostname github.com *> $null
