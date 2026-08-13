@@ -33,7 +33,7 @@ The employee chooses the project they are assigned. The installer prepares the t
 | **PRIME** | The main Prime Agent coding session. |
 | **NO MISTAKES GATE** | The visible quality checkpoint. It stays idle until intentional use. |
 | **BUZZ** | The room where humans and agents discuss the linked GitHub issue. |
-| **WAYFINDER / CREW MAP** | The GitHub Issue plan that keeps decisions and work visible. |
+| **WAYFINDER** | The GitHub Issue plan that keeps decisions and work visible. |
 
 GitHub remains the official record for code, branches, reviews, pull requests, and the issue tracker.
 
@@ -76,7 +76,7 @@ Before team rollout, copy `config/team.example.json` to `config/team.json` and s
 
 **Buzz** is the conversation.
 
-**Wayfinder / Crew Map** is the shared plan.
+**Wayfinder** is the shared plan.
 
 **GitHub** is the official work record.
 

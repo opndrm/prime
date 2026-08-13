@@ -9,6 +9,6 @@ When it finishes, open WezTerm. Your workspace has two simple areas:
 
 Prime Agent starts with Ollama. DeepSeek V4 Flash is the default. MiniMax M3 and every installed Ollama model can be selected when needed.
 
-Buzz is the team conversation space. Use it to discuss the work and link the relevant GitHub issue. Wayfinder/Crew Map keeps the GitHub issue plan. GitHub remains the official place for code, branches, reviews, and pull requests.
+Buzz is the team conversation space. Use it to discuss the work and link the relevant GitHub issue. Wayfinder keeps the GitHub issue plan. GitHub remains the official place for code, branches, reviews, and pull requests.
 
 Atomic Vault is personal. Do not share credentials, private keys, or Vault access. If Vault trust is waiting, ask the team lead for the official owner-approved step.
