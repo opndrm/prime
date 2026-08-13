@@ -2,11 +2,13 @@
 
 # OPEN DREAM<br>PRIME
 
-`ONE-CLICK MAC ONBOARDING · TEAM CODING WORKSPACE`
+`ONE CLICK · ONE CALM WORKSPACE · MAC + WINDOWS`
 
-**A clean first coding workspace for the Open Dream team.**
+**The Open Dream coding workspace for people and agents.**
 
-[Visual guide / Guía visual](docs/index.html) · [Visual en español](docs/index.es.html) · [Install for ADAM](#install) · [Install for FRNKLY.ONE](#install) · [English guide](docs/GETTING-STARTED.en.md) · [Guía en español](docs/EMPEZAR.es.md)
+[Open OPNDRM.com](https://opndrm.com) · [English guide](https://opndrm.com/guide/) · [Guía en español](https://opndrm.com/es/guide/) · [Team access](https://opndrm.com/admin)
+
+![Open Dream Prime home](docs/opndrm-home.png)
 
 </div>
 
@@ -14,81 +16,66 @@
 
 ## START HERE
 
-Open Dream Prime turns a fresh Mac into one calm, visible place to make software.
+Open Dream Prime creates a fresh **OPNDRM APP** workspace on the Desktop. The public installer is intentionally simple:
 
 ```
-ONE COMMAND → ONE PROJECT → ONE PRIME WORKSPACE
+CHOOSE MAC OR WINDOWS → COPY ONE COMMAND → OPEN PRIME → BUILD
 ```
 
-The employee chooses the project they are assigned. The installer prepares the tools, gives them a fresh checkout, and opens the workspace. Their first instruction is simple:
-
-> Tell PRIME what you want to build.
-
----
+The installer prepares the shared tools and opens a named PRIME workspace. Daily work does **not** rerun the installer: open the saved workspace for the app you need.
 
 ## THE WORKSPACE
 
-| | What it is |
+| Surface | Purpose |
 | --- | --- |
-| **PRIME** | The main Prime Agent coding session. |
-| **NO MISTAKES GATE** | The visible quality checkpoint. It stays idle until intentional use. |
-| **BUZZ** | The room where humans and agents discuss the linked GitHub issue. |
-| **WAYFINDER** | The GitHub Issue plan that keeps decisions and work visible. |
+| **PRIME** | The main Prime Agent session for one bounded work card. |
+| **NO MISTAKES GATE** | A visible quality checkpoint. It remains inactive until the approved repository workflow uses it. |
+| **BUZZ** | The conversation space for people and agents. Never put credentials there. |
+| **WAYFINDER** | GitHub Issues: the plan, owner, decisions, and next work. |
 
-GitHub remains the official record for code, branches, reviews, pull requests, and the issue tracker.
-
----
+GitHub remains the record for code, branches, reviews, and the work history.
 
 ## WHAT GETS INSTALLED
 
 | System | Purpose |
 | --- | --- |
-| **WezTerm + HERDR** | The visible terminal workspace. |
+| **WezTerm + HERDR** | The persistent local terminal workspace. |
 | **Prime Agent + Ollama** | The coding harness and local model catalog. |
-| **No Mistakes** | The installed, inactive Git quality gate. |
-| **Buzz** | Human-and-agent team communication. |
-| **Git + GitHub CLI** | Fresh checkouts and team code collaboration. |
-| **Atomic Vault + CBF Remote** | The employee’s personal credential boundary. It is added only from the team-approved package source. |
+| **No Mistakes** | Installed as an inactive quality gate. |
+| **Buzz** | Human-and-agent coordination. |
+| **Git + GitHub CLI** | Version control and team collaboration. |
+| **Atomic Vault + CBF Remote** | The employee’s personal credential boundary. Trust remains an owner action. |
 
-DeepSeek V4 Flash is ready by default. MiniMax M3 and every model installed in Ollama are selectable in PRIME.
+DeepSeek Flash, MiniMax M3 when installed, and every locally installed Ollama model are available to PRIME.
 
----
+## OPEN A WORKSPACE
 
-## INSTALL
+Use the published `/opndrm-prime` skill in English or Spanish:
 
-Clone this repository, then choose the single project you are assigned.
+| Ask PRIME | Opens |
+| --- | --- |
+| `Open OPNDRM APP` / `abre OPNDRM APP` | The fresh Desktop workspace. |
+| `Open ADAM` / `abre ADAM` | The saved ADAM workspace. |
+| `Open FRNKLY.ONE` / `abre FRNKLY.ONE` | The saved FRNKLY.ONE workspace. |
+| `Open the last ADAM session` | That app’s most recent named HERDR session. |
 
-```bash
-./scripts/install-macos.sh ADAM
-```
+The same named-session behavior is designed for Mac and Windows. Windows remains a first-device preview until it passes a real Windows-device health check.
 
-```bash
-./scripts/install-macos.sh FRNKLY.ONE
-```
+## TEAM ACCESS
 
-The installer does not overwrite an existing checkout, collect secrets, enroll Vault trust, or start a No Mistakes run. Those actions always belong to the employee or the repository’s approved workflow.
+The public page creates new **OPNDRM APP** workspaces. Existing team projects, including ADAM and FRNKLY.ONE, are available only through the protected **Open Dream Team** page after team access is verified. Each team app has its own one-click installer, purpose, and start instructions.
 
-Before team rollout, copy `config/team.example.json` to `config/team.json` and set the Open Dream Buzz relay plus the official Atomic Vault package source. Keep this private local configuration out of GitHub.
+## SAFETY BOUNDARIES
 
----
-
-## FOR THE TEAM
-
-**Buzz** is the conversation.
-
-**Wayfinder** is the shared plan.
-
-**GitHub** is the official work record.
-
-**Atomic Vault** keeps credentials personal.
-**PRIME** is where the code gets built.
-
-Read the employee guide before the first task: [English](docs/GETTING-STARTED.en.md) · [Español](docs/EMPEZAR.es.md).
+- The installer never overwrites an existing workspace.
+- No Mistakes is installed but never started by onboarding.
+- Atomic Vault credentials and trust stay personal; no credential is placed in this repository.
+- A person’s project workspace, session, branch, and credentials remain separate from every other app and teammate.
 
 ---
 
 <div align="center">
 
-`OPNDRM · MAC FIRST · WINDOWS NEXT`
+`OPNDRM · BUILD CALM · KEEP THE TEAM ALIGNED`
 
 </div>
