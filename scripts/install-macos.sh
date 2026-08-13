@@ -13,8 +13,9 @@ case "$LANE" in ADAM|FRNKLY.ONE|OPNDRM-APP) ;; *) fail "Choose a valid Open Drea
 ensure_developer_tools() {
   xcode-select -p >/dev/null 2>&1 && return
   say "Starting Apple Command Line Tools installation"
-  xcode-select --install >/dev/null 2>&1 || true
-  printf 'Approve the Apple Command Line Tools dialog if it appears. Open Dream Prime will continue automatically when it finishes.\n'
+  xcode-select --install 2>&1 || true
+  open 'x-apple.systempreferences:com.apple.Software-Update-Settings.extension' >/dev/null 2>&1 || true
+  printf 'Apple Software Update has been opened. Install Command Line Tools there, then this window will continue automatically.\n'
   for _ in {1..1800}; do
     xcode-select -p >/dev/null 2>&1 && return
     sleep 1
