@@ -15,7 +15,7 @@ ensure_developer_tools() {
   say "Starting Apple Command Line Tools installation"
   xcode-select --install 2>&1 || true
   open 'x-apple.systempreferences:com.apple.Software-Update-Settings.extension' >/dev/null 2>&1 || true
-  printf 'Apple Software Update has been opened. Install Command Line Tools there, then this window will continue automatically.\n'
+  printf 'Apple Software Update has been opened. If Apple requires a macOS update before Command Line Tools can install, complete that Apple update and restart if requested; then run this same OPNDRM command again. Otherwise, install Command Line Tools there and this window will continue automatically.\n'
   for _ in {1..1800}; do
     xcode-select -p >/dev/null 2>&1 && return
     sleep 1
