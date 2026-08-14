@@ -159,6 +159,16 @@ require_text "$ROOT/api/admin.js" 'Selected app:'
 require_text "$ROOT/api/admin.js" 'FRNKLY.ONE requires that personal account'
 require_text "$ROOT/api/admin.js" 'FRNKLY.ONE is the Rust rebuild at opndrm/Frnkly.one'
 require_text "$ROOT/api/admin.js" "platform='+platform+'&lane='+encodeURIComponent(lane)"
+require_text "$ROOT/api/admin.js" 'class="installer-actions" role="group"'
+require_text "$ROOT/api/admin.js" 'COPY INSTALLER COMMAND'
+require_text "$ROOT/api/admin.js" '>CHANGE APP<'
+forbid_text "$ROOT/api/admin.js" 'READ SELECTED APP GUIDE'
+require_text "$ROOT/api/admin.js" "Copy the '+platform+' installer command for '+lane"
+require_text "$ROOT/api/admin.js" "Open the '+lane+' guide for '+platform+' to change app"
+require_text "$ROOT/api/admin.js" 'button:focus-visible,a.button:focus-visible'
+require_text "$ROOT/api/admin.js" '.installer-actions{display:flex;flex-wrap:wrap;align-items:stretch;gap:1rem'
+require_text "$ROOT/api/admin.js" '.installer-actions #copy{flex:1 1 18rem;min-height:3.75rem'
+require_text "$ROOT/api/admin.js" '@media(max-width:34rem){'
 for guide in "$ROOT/site/guide/index.html" "$ROOT/site/es/guide/index.html"; do
   require_text "$guide" "requestedLane"
   require_text "$guide" "FRNKLY.ONE"
