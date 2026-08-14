@@ -204,8 +204,9 @@ require_text "$ROOT/api/admin.js" "Copy the '+platform+' installer command for '
 require_text "$ROOT/api/admin.js" "Open the '+lane+' guide for '+platform+' to change app"
 require_text "$ROOT/api/admin.js" 'button:focus-visible,a.button:focus-visible'
 require_text "$ROOT/api/admin.js" '.installer-actions{display:flex;flex-wrap:wrap;align-items:stretch;gap:1rem'
-require_text "$ROOT/api/admin.js" '.installer-actions #copy{flex:1 1 18rem;min-height:3.75rem'
+require_text "$ROOT/api/admin.js" '.installer-actions #copy{flex:0 1 auto;min-height:3.25rem;padding:0 1.125rem;font-size:.76rem;box-shadow:2px 2px 0 var(--ink)}'
 require_text "$ROOT/api/admin.js" '@media(max-width:34rem){'
+require_text "$ROOT/api/admin.js" '.installer-actions #copy,.installer-actions #guide{width:100%;min-height:3.25rem}'
 for guide in "$ROOT/site/guide/index.html" "$ROOT/site/es/guide/index.html"; do
   require_text "$guide" "requestedLane"
   require_text "$guide" "FRNKLY.ONE"
