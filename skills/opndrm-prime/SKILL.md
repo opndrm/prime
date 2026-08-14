@@ -32,6 +32,8 @@ When the teammate says “open ADAM,” “open FRNKLY.ONE,” “open OPNDRM AP
 
 Mac and Windows use the same HERDR session names after installation. The Windows path remains a first-device preview until it passes a real-device health check.
 
+FRNKLY.ONE is the Rust rebuild and maps only to the private `opndrm/Frnkly.one` repository (`https://github.com/opndrm/Frnkly.one.git`). Its local workspace and HERDR session remain named `FRNKLY.ONE` and `opndrm-frnkly-one`.
+
 ## Core workflow after opening the workspace
 
 1. Confirm the teammate's own checkout, branch, credentials, and local HERDR session.

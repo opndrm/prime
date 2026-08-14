@@ -36,8 +36,8 @@ switch ($Lane) {
     $target = Join-Path $ProjectsRoot 'ADAM'
   }
   'FRNKLY.ONE' {
-    $PrivateRepository = 'frnklyone/frnkly-one-v2'
-    $repo = 'https://github.com/frnklyone/frnkly-one-v2.git'
+    $PrivateRepository = 'opndrm/Frnkly.one'
+    $repo = 'https://github.com/opndrm/Frnkly.one.git'
     $target = Join-Path $ProjectsRoot 'FRNKLY.ONE'
   }
   'OPNDRM-APP' {

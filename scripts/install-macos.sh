@@ -12,7 +12,7 @@ case "$LANE" in ADAM|FRNKLY.ONE|OPNDRM-APP) ;; *) fail "Choose a valid Open Drea
 
 case "$LANE" in
   ADAM) PRIVATE_REPOSITORY='opndrm/ADAM'; repo='https://github.com/opndrm/ADAM.git'; target="${OPNDRM_PROJECTS_DIR:-$HOME/OPNDRM}/ADAM" ;;
-  FRNKLY.ONE) PRIVATE_REPOSITORY='frnklyone/frnkly-one-v2'; repo='https://github.com/frnklyone/frnkly-one-v2.git'; target="${OPNDRM_PROJECTS_DIR:-$HOME/OPNDRM}/FRNKLY.ONE" ;;
+  FRNKLY.ONE) PRIVATE_REPOSITORY='opndrm/Frnkly.one'; repo='https://github.com/opndrm/Frnkly.one.git'; target="${OPNDRM_PROJECTS_DIR:-$HOME/OPNDRM}/FRNKLY.ONE" ;;
   OPNDRM-APP) PRIVATE_REPOSITORY=''; repo=''; target="$HOME/Desktop/OPNDRM APP" ;;
 esac
 

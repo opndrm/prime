@@ -26,6 +26,8 @@ The installer prepares the shared tools and opens a named PRIME workspace. Daily
 
 The public **OPNDRM APP** lane never starts GitHub device authorization. For private **ADAM** and **FRNKLY.ONE** lanes, GitHub CLI owns one personal web/device authorization before cloning: the teammate signs in with their own GitHub account and enters the one-time code only at GitHub’s official device page. The installer displays the authenticated username and verifies read access to the selected repository before cloning. It never uses an Open Dream shared login, repository-administrator role, token, or credential. If access is missing, the repository owner invites that personal account as a normal collaborator with the needed repository access; **FRNKLY.ONE requires that invitation**.
 
+The canonical FRNKLY.ONE Rust checkout is [`opndrm/Frnkly.one`](https://github.com/opndrm/Frnkly.one.git). The installer keeps its local workspace and session named **FRNKLY.ONE** while cloning that repository.
+
 ## THE WORKSPACE
 
 | Surface | Purpose |

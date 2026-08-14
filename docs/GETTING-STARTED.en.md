@@ -4,6 +4,8 @@ Run the Mac or Windows installer with the one project you are assigned: `ADAM` o
 
 Before a private project is cloned, GitHub CLI runs exactly one web/device authorization. Sign in with **your own GitHub account** and enter the one-time code only at GitHub’s official device page. The installer shows the signed-in username, then verifies that account can read the selected repository. It does not use an Open Dream shared login, a token, another credential, or GitHub administrator repository access. If it stops for missing access, ask the repository owner to invite your personal account as a normal collaborator with the needed repository access, then run the installer again. **FRNKLY.ONE requires that personal collaborator invitation.** Public **OPNDRM APP** does not start GitHub device authorization.
 
+FRNKLY.ONE is the Rust rebuild. Its canonical private checkout is [`opndrm/Frnkly.one`](https://github.com/opndrm/Frnkly.one.git), while the installed workspace remains named `FRNKLY.ONE`.
+
 When it finishes, open WezTerm. Your workspace has two simple areas:
 
 - **PRIME** — start here. Tell Prime Agent what you want to build.

@@ -40,9 +40,11 @@ for lane in ADAM FRNKLY.ONE OPNDRM-APP; do
   require_text "$WINDOWS" "'$lane'"
 done
 require_text "$MAC" "PRIVATE_REPOSITORY='opndrm/ADAM'"
-require_text "$MAC" "PRIVATE_REPOSITORY='frnklyone/frnkly-one-v2'"
+require_text "$MAC" "PRIVATE_REPOSITORY='opndrm/Frnkly.one'"
+require_text "$MAC" "repo='https://github.com/opndrm/Frnkly.one.git'"
 require_text "$WINDOWS" "'opndrm/ADAM'"
-require_text "$WINDOWS" "'frnklyone/frnkly-one-v2'"
+require_text "$WINDOWS" "'opndrm/Frnkly.one'"
+require_text "$WINDOWS" "'https://github.com/opndrm/Frnkly.one.git'"
 
 # Private lanes have exactly one GitHub CLI-owned flow, identify the account,
 # preflight read access, and stop without cloning when read access is absent.
@@ -68,15 +70,20 @@ require_text "$ROOT/site/install-macos.sh" 'exec "$source_dir/scripts/install-ma
 require_text "$ROOT/site/install-windows.ps1" "scripts\\install-windows.ps1"
 require_text "$ROOT/api/admin.js" 'Selected app:'
 require_text "$ROOT/api/admin.js" 'FRNKLY.ONE requires that personal account'
+require_text "$ROOT/api/admin.js" 'FRNKLY.ONE is the Rust rebuild at opndrm/Frnkly.one'
 require_text "$ROOT/api/admin.js" "platform='+platform+'&lane='+encodeURIComponent(lane)"
 for guide in "$ROOT/site/guide/index.html" "$ROOT/site/es/guide/index.html"; do
   require_text "$guide" "requestedLane"
   require_text "$guide" "FRNKLY.ONE"
+  require_text "$guide" "opndrm/Frnkly.one"
 done
 for onboarding in "$ROOT/skills/opndrm-prime/references/onboarding-en.md" "$ROOT/skills/opndrm-prime/references/onboarding-es.md" "$ROOT/docs/GETTING-STARTED.en.md" "$ROOT/docs/EMPEZAR.es.md"; do
   require_text "$onboarding" "FRNKLY.ONE"
   require_text "$onboarding" "OPNDRM APP"
+  require_text "$onboarding" "https://github.com/opndrm/Frnkly.one.git"
 done
+require_text "$ROOT/README.md" "https://github.com/opndrm/Frnkly.one.git"
+require_text "$ROOT/skills/opndrm-prime/SKILL.md" "https://github.com/opndrm/Frnkly.one.git"
 
 if command -v pwsh >/dev/null 2>&1; then
   pwsh -NoProfile -Command '$errors = $null; [System.Management.Automation.Language.Parser]::ParseFile($args[0], [ref]$null, [ref]$errors) | Out-Null; if ($errors.Count) { $errors | ForEach-Object { Write-Error $_ }; exit 1 }' "$WINDOWS"
