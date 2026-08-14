@@ -64,6 +64,41 @@ ensure_github_access() {
   gh auth setup-git --hostname github.com || fail "GitHub could not configure secure Git access for this Mac account."
 }
 
+ensure_herdr_session() {
+  local session_name="$1"
+  local herdr_state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/opndrm/prime"
+  local herdr_log="$herdr_state_dir/${session_name}-herdr.log"
+
+  # HERDR workspace and tab commands use the named session socket. They do not
+  # start that socket themselves, so every lane needs its own server first.
+  if herdr --session "$session_name" status server >/dev/null 2>&1; then
+    return
+  fi
+
+  say "Starting the local HERDR session: $session_name"
+  mkdir -p "$herdr_state_dir"
+  nohup herdr --session "$session_name" server >"$herdr_log" 2>&1 </dev/null &
+  for _ in {1..30}; do
+    if herdr --session "$session_name" status server >/dev/null 2>&1; then
+      return
+    fi
+    sleep 1
+  done
+
+  fail "HERDR could not start or attach the $session_name session. The selected workspace at $target was kept, but no PRIME workspace or No Mistakes Gate was created. Setup is not complete. Open WezTerm and run 'herdr --session $session_name' to retry the personal session, or inspect $herdr_log."
+}
+
+launch_herdr_workspace() {
+  local session_name="$1"
+  local workspace_path="$2"
+
+  command -v wezterm >/dev/null 2>&1 || fail "WezTerm is not available to display the HERDR workspace. Setup is not complete and no Ready message was shown."
+  say "Opening WezTerm in the $session_name HERDR workspace"
+  if ! wezterm start --cwd "$workspace_path" --workspace "$session_name" -- herdr --session "$session_name"; then
+    fail "HERDR workspace was created, but WezTerm could not attach it visibly. Setup is not complete and no Ready message was shown. Open WezTerm and run 'herdr --session $session_name' from $workspace_path after fixing WezTerm."
+  fi
+}
+
 ensure_github_access
 # The public OPNDRM-APP lane never starts device authorization. Later public
 # GitHub downloads must fail with guidance instead of opening a sign-in prompt.
@@ -110,8 +145,13 @@ else
 fi
 say "Creating the visible PRIME workspace and reserved Gate"
 session_name="opndrm-$(printf '%s' "$LANE" | tr '[:upper:].' '[:lower:]-')"
-herdr --session "$session_name" workspace create --cwd "$target" --label "$LANE — PRIME" --focus
-herdr --session "$session_name" tab create --cwd "$target" --label "NO MISTAKES GATE" --no-focus
+ensure_herdr_session "$session_name"
+if ! herdr --session "$session_name" workspace create --cwd "$target" --label "$LANE — PRIME" --focus; then
+  fail "HERDR could not create the PRIME workspace. Setup is not complete and no Ready message was shown. The selected workspace at $target was kept untouched."
+fi
+if ! herdr --session "$session_name" tab create --cwd "$target" --label "NO MISTAKES GATE — RESERVED (INACTIVE)" --no-focus; then
+  fail "HERDR could not create the reserved inactive No Mistakes Gate. Setup is not complete and no Ready message was shown. No Gate run was started."
+fi
 say "Preparing personal Buzz onboarding"
 buzz_state_dir="${XDG_CONFIG_HOME:-$HOME/.config}/opndrm/prime"
 mkdir -p "$buzz_state_dir"
@@ -131,6 +171,7 @@ record = {
 }
 pathlib.Path(path).write_text(json.dumps(record, indent=2) + "\n")
 PY
-open -a Buzz >/dev/null 2>&1 || printf 'Buzz is installed. Open it when ready to complete your personal sign-in.\n'
-open "$issue_tracker_url"
-printf "\nReady. No Mistakes is installed but inactive. Buzz onboarding is waiting for the employee's personal sign-in and Vault approval. Atomic Vault/CBF Remote requires the employee to complete the official owner-trust step.\n"
+launch_herdr_workspace "$session_name" "$target"
+open -gja Buzz >/dev/null 2>&1 || printf 'Buzz is installed. Open it when ready to complete your personal sign-in.\n'
+printf "Buzz onboarding is prepared for %s at %s and is waiting for that person's own sign-in.\n" "$LANE" "$buzz_state_dir/${session_name}-buzz-onboarding.json"
+printf "\nReady: WezTerm is attached to the %s HERDR workspace rooted at %s. PRIME is the main workspace and NO MISTAKES GATE is reserved and inactive. No Gate run was started. Buzz onboarding is waiting for the employee's personal sign-in and Vault approval. Atomic Vault/CBF Remote requires the employee to complete the official owner-trust step.\n" "$session_name" "$target"

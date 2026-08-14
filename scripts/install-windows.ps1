@@ -22,6 +22,41 @@ function Refresh-Path {
   $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
   $env:Path = "$machinePath;$userPath"
 }
+function Ensure-HerdrSession([string]$SessionName, [string]$WorkspacePath) {
+  # HERDR workspace and tab commands use the named session socket. They do not
+  # start that socket themselves, so every lane needs its own server first.
+  herdr --session $SessionName status server *> $null
+  if ($LASTEXITCODE -eq 0) { return }
+
+  $herdrCommand = Get-Command herdr -ErrorAction SilentlyContinue
+  if (-not $herdrCommand) { Stop-Install 'HERDR is not available to start the selected personal session.' }
+  $herdrStateDirectory = Join-Path $env:LOCALAPPDATA 'OPNDRM\Prime\logs'
+  New-Item -ItemType Directory -Path $herdrStateDirectory -Force | Out-Null
+  $herdrLog = Join-Path $herdrStateDirectory "$SessionName-herdr.log"
+  Write-Step "Starting the local HERDR session: $SessionName"
+  try {
+    Start-Process -FilePath $herdrCommand.Source -ArgumentList @('--session', $SessionName, 'server') -RedirectStandardOutput $herdrLog -RedirectStandardError "$herdrLog.err" -WindowStyle Hidden | Out-Null
+  } catch {
+    Stop-Install "HERDR could not start the $SessionName session. The selected workspace at $WorkspacePath was kept, but no PRIME workspace or No Mistakes Gate was created. Setup is not complete. Inspect $herdrLog."
+  }
+  for ($try = 0; $try -lt 30; $try++) {
+    herdr --session $SessionName status server *> $null
+    if ($LASTEXITCODE -eq 0) { return }
+    Start-Sleep -Seconds 1
+  }
+  Stop-Install "HERDR could not start or attach the $SessionName session. The selected workspace at $WorkspacePath was kept, but no PRIME workspace or No Mistakes Gate was created. Setup is not complete. Open WezTerm and run 'herdr --session $SessionName' to retry the personal session, or inspect $herdrLog."
+}
+function Start-HerdrWorkspace([string]$SessionName, [string]$WorkspacePath) {
+  $weztermCommand = Get-Command wezterm -ErrorAction SilentlyContinue
+  if (-not $weztermCommand) { Stop-Install 'WezTerm is not available to display the HERDR workspace. Setup is not complete and no Ready message was shown.' }
+  Write-Step "Opening WezTerm in the $SessionName HERDR workspace"
+  try {
+    & $weztermCommand.Source start --cwd $WorkspacePath --workspace $SessionName -- herdr --session $SessionName
+    if ($LASTEXITCODE -ne 0) { throw "wezterm exited with code $LASTEXITCODE" }
+  } catch {
+    Stop-Install "HERDR workspace was created, but WezTerm could not attach it visibly. Setup is not complete and no Ready message was shown. Open WezTerm and run 'herdr --session $SessionName' from $WorkspacePath after fixing WezTerm."
+  }
+}
 
 if ([string]::IsNullOrWhiteSpace($env:OPNDRM_PROJECTS_DIR)) {
   $ProjectsRoot = Join-Path $env:USERPROFILE 'OPNDRM'
@@ -164,8 +199,11 @@ $provider = @{ providers = @{ ollama = @{ baseUrl = 'http://127.0.0.1:11434/v1';
 $provider | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $providerFile -Encoding utf8
 
 $session = "opndrm-$($Lane.ToLower().Replace('.', '-'))"
+Ensure-HerdrSession -SessionName $session -WorkspacePath $target
 herdr --session $session workspace create --cwd $target --label "$Lane — PRIME" --focus
-herdr --session $session tab create --cwd $target --label 'NO MISTAKES GATE' --no-focus
+if ($LASTEXITCODE -ne 0) { Stop-Install "HERDR could not create the PRIME workspace. Setup is not complete and no Ready message was shown. The selected workspace at $target was kept untouched." }
+herdr --session $session tab create --cwd $target --label 'NO MISTAKES GATE — RESERVED (INACTIVE)' --no-focus
+if ($LASTEXITCODE -ne 0) { Stop-Install 'HERDR could not create the reserved inactive No Mistakes Gate. Setup is not complete and no Ready message was shown. No Gate run was started.' }
 
 Write-Step 'Preparing personal Buzz onboarding'
 $buzzStateDirectory = Join-Path $env:APPDATA 'OPNDRM\Prime'
@@ -182,14 +220,15 @@ $buzzState = [ordered]@{
   next_owner_action = 'Sign in to Buzz, create or connect the named agent, then save its approved identifier in your Atomic Vault OPNDRM entry.'
 }
 $buzzState | ConvertTo-Json | Set-Content -LiteralPath $buzzStateFile -Encoding utf8
+Start-HerdrWorkspace -SessionName $session -WorkspacePath $target
 $buzzApp = Get-StartApps | Where-Object { $_.Name -eq 'Buzz' } | Select-Object -First 1
 if ($buzzApp) {
   Start-Process "shell:AppsFolder\$($buzzApp.AppID)"
-  Write-Host 'Buzz has opened. Complete your personal Buzz sign-in, then use the prepared onboarding record to create or connect your named agent.'
+  Write-Host "Buzz has opened for $Lane. Complete your personal Buzz sign-in, then use $buzzStateFile to create or connect your named agent."
 } else {
-  Write-Host 'Buzz is installed. Open Buzz from Start, complete your personal sign-in, then use the prepared onboarding record to create or connect your named agent.'
+  Write-Host "Buzz is installed. Open it from Start, complete your personal sign-in, then use $buzzStateFile to create or connect your named agent for $Lane."
 }
 
 Write-Step 'Atomic Vault boundary'
 Write-Host 'Atomic Vault is not installed from an unknown public source. The employee completes the team-approved Atomic Vault and CBF Remote owner-trust step directly.'
-Write-Host "`nReady: $Lane workspace created. HERDR is Windows preview; No Mistakes is installed but no Gate run was started. Buzz onboarding is waiting for the employee’s personal sign-in and Vault approval. Run /reload in Prime Agent to refresh the Open Dream Prime skill."
+Write-Host "`nReady: WezTerm is attached to the $session HERDR workspace rooted at $target. PRIME is the main workspace and NO MISTAKES GATE is reserved and inactive. No Gate run was started. Buzz onboarding is waiting for the employee’s personal sign-in and Vault approval. Run /reload in Prime Agent to refresh the Open Dream Prime skill."

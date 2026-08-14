@@ -48,26 +48,63 @@ done
 require_text "$MAC" "PRIVATE_REPOSITORY='opndrm/ADAM'"
 require_text "$MAC" "PRIVATE_REPOSITORY='opndrm/Frnkly.one'"
 require_text "$MAC" "repo='https://github.com/opndrm/Frnkly.one.git'"
+require_text "$MAC" "OPNDRM-APP) PRIVATE_REPOSITORY=''; repo=''; target=\"\$HOME/Desktop/OPNDRM APP\" ;;"
 require_text "$WINDOWS" "'opndrm/ADAM'"
 require_text "$WINDOWS" "'opndrm/Frnkly.one'"
 require_text "$WINDOWS" "'https://github.com/opndrm/Frnkly.one.git'"
+require_text "$WINDOWS" "\$target = Join-Path ([Environment]::GetFolderPath('Desktop')) 'OPNDRM APP'"
 
 # FRNKLY.ONE has one checkout focal point: clone, PRIME workspace, reserved
 # inactive Gate, and Buzz context all use the selected checkout and issue plan.
 require_text "$MAC" 'git clone "$repo" "$target"'
 require_text "$MAC" 'workspace create --cwd "$target"'
-require_text "$MAC" 'tab create --cwd "$target" --label "NO MISTAKES GATE" --no-focus'
+require_text "$MAC" 'tab create --cwd "$target" --label "NO MISTAKES GATE — RESERVED (INACTIVE)" --no-focus'
 require_text "$MAC" '"workspace_path": workspace_path'
 require_text "$MAC" '"repository": repository or None'
 require_text "$MAC" '"issue_tracker": issue_tracker'
 require_text "$WINDOWS" 'git clone $repo $target'
 require_text "$WINDOWS" 'workspace create --cwd $target'
-require_text "$WINDOWS" "tab create --cwd \$target --label 'NO MISTAKES GATE' --no-focus"
+require_text "$WINDOWS" "tab create --cwd \$target --label 'NO MISTAKES GATE — RESERVED (INACTIVE)' --no-focus"
 require_text "$WINDOWS" 'workspace_path = $target'
 require_text "$WINDOWS" 'repository = $PrivateRepository'
 require_text "$WINDOWS" "issue_tracker = 'https://github.com/opndrm/prime/issues'"
 forbid_text "$MAC" 'no-mistakes run'
 forbid_text "$WINDOWS" 'no-mistakes run'
+
+# HERDR workspace and tab commands require a live named-session socket. Each
+# selected root therefore gets its own server after that root exists, and a
+# WezTerm client attaches before a success message can be printed.
+require_text "$MAC" 'herdr --session "$session_name" status server'
+require_text "$MAC" 'nohup herdr --session "$session_name" server >"$herdr_log" 2>&1 </dev/null &'
+require_text "$MAC" 'ensure_herdr_session "$session_name"'
+require_text "$MAC" "session_name=\"opndrm-\$(printf '%s' \"\$LANE\" | tr '[:upper:].' '[:lower:]-')\""
+require_text "$MAC" 'wezterm start --cwd "$workspace_path" --workspace "$session_name" -- herdr --session "$session_name"'
+require_text "$MAC" 'HERDR could not start or attach the $session_name session.'
+require_text "$MAC" 'Setup is not complete and no Ready message was shown.'
+require_text "$MAC" 'Ready: WezTerm is attached to the %s HERDR workspace rooted at %s.'
+require_before "$MAC" 'mkdir -p "$target"' 'ensure_herdr_session "$session_name"'
+require_before "$MAC" 'git clone "$repo" "$target"' 'ensure_herdr_session "$session_name"'
+require_before "$MAC" 'ensure_herdr_session "$session_name"' 'workspace create --cwd "$target"'
+require_before "$MAC" 'workspace create --cwd "$target"' 'tab create --cwd "$target"'
+require_before "$MAC" 'tab create --cwd "$target"' 'launch_herdr_workspace "$session_name" "$target"'
+require_before "$MAC" 'launch_herdr_workspace "$session_name" "$target"' 'Ready: WezTerm is attached'
+require_before "$MAC" 'launch_herdr_workspace "$session_name" "$target"' 'open -gja Buzz'
+
+require_text "$WINDOWS" 'herdr --session $SessionName status server'
+require_text "$WINDOWS" "Start-Process -FilePath \$herdrCommand.Source -ArgumentList @('--session', \$SessionName, 'server')"
+require_text "$WINDOWS" 'Ensure-HerdrSession -SessionName $session -WorkspacePath $target'
+require_text "$WINDOWS" "\$session = \"opndrm-\$(\$Lane.ToLower().Replace('.', '-'))\""
+require_text "$WINDOWS" '& $weztermCommand.Source start --cwd $WorkspacePath --workspace $SessionName -- herdr --session $SessionName'
+require_text "$WINDOWS" 'HERDR could not start or attach the $SessionName session.'
+require_text "$WINDOWS" 'Setup is not complete and no Ready message was shown.'
+require_text "$WINDOWS" 'Ready: WezTerm is attached to the $session HERDR workspace rooted at $target.'
+require_before "$WINDOWS" 'New-Item -ItemType Directory -Path $target | Out-Null' 'Ensure-HerdrSession -SessionName $session -WorkspacePath $target'
+require_before "$WINDOWS" 'git clone $repo $target' 'Ensure-HerdrSession -SessionName $session -WorkspacePath $target'
+require_before "$WINDOWS" 'Ensure-HerdrSession -SessionName $session -WorkspacePath $target' 'workspace create --cwd $target'
+require_before "$WINDOWS" 'workspace create --cwd $target' 'tab create --cwd $target'
+require_before "$WINDOWS" 'tab create --cwd $target' 'Start-HerdrWorkspace -SessionName $session -WorkspacePath $target'
+require_before "$WINDOWS" 'Start-HerdrWorkspace -SessionName $session -WorkspacePath $target' 'Ready: WezTerm is attached'
+require_before "$WINDOWS" 'Start-HerdrWorkspace -SessionName $session -WorkspacePath $target' '$buzzApp = Get-StartApps'
 
 # Private lanes have exactly one GitHub CLI-owned flow, identify the account,
 # preflight read access, and stop without cloning when read access is absent.
@@ -111,10 +148,12 @@ for onboarding in "$ROOT/skills/opndrm-prime/references/onboarding-en.md" "$ROOT
   require_text "$onboarding" "https://github.com/opndrm/Frnkly.one.git"
 done
 require_text "$ROOT/README.md" "https://github.com/opndrm/Frnkly.one.git"
+require_text "$ROOT/README.md" "It prints \`Ready\` only after the HERDR/WezTerm attach succeeds"
 require_text "$ROOT/skills/opndrm-prime/SKILL.md" "https://github.com/opndrm/Frnkly.one.git"
+require_text "$ROOT/skills/opndrm-prime/SKILL.md" "do not rely on a shared HERDR server"
 
 if command -v pwsh >/dev/null 2>&1; then
-  pwsh -NoProfile -Command '$errors = $null; [System.Management.Automation.Language.Parser]::ParseFile($args[0], [ref]$null, [ref]$errors) | Out-Null; if ($errors.Count) { $errors | ForEach-Object { Write-Error $_ }; exit 1 }' "$WINDOWS"
+  pwsh -NoProfile -Command '& { param([string]$scriptPath); $tokens = $null; $errors = $null; [System.Management.Automation.Language.Parser]::ParseFile($scriptPath, [ref]$tokens, [ref]$errors) | Out-Null; if ($errors.Count) { $errors | ForEach-Object { Write-Error $_ }; exit 1 } }' "$WINDOWS"
   printf 'PowerShell parser check passed.\n'
 else
   printf 'PowerShell parser check skipped: pwsh is not available on this Mac.\n'

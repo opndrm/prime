@@ -6,14 +6,14 @@ Before a private project is cloned, GitHub CLI runs exactly one web/device autho
 
 FRNKLY.ONE is the Rust rebuild. Its canonical private checkout is [`opndrm/Frnkly.one`](https://github.com/opndrm/Frnkly.one.git), while the installed workspace remains named `FRNKLY.ONE`.
 
-When it finishes, open WezTerm. Your workspace has two simple areas:
+On a successful install, WezTerm opens attached to your own named HERDR session for the selected workspace. The installer creates that personal session only after the selected root exists, and it stops without a `Ready` claim if HERDR cannot start or attach. Your workspace has two simple areas:
 
 - **PRIME** — start here. Tell Prime Agent what you want to build.
-- **NO MISTAKES GATE** — this stays idle until you intentionally use it to check a finished branch.
+- **NO MISTAKES GATE — RESERVED (INACTIVE)** — this stays idle until you intentionally use it to check a finished branch.
 
 Prime Agent starts with Ollama. DeepSeek V4 Flash is the default. MiniMax M3 and every installed Ollama model can be selected when needed.
 
-Buzz is the team conversation space. Use it to discuss the work and link the relevant GitHub issue. Wayfinder keeps the GitHub issue plan. GitHub remains the official place for code, branches, reviews, and pull requests.
+Buzz is the team conversation space. The installer prepares and opens its local onboarding context for the selected workspace, but it remains waiting for your own sign-in. Use it to discuss the work and link the relevant GitHub issue. Wayfinder keeps the GitHub issue plan. GitHub remains the official place for code, branches, reviews, and pull requests.
 
 Atomic Vault is personal. Do not share credentials, private keys, or Vault access. If Vault trust is waiting, ask the team lead for the official owner-approved step.
 

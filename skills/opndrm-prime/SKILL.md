@@ -25,8 +25,8 @@ When the teammate says “open ADAM,” “open FRNKLY.ONE,” “open OPNDRM AP
 | FRNKLY.ONE | `~/OPNDRM/FRNKLY.ONE` | `%USERPROFILE%\\OPNDRM\\FRNKLY.ONE` | `opndrm-frnkly-one` |
 
 1. Confirm the named folder exists. Never overwrite it or rerun an installer as a daily-start action.
-2. Attach the matching named HERDR session. This restores the last saved workspace for that app on both Mac and Windows.
-3. If the named session or workspace does not exist, create it only in that app’s existing folder, name the main workspace `APP — PRIME`, and add an inactive `NO MISTAKES GATE` tab. Do not start a Gate run.
+2. Attach the matching named HERDR session. The installer starts or reuses that lane's personal session only after its selected root exists, then opens WezTerm attached to it; do not rely on a shared HERDR server.
+3. If the named session or workspace does not exist, create it only in that app’s existing folder, name the main workspace `APP — PRIME`, and add a `NO MISTAKES GATE — RESERVED (INACTIVE)` tab. Do not start a Gate run.
 4. If the request is “open the last session,” ask which app only when no app is named. “Last ADAM session,” “last FRNKLY.ONE session,” and “last OPNDRM APP session” map directly to the rows above.
 5. State which app and last session were opened. Do not imply that one app upgrades, replaces, or changes another.
 
