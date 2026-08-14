@@ -46,6 +46,23 @@ require_text "$WINDOWS" "'opndrm/ADAM'"
 require_text "$WINDOWS" "'opndrm/Frnkly.one'"
 require_text "$WINDOWS" "'https://github.com/opndrm/Frnkly.one.git'"
 
+# FRNKLY.ONE has one checkout focal point: clone, PRIME workspace, reserved
+# inactive Gate, and Buzz context all use the selected checkout and issue plan.
+require_text "$MAC" 'git clone "$repo" "$target"'
+require_text "$MAC" 'workspace create --cwd "$target"'
+require_text "$MAC" 'tab create --cwd "$target" --label "NO MISTAKES GATE" --no-focus'
+require_text "$MAC" '"workspace_path": workspace_path'
+require_text "$MAC" '"repository": repository or None'
+require_text "$MAC" '"issue_tracker": issue_tracker'
+require_text "$WINDOWS" 'git clone $repo $target'
+require_text "$WINDOWS" 'workspace create --cwd $target'
+require_text "$WINDOWS" "tab create --cwd \$target --label 'NO MISTAKES GATE' --no-focus"
+require_text "$WINDOWS" 'workspace_path = $target'
+require_text "$WINDOWS" 'repository = $PrivateRepository'
+require_text "$WINDOWS" "issue_tracker = 'https://github.com/opndrm/prime/issues'"
+forbid_text "$MAC" 'no-mistakes run'
+forbid_text "$WINDOWS" 'no-mistakes run'
+
 # Private lanes have exactly one GitHub CLI-owned flow, identify the account,
 # preflight read access, and stop without cloning when read access is absent.
 for script in "$MAC" "$WINDOWS"; do

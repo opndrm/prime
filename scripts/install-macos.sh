@@ -115,12 +115,14 @@ herdr --session "$session_name" tab create --cwd "$target" --label "NO MISTAKES 
 say "Preparing personal Buzz onboarding"
 buzz_state_dir="${XDG_CONFIG_HOME:-$HOME/.config}/opndrm/prime"
 mkdir -p "$buzz_state_dir"
-python3 - "$buzz_state_dir/${session_name}-buzz-onboarding.json" "$LANE" "$issue_tracker_url" "$buzz_relay_url" <<'PY'
+python3 - "$buzz_state_dir/${session_name}-buzz-onboarding.json" "$LANE" "$issue_tracker_url" "$buzz_relay_url" "$target" "$PRIVATE_REPOSITORY" <<'PY'
 import json, pathlib, sys
-path, lane, issue_tracker, relay = sys.argv[1:]
+path, lane, issue_tracker, relay, workspace_path, repository = sys.argv[1:]
 record = {
     "status": "waiting-for-owner",
     "workspace": lane,
+    "workspace_path": workspace_path,
+    "repository": repository or None,
     "suggested_agent_name": f"PRIME — {lane}",
     "suggested_agent_role": "root workspace agent",
     "issue_tracker": issue_tracker,
