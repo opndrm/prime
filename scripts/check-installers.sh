@@ -21,8 +21,9 @@ require_before() {
 }
 
 bash -n "$MAC"
+bash -n "$ROOT/scripts/check-herdr-bootstrap.sh"
 if command -v shellcheck >/dev/null 2>&1; then
-  shellcheck -e SC2016 "$MAC" "$0"
+  shellcheck -e SC2016 "$MAC" "$ROOT/scripts/check-herdr-bootstrap.sh" "$0"
   printf 'ShellCheck passed.\n'
 else
   printf 'ShellCheck skipped: shellcheck is not available.\n'
@@ -74,9 +75,12 @@ forbid_text "$WINDOWS" 'no-mistakes run'
 # HERDR workspace and tab commands require a live named-session socket. Each
 # selected root therefore gets its own server after that root exists, and a
 # WezTerm client attaches before a success message can be printed.
-require_text "$MAC" 'herdr --session "$session_name" status server'
+require_text "$MAC" 'herdr --session "$1" status server'
+require_text "$MAC" "grep -qx 'status: running'"
 require_text "$MAC" 'nohup herdr --session "$session_name" server >"$herdr_log" 2>&1 </dev/null &'
 require_text "$MAC" 'ensure_herdr_session "$session_name"'
+require_text "$MAC" 'if herdr_session_running "$session_name"; then'
+forbid_text "$MAC" 'status server >/dev/null 2>&1; then'
 require_text "$MAC" "session_name=\"opndrm-\$(printf '%s' \"\$LANE\" | tr '[:upper:].' '[:lower:]-')\""
 require_text "$MAC" 'wezterm start --cwd "$workspace_path" --workspace "$session_name" -- herdr --session "$session_name"'
 require_text "$MAC" 'HERDR could not start or attach the $session_name session.'
@@ -91,8 +95,10 @@ require_before "$MAC" 'launch_herdr_workspace "$session_name" "$target"' 'Ready:
 require_before "$MAC" 'launch_herdr_workspace "$session_name" "$target"' 'open -gja Buzz'
 
 require_text "$WINDOWS" 'herdr --session $SessionName status server'
+require_text "$WINDOWS" "return \$serverStatus -match '(?m)^status:\\s*running\\s*\$'"
 require_text "$WINDOWS" "Start-Process -FilePath \$herdrCommand.Source -ArgumentList @('--session', \$SessionName, 'server')"
 require_text "$WINDOWS" 'Ensure-HerdrSession -SessionName $session -WorkspacePath $target'
+require_text "$WINDOWS" 'Test-HerdrSessionRunning -SessionName $SessionName'
 require_text "$WINDOWS" "\$session = \"opndrm-\$(\$Lane.ToLower().Replace('.', '-'))\""
 require_text "$WINDOWS" '& $weztermCommand.Source start --cwd $WorkspacePath --workspace $SessionName -- herdr --session $SessionName'
 require_text "$WINDOWS" 'HERDR could not start or attach the $SessionName session.'
@@ -105,6 +111,22 @@ require_before "$WINDOWS" 'workspace create --cwd $target' 'tab create --cwd $ta
 require_before "$WINDOWS" 'tab create --cwd $target' 'Start-HerdrWorkspace -SessionName $session -WorkspacePath $target'
 require_before "$WINDOWS" 'Start-HerdrWorkspace -SessionName $session -WorkspacePath $target' 'Ready: WezTerm is attached'
 require_before "$WINDOWS" 'Start-HerdrWorkspace -SessionName $session -WorkspacePath $target' '$buzzApp = Get-StartApps'
+
+# HERDR reports a successful `status server` command even when its output says
+# "status: not running". Keep a real, isolated server bootstrap check for the
+# actual detached command and require explicit opt-in outside supported Macs.
+require_text "$ROOT/scripts/check-herdr-bootstrap.sh" "status: not running"
+require_text "$ROOT/scripts/check-herdr-bootstrap.sh" "grep -qx 'status: running'"
+require_text "$ROOT/scripts/check-herdr-bootstrap.sh" 'nohup herdr --session "$session" server'
+require_text "$ROOT/scripts/check-herdr-bootstrap.sh" 'server_pid=$!'
+require_text "$ROOT/scripts/check-herdr-bootstrap.sh" 'kill -0 "$server_pid"'
+require_text "$ROOT/scripts/check-herdr-bootstrap.sh" 'workspace create --cwd "$workspace"'
+require_text "$ROOT/scripts/check-herdr-bootstrap.sh" 'NO MISTAKES GATE — RESERVED (INACTIVE)'
+if [[ "${OPNDRM_HERDR_INTEGRATION:-0}" == 1 ]]; then
+  "$ROOT/scripts/check-herdr-bootstrap.sh"
+else
+  printf 'HERDR lifecycle integration skipped (set OPNDRM_HERDR_INTEGRATION=1 to run it).\n'
+fi
 
 # Private lanes have exactly one GitHub CLI-owned flow, identify the account,
 # preflight read access, and stop without cloning when read access is absent.

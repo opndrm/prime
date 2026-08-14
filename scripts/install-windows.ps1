@@ -22,11 +22,14 @@ function Refresh-Path {
   $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
   $env:Path = "$machinePath;$userPath"
 }
+function Test-HerdrSessionRunning([string]$SessionName) {
+  $serverStatus = herdr --session $SessionName status server 2>&1 | Out-String
+  return $serverStatus -match '(?m)^status:\s*running\s*$'
+}
 function Ensure-HerdrSession([string]$SessionName, [string]$WorkspacePath) {
   # HERDR workspace and tab commands use the named session socket. They do not
   # start that socket themselves, so every lane needs its own server first.
-  herdr --session $SessionName status server *> $null
-  if ($LASTEXITCODE -eq 0) { return }
+  if (Test-HerdrSessionRunning -SessionName $SessionName) { return }
 
   $herdrCommand = Get-Command herdr -ErrorAction SilentlyContinue
   if (-not $herdrCommand) { Stop-Install 'HERDR is not available to start the selected personal session.' }
@@ -40,8 +43,7 @@ function Ensure-HerdrSession([string]$SessionName, [string]$WorkspacePath) {
     Stop-Install "HERDR could not start the $SessionName session. The selected workspace at $WorkspacePath was kept, but no PRIME workspace or No Mistakes Gate was created. Setup is not complete. Inspect $herdrLog."
   }
   for ($try = 0; $try -lt 30; $try++) {
-    herdr --session $SessionName status server *> $null
-    if ($LASTEXITCODE -eq 0) { return }
+    if (Test-HerdrSessionRunning -SessionName $SessionName) { return }
     Start-Sleep -Seconds 1
   }
   Stop-Install "HERDR could not start or attach the $SessionName session. The selected workspace at $WorkspacePath was kept, but no PRIME workspace or No Mistakes Gate was created. Setup is not complete. Open WezTerm and run 'herdr --session $SessionName' to retry the personal session, or inspect $herdrLog."

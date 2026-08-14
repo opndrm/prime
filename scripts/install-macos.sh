@@ -64,6 +64,10 @@ ensure_github_access() {
   gh auth setup-git --hostname github.com || fail "GitHub could not configure secure Git access for this Mac account."
 }
 
+herdr_session_running() {
+  herdr --session "$1" status server 2>&1 | grep -qx 'status: running'
+}
+
 ensure_herdr_session() {
   local session_name="$1"
   local herdr_state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/opndrm/prime"
@@ -71,7 +75,7 @@ ensure_herdr_session() {
 
   # HERDR workspace and tab commands use the named session socket. They do not
   # start that socket themselves, so every lane needs its own server first.
-  if herdr --session "$session_name" status server >/dev/null 2>&1; then
+  if herdr_session_running "$session_name"; then
     return
   fi
 
@@ -79,7 +83,7 @@ ensure_herdr_session() {
   mkdir -p "$herdr_state_dir"
   nohup herdr --session "$session_name" server >"$herdr_log" 2>&1 </dev/null &
   for _ in {1..30}; do
-    if herdr --session "$session_name" status server >/dev/null 2>&1; then
+    if herdr_session_running "$session_name"; then
       return
     fi
     sleep 1
