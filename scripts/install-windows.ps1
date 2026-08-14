@@ -53,11 +53,83 @@ function Start-HerdrWorkspace([string]$SessionName, [string]$WorkspacePath) {
   if (-not $weztermCommand) { Stop-Install 'WezTerm is not available to display the HERDR workspace. Setup is not complete and no Ready message was shown.' }
   Write-Step "Opening WezTerm in the $SessionName HERDR workspace"
   try {
-    & $weztermCommand.Source start --cwd $WorkspacePath --workspace $SessionName -- herdr --session $SessionName
-    if ($LASTEXITCODE -ne 0) { throw "wezterm exited with code $LASTEXITCODE" }
+    # `wezterm start -- herdr …` can remain attached to the HERDR client on a
+    # first launch. Start the GUI independently so this installer can report
+    # its verified handoff instead of waiting for WezTerm to close.
+    $weztermArguments = "start --cwd `"$WorkspacePath`" --workspace `"$SessionName`" -- herdr --session `"$SessionName`""
+    $weztermLaunch = Start-Process -FilePath $weztermCommand.Source -ArgumentList $weztermArguments -PassThru
+    Start-Sleep -Milliseconds 750
+    if ($weztermLaunch.HasExited -and $weztermLaunch.ExitCode -ne 0) { throw "wezterm exited with code $($weztermLaunch.ExitCode)" }
   } catch {
     Stop-Install "HERDR workspace was created, but WezTerm could not attach it visibly. Setup is not complete and no Ready message was shown. Open WezTerm and run 'herdr --session $SessionName' from $WorkspacePath after fixing WezTerm."
   }
+  Write-Host "WezTerm handoff opened for $SessionName; this installer will now finish without waiting for that window to close."
+}
+function Get-PrimePaneId([string]$WorkspaceResult) {
+  try {
+    $paneId = (($WorkspaceResult | ConvertFrom-Json).result.root_pane.pane_id)
+  } catch {
+    return $null
+  }
+  if ([string]::IsNullOrWhiteSpace($paneId)) { return $null }
+  return $paneId
+}
+function Test-PrimeAgentRunningInRoot([string]$SessionName, [string]$PaneId, [string]$WorkspacePath) {
+  try {
+    $processInfo = (herdr --session $SessionName pane process-info --pane $PaneId 2>$null | Out-String | ConvertFrom-Json).result.process_info
+  } catch {
+    return $false
+  }
+  foreach ($process in @($processInfo.foreground_processes)) {
+    $command = (@($process.argv) -join ' ') + ' ' + [string]$process.cmdline
+    if ($process.cwd -eq $WorkspacePath -and $command -match 'prime-agent') { return $true }
+  }
+  return $false
+}
+function Start-PrimeAgent([string]$SessionName, [string]$PaneId, [string]$WorkspacePath) {
+  # HERDR creates a root shell by design. Prime Agent's documented `--cwd`
+  # option keeps the selected checkout explicit instead of leaving PRIME at a
+  # shell prompt.
+  $primeCommand = "prime-agent --cwd `"$WorkspacePath`""
+  herdr --session $SessionName pane run $PaneId $primeCommand
+  if ($LASTEXITCODE -ne 0) { Stop-Install "HERDR created PRIME, but it could not start Prime Agent in $WorkspacePath. Setup is not complete and no Ready message was shown. The reserved inactive Gate was not started." }
+  for ($try = 0; $try -lt 10; $try++) {
+    if (Test-PrimeAgentRunningInRoot -SessionName $SessionName -PaneId $PaneId -WorkspacePath $WorkspacePath) {
+      Write-Host "Prime Agent is running in the selected $Lane workspace root."
+      return
+    }
+    Start-Sleep -Seconds 1
+  }
+  Stop-Install "HERDR created PRIME, but Prime Agent did not stay running in $WorkspacePath. Setup is not complete and no Ready message was shown. The reserved inactive Gate was not started."
+}
+function Start-BuzzOnboarding([string]$StateFile) {
+  Write-Step 'Opening Buzz for personal onboarding'
+  $buzzApp = Get-StartApps | Where-Object { $_.Name -eq 'Buzz' } | Select-Object -First 1
+  if (-not $buzzApp) { Stop-Install 'Buzz was installed but was not registered in Start. Setup is not complete and no Ready message was shown. No Buzz account or agent was connected.' }
+  try {
+    Start-Process "shell:AppsFolder\$($buzzApp.AppID)"
+  } catch {
+    Stop-Install 'Buzz could not open for personal onboarding. Setup is not complete and no Ready message was shown. No Buzz account or agent was connected.'
+  }
+  for ($try = 0; $try -lt 10; $try++) {
+    if (Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -match 'buzz' }) {
+      Write-Host "Buzz is open for $Lane. It is waiting for that person's own sign-in; no account or agent was connected."
+      Write-Host "Buzz onboarding context: $StateFile"
+      return
+    }
+    Start-Sleep -Seconds 1
+  }
+  Stop-Install 'Buzz was installed but did not open for personal onboarding. Setup is not complete and no Ready message was shown. No Buzz account or agent was connected.'
+}
+function Start-WayfinderOnboarding([string]$StateFile, [string]$IssueTrackerUrl, [string]$RepositoryName) {
+  Write-Step 'Preparing the lane-specific Wayfinder issue context'
+  try {
+    Start-Process $IssueTrackerUrl
+  } catch {
+    Stop-Install "Wayfinder/GitHub Issues could not open for $Lane. Setup is not complete and no Ready message was shown. No issue was created or changed."
+  }
+  Write-Host "Wayfinder/GitHub Issues opened for $Lane at $IssueTrackerUrl. It is scoped only to $RepositoryName and is waiting for any personal browser sign-in GitHub requires."
+  Write-Host "Wayfinder context: $StateFile"
 }
 
 if ([string]::IsNullOrWhiteSpace($env:OPNDRM_PROJECTS_DIR)) {
@@ -69,17 +141,23 @@ if ([string]::IsNullOrWhiteSpace($env:OPNDRM_PROJECTS_DIR)) {
 switch ($Lane) {
   'ADAM' {
     $PrivateRepository = 'opndrm/ADAM'
+    $RepositoryName = 'opndrm/ADAM'
     $repo = 'https://github.com/opndrm/ADAM.git'
+    $IssueTrackerUrl = 'https://github.com/opndrm/ADAM/issues'
     $target = Join-Path $ProjectsRoot 'ADAM'
   }
   'FRNKLY.ONE' {
     $PrivateRepository = 'opndrm/Frnkly.one'
+    $RepositoryName = 'opndrm/Frnkly.one'
     $repo = 'https://github.com/opndrm/Frnkly.one.git'
+    $IssueTrackerUrl = 'https://github.com/opndrm/Frnkly.one/issues'
     $target = Join-Path $ProjectsRoot 'FRNKLY.ONE'
   }
   'OPNDRM-APP' {
     $PrivateRepository = $null
+    $RepositoryName = 'opndrm/prime'
     $repo = $null
+    $IssueTrackerUrl = 'https://github.com/opndrm/prime/issues'
     $target = Join-Path ([Environment]::GetFolderPath('Desktop')) 'OPNDRM APP'
   }
 }
@@ -202,10 +280,13 @@ $provider | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $providerFile -En
 
 $session = "opndrm-$($Lane.ToLower().Replace('.', '-'))"
 Ensure-HerdrSession -SessionName $session -WorkspacePath $target
-herdr --session $session workspace create --cwd $target --label "$Lane — PRIME" --focus
+$primeWorkspaceResult = herdr --session $session workspace create --cwd $target --label "$Lane — PRIME · WAYFINDER: $RepositoryName" --focus | Out-String
 if ($LASTEXITCODE -ne 0) { Stop-Install "HERDR could not create the PRIME workspace. Setup is not complete and no Ready message was shown. The selected workspace at $target was kept untouched." }
-herdr --session $session tab create --cwd $target --label 'NO MISTAKES GATE — RESERVED (INACTIVE)' --no-focus
+$primePaneId = Get-PrimePaneId -WorkspaceResult $primeWorkspaceResult
+if ([string]::IsNullOrWhiteSpace($primePaneId)) { Stop-Install "HERDR created PRIME but did not return its root pane. Setup is not complete and no Ready message was shown. The selected workspace at $target was kept untouched." }
+herdr --session $session tab create --cwd $target --label "NO MISTAKES GATE — RESERVED (INACTIVE) · ROOT: $target" --no-focus
 if ($LASTEXITCODE -ne 0) { Stop-Install 'HERDR could not create the reserved inactive No Mistakes Gate. Setup is not complete and no Ready message was shown. No Gate run was started.' }
+Start-PrimeAgent -SessionName $session -PaneId $primePaneId -WorkspacePath $target
 
 Write-Step 'Preparing personal Buzz onboarding'
 $buzzStateDirectory = Join-Path $env:APPDATA 'OPNDRM\Prime'
@@ -215,22 +296,28 @@ $buzzState = [ordered]@{
   status = 'waiting-for-owner'
   workspace = $Lane
   workspace_path = $target
-  repository = $PrivateRepository
+  repository = $RepositoryName
   suggested_agent_name = "PRIME — $Lane"
   suggested_agent_role = 'root workspace agent'
-  issue_tracker = 'https://github.com/opndrm/prime/issues'
+  issue_tracker = $IssueTrackerUrl
   next_owner_action = 'Sign in to Buzz, create or connect the named agent, then save its approved identifier in your Atomic Vault OPNDRM entry.'
 }
 $buzzState | ConvertTo-Json | Set-Content -LiteralPath $buzzStateFile -Encoding utf8
-Start-HerdrWorkspace -SessionName $session -WorkspacePath $target
-$buzzApp = Get-StartApps | Where-Object { $_.Name -eq 'Buzz' } | Select-Object -First 1
-if ($buzzApp) {
-  Start-Process "shell:AppsFolder\$($buzzApp.AppID)"
-  Write-Host "Buzz has opened for $Lane. Complete your personal Buzz sign-in, then use $buzzStateFile to create or connect your named agent."
-} else {
-  Write-Host "Buzz is installed. Open it from Start, complete your personal sign-in, then use $buzzStateFile to create or connect your named agent for $Lane."
+$wayfinderStateFile = Join-Path $buzzStateDirectory "$session-wayfinder-onboarding.json"
+$wayfinderState = [ordered]@{
+  status = 'waiting-for-owner'
+  workspace = $Lane
+  workspace_path = $target
+  repository = $RepositoryName
+  issue_tracker = $IssueTrackerUrl
+  workflow = "Use only this repository's existing GitHub Issues/Wayfinder workflow. Onboarding created, assigned, labelled, edited, or published no issue, map, dependency, receipt, or decision."
+  next_owner_action = "Open the selected repository's existing issue workflow. Complete any personal GitHub browser sign-in it requires before taking an owner-authorized issue action."
 }
+$wayfinderState | ConvertTo-Json | Set-Content -LiteralPath $wayfinderStateFile -Encoding utf8
+Start-HerdrWorkspace -SessionName $session -WorkspacePath $target
+Start-BuzzOnboarding -StateFile $buzzStateFile
+Start-WayfinderOnboarding -StateFile $wayfinderStateFile -IssueTrackerUrl $IssueTrackerUrl -RepositoryName $RepositoryName
 
 Write-Step 'Atomic Vault boundary'
 Write-Host 'Atomic Vault is not installed from an unknown public source. The employee completes the team-approved Atomic Vault and CBF Remote owner-trust step directly.'
-Write-Host "`nReady: WezTerm is attached to the $session HERDR workspace rooted at $target. PRIME is the main workspace and NO MISTAKES GATE is reserved and inactive. No Gate run was started. Buzz onboarding is waiting for the employee’s personal sign-in and Vault approval. Run /reload in Prime Agent to refresh the Open Dream Prime skill."
+Write-Host "`nReady: PRIME is running in the $session HERDR workspace rooted at $target. WezTerm was opened without blocking this PowerShell window; NO MISTAKES GATE is reserved and inactive, and no Gate run was started. Buzz is open but waiting for the employee’s personal sign-in and Vault approval. Wayfinder/GitHub Issues is open only for $RepositoryName. Run /reload in Prime Agent to refresh the Open Dream Prime skill."

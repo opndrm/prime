@@ -13,7 +13,7 @@ Cuando la instalación tiene éxito, WezTerm se abre conectado a su propia sesi�
 
 Prime Agent comienza con Ollama. DeepSeek V4 Flash es el modelo predeterminado. MiniMax M3 y cada modelo instalado en Ollama están disponibles cuando los necesite.
 
-Buzz es el espacio de conversación del equipo. El instalador prepara y abre su contexto local de incorporación para el espacio seleccionado, pero queda esperando su propio inicio de sesión. Úselo para hablar del trabajo y enlazar la incidencia correspondiente de GitHub. Wayfinder organiza el plan de incidencias de GitHub. GitHub sigue siendo el registro oficial para código, ramas, revisiones y solicitudes de extracción.
+Buzz es el espacio de conversación del equipo. El instalador lo abre visiblemente y prepara su contexto local de incorporación para el espacio seleccionado, pero queda esperando su propio inicio de sesión. Úselo para hablar del trabajo y enlazar la incidencia correspondiente de GitHub. Wayfinder abre únicamente el plan de Issues de GitHub del repositorio seleccionado y guarda un contexto local esperando al propietario; no crea ni cambia Issues, mapas, recibos, asignaciones, etiquetas ni decisiones. GitHub sigue siendo el registro oficial para código, ramas, revisiones y solicitudes de extracción.
 
 Atomic Vault es personal. No comparta credenciales, claves privadas ni acceso al Vault. Si la confianza del Vault está pendiente, pida al líder del equipo el paso oficial aprobado por el propietario.
 

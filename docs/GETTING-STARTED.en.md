@@ -13,7 +13,7 @@ On a successful install, WezTerm opens attached to your own named HERDR session 
 
 Prime Agent starts with Ollama. DeepSeek V4 Flash is the default. MiniMax M3 and every installed Ollama model can be selected when needed.
 
-Buzz is the team conversation space. The installer prepares and opens its local onboarding context for the selected workspace, but it remains waiting for your own sign-in. Use it to discuss the work and link the relevant GitHub issue. Wayfinder keeps the GitHub issue plan. GitHub remains the official place for code, branches, reviews, and pull requests.
+Buzz is the team conversation space. The installer visibly opens it and prepares its local onboarding context for the selected workspace, but it remains waiting for your own sign-in. Use it to discuss the work and link the relevant GitHub issue. Wayfinder opens only that selected repository’s GitHub Issues plan and records a local waiting-for-owner context; it creates or changes no issue, map, receipt, assignment, label, or decision. GitHub remains the official place for code, branches, reviews, and pull requests.
 
 Atomic Vault is personal. Do not share credentials, private keys, or Vault access. If Vault trust is waiting, ask the team lead for the official owner-approved step.
 

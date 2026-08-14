@@ -1,6 +1,6 @@
 ---
 name: opndrm-prime
-description: "Open and operate Open Dream Prime workspaces on Mac or Windows: OPNDRM APP, ADAM, or FRNKLY.ONE; restore their named HERDR sessions; and guide bilingual team onboarding."
+description: "Open and operate Open Dream Prime workspaces on Mac or Windows: OPNDRM APP, ADAM, or FRNKLY.ONE; restore their named HERDR sessions; and guide bilingual team onboarding with isolated Wayfinder issue context."
 ---
 
 # Open Dream Prime
@@ -26,7 +26,7 @@ When the teammate says “open ADAM,” “open FRNKLY.ONE,” “open OPNDRM AP
 
 1. Confirm the named folder exists. Never overwrite it or rerun an installer as a daily-start action.
 2. Attach the matching named HERDR session. The installer starts or reuses that lane's personal session only after its selected root exists, then opens WezTerm attached to it; do not rely on a shared HERDR server.
-3. If the named session or workspace does not exist, create it only in that app’s existing folder, name the main workspace `APP — PRIME`, and add a `NO MISTAKES GATE — RESERVED (INACTIVE)` tab. Do not start a Gate run.
+3. If the named session or workspace does not exist, create it only in that app’s existing folder, name the main workspace `APP — PRIME`, launch Prime Agent with that exact folder as its working directory, and add a `NO MISTAKES GATE — RESERVED (INACTIVE)` tab rooted there. Do not start a Gate run.
 4. If the request is “open the last session,” ask which app only when no app is named. “Last ADAM session,” “last FRNKLY.ONE session,” and “last OPNDRM APP session” map directly to the rows above.
 5. State which app and last session were opened. Do not imply that one app upgrades, replaces, or changes another.
 
@@ -41,6 +41,16 @@ FRNKLY.ONE is the Rust rebuild and maps only to the private `opndrm/Frnkly.one` 
 3. Run one root **PRIME** session for that card. Create a child only for genuinely independent work.
 4. Use Buzz for conversation, Wayfinder/GitHub Issues for plan and decisions, and GitHub for branches, reviews, and code.
 5. Record verified result, uncertainty, and next owner before moving to another card.
+
+## Wayfinder workflow
+
+Wayfinder is the per-lane GitHub Issues planning context. It is required for OPNDRM APP, ADAM, and FRNKLY.ONE, but it never combines their tracker records.
+
+1. Open only the selected repository’s GitHub Issues context: `opndrm/prime`, `opndrm/ADAM`, or `opndrm/Frnkly.one`.
+2. Keep PRIME, the reserved inactive Gate, and Wayfinder rooted in that same selected checkout. Do not substitute a home directory or another lane.
+3. The installer records and opens the context but creates, assigns, labels, edits, or publishes no issue, map, child issue, dependency, receipt, or decision.
+4. FRNKLY.ONE remains pre-V1: use its existing **FRNKLY.ONE V1 — running product receipt**. Do not create a new map, receipt, or child issue.
+5. A teammate completes any browser GitHub sign-in personally before an owner-authorized tracker action. The public OPNDRM APP lane never invokes GitHub device authorization.
 
 ## OPNDRM Buzz
 
@@ -73,7 +83,8 @@ Use Buzz for discussion and handoffs; use Wayfinder/GitHub Issues for plan and d
 - Configure Ollama per person. DeepSeek Flash and MiniMax M3 may be ready; discover the teammate's installed local Ollama models before promising availability.
 - Create No Mistakes as a visible, inactive Gate only. Never start, approve, rerun, abort, or repair it from onboarding.
 - Install Atomic Vault and CBF Remote only through the approved package source. Never copy, request, expose, or share credentials; Vault trust is completed by the individual owner.
-- Install Buzz in the same one-click setup and stage a local Buzz onboarding record. After the teammate completes their own Buzz sign-in, create or connect only their named Buzz agents. Store each approved agent identifier in that teammate’s Atomic Vault under an OPNDRM entry, never in a repository, shared configuration, or another person’s Vault. Report Buzz as **waiting for owner** until sign-in, visible named agents, and Vault confirmation are all complete.
+- Install and visibly open Buzz in the same one-click setup, then stage a local Buzz onboarding record. After the teammate completes their own Buzz sign-in, create or connect only their named Buzz agents. Store each approved agent identifier in that teammate’s Atomic Vault under an OPNDRM entry, never in a repository, shared configuration, or another person’s Vault. Report Buzz as **waiting for owner** until sign-in, visible named agents, and Vault confirmation are all complete.
+- Prepare and visibly open the selected lane’s Wayfinder/GitHub Issues context. It remains **waiting for owner** when the browser needs a personal sign-in; do not create or modify tracker records during setup.
 
 ## Decision and safety boundaries
 

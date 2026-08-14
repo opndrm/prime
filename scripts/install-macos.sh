@@ -11,9 +11,9 @@ case "$LANE" in ADAM|FRNKLY.ONE|OPNDRM-APP) ;; *) fail "Choose a valid Open Drea
 [[ "$(uname -s)" == "Darwin" ]] || fail "This is the Mac installer."
 
 case "$LANE" in
-  ADAM) PRIVATE_REPOSITORY='opndrm/ADAM'; repo='https://github.com/opndrm/ADAM.git'; target="${OPNDRM_PROJECTS_DIR:-$HOME/OPNDRM}/ADAM" ;;
-  FRNKLY.ONE) PRIVATE_REPOSITORY='opndrm/Frnkly.one'; repo='https://github.com/opndrm/Frnkly.one.git'; target="${OPNDRM_PROJECTS_DIR:-$HOME/OPNDRM}/FRNKLY.ONE" ;;
-  OPNDRM-APP) PRIVATE_REPOSITORY=''; repo=''; target="$HOME/Desktop/OPNDRM APP" ;;
+  ADAM) PRIVATE_REPOSITORY='opndrm/ADAM'; repository_name='opndrm/ADAM'; repo='https://github.com/opndrm/ADAM.git'; issue_tracker_url='https://github.com/opndrm/ADAM/issues'; target="${OPNDRM_PROJECTS_DIR:-$HOME/OPNDRM}/ADAM" ;;
+  FRNKLY.ONE) PRIVATE_REPOSITORY='opndrm/Frnkly.one'; repository_name='opndrm/Frnkly.one'; repo='https://github.com/opndrm/Frnkly.one.git'; issue_tracker_url='https://github.com/opndrm/Frnkly.one/issues'; target="${OPNDRM_PROJECTS_DIR:-$HOME/OPNDRM}/FRNKLY.ONE" ;;
+  OPNDRM-APP) PRIVATE_REPOSITORY=''; repository_name='opndrm/prime'; repo=''; issue_tracker_url='https://github.com/opndrm/prime/issues'; target="$HOME/Desktop/OPNDRM APP" ;;
 esac
 
 ensure_developer_tools() {
@@ -31,7 +31,6 @@ ensure_developer_tools() {
 
 ensure_developer_tools
 [[ -f "$TEAM_CONFIG" ]] || TEAM_CONFIG="$ROOT/config/team.example.json"
-issue_tracker_url="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["issueTrackerUrl"])' "$TEAM_CONFIG")"
 buzz_relay_url="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("buzzRelayUrl", ""))' "$TEAM_CONFIG")"
 atomic_vault_url="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("atomicVaultInstallerUrl", ""))' "$TEAM_CONFIG")"
 
@@ -95,12 +94,103 @@ ensure_herdr_session() {
 launch_herdr_workspace() {
   local session_name="$1"
   local workspace_path="$2"
+  local herdr_state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/opndrm/prime"
+  local wezterm_log="$herdr_state_dir/${session_name}-wezterm.log"
+  local wezterm_pid
 
   command -v wezterm >/dev/null 2>&1 || fail "WezTerm is not available to display the HERDR workspace. Setup is not complete and no Ready message was shown."
   say "Opening WezTerm in the $session_name HERDR workspace"
-  if ! wezterm start --cwd "$workspace_path" --workspace "$session_name" -- herdr --session "$session_name"; then
+  mkdir -p "$herdr_state_dir"
+  # `wezterm start -- herdr …` stays attached to the HERDR client on its first
+  # launch. Detach the GUI handoff so the originating installer can report its
+  # verified result instead of waiting for the teammate to close WezTerm.
+  nohup wezterm start --cwd "$workspace_path" --workspace "$session_name" -- herdr --session "$session_name" >"$wezterm_log" 2>&1 </dev/null &
+  wezterm_pid=$!
+  sleep 1
+  if ! kill -0 "$wezterm_pid" 2>/dev/null && grep -qiE '(^|[^a-z])(error|failed)([^a-z]|$)' "$wezterm_log" 2>/dev/null; then
     fail "HERDR workspace was created, but WezTerm could not attach it visibly. Setup is not complete and no Ready message was shown. Open WezTerm and run 'herdr --session $session_name' from $workspace_path after fixing WezTerm."
   fi
+  printf 'WezTerm handoff opened for %s; this installer will now finish without waiting for that window to close.\n' "$session_name"
+}
+
+prime_pane_id_from_workspace() {
+  python3 - "$1" <<'PY'
+import json, sys
+payload = json.loads(sys.argv[1])
+pane_id = payload.get("result", {}).get("root_pane", {}).get("pane_id", "")
+if not pane_id:
+    raise SystemExit(1)
+print(pane_id)
+PY
+}
+
+prime_agent_running_in_root() {
+  local session_name="$1"
+  local pane_id="$2"
+  local workspace_path="$3"
+  local process_info
+  process_info="$(herdr --session "$session_name" pane process-info --pane "$pane_id" 2>/dev/null || true)"
+  python3 - "$workspace_path" "$process_info" <<'PY'
+import json, sys
+workspace_path, raw = sys.argv[1:]
+try:
+    processes = json.loads(raw)["result"]["process_info"]["foreground_processes"]
+except (IndexError, KeyError, TypeError, ValueError):
+    raise SystemExit(1)
+for process in processes:
+    command = " ".join(str(value) for value in (process.get("argv") or [])) + " " + str(process.get("cmdline", ""))
+    if process.get("cwd") == workspace_path and "prime-agent" in command:
+        raise SystemExit(0)
+raise SystemExit(1)
+PY
+}
+
+launch_prime_agent() {
+  local session_name="$1"
+  local pane_id="$2"
+  local workspace_path="$3"
+  local prime_command
+
+  # HERDR creates a root shell by design. Prime Agent's documented `--cwd`
+  # option makes the selected checkout explicit, while `exec` replaces that
+  # shell instead of leaving the visible PRIME tab at a prompt.
+  prime_command="exec prime-agent --cwd $(printf '%q' "$workspace_path")"
+  if ! herdr --session "$session_name" pane run "$pane_id" "$prime_command" >/dev/null; then
+    fail "HERDR created PRIME, but it could not start Prime Agent in $workspace_path. Setup is not complete and no Ready message was shown. The reserved inactive Gate was not started."
+  fi
+  for _ in {1..10}; do
+    if prime_agent_running_in_root "$session_name" "$pane_id" "$workspace_path"; then
+      printf 'Prime Agent is running in the selected %s workspace root.\n' "$LANE"
+      return
+    fi
+    sleep 1
+  done
+  fail "HERDR created PRIME, but Prime Agent did not stay running in $workspace_path. Setup is not complete and no Ready message was shown. The reserved inactive Gate was not started."
+}
+
+launch_buzz_onboarding() {
+  local buzz_state_file="$1"
+
+  say "Opening Buzz for personal onboarding"
+  open -a Buzz >/dev/null 2>&1 || fail "Buzz could not open for personal onboarding. Setup is not complete and no Ready message was shown. No Buzz sign-in was completed in this installer; reopen Buzz after fixing the application."
+  for _ in {1..10}; do
+    if pgrep -f '/Buzz.*\.app/Contents/MacOS/buzz-desktop' >/dev/null 2>&1; then
+      printf "Buzz is open for %s. It is waiting for that person's own sign-in; no account or agent was connected.\n" "$LANE"
+      printf 'Buzz onboarding context: %s\n' "$buzz_state_file"
+      return
+    fi
+    sleep 1
+  done
+  fail "Buzz was installed but did not open for personal onboarding. Setup is not complete and no Ready message was shown. No Buzz account or agent was connected."
+}
+
+prepare_wayfinder_onboarding() {
+  local state_file="$1"
+
+  say "Preparing the lane-specific Wayfinder issue context"
+  open "$issue_tracker_url" >/dev/null 2>&1 || fail "Wayfinder/GitHub Issues could not open for $LANE. Setup is not complete and no Ready message was shown. No issue was created or changed."
+  printf 'Wayfinder/GitHub Issues opened for %s at %s. It is scoped only to %s and is waiting for any personal browser sign-in GitHub requires.\n' "$LANE" "$issue_tracker_url" "$repository_name"
+  printf 'Wayfinder context: %s\n' "$state_file"
 }
 
 ensure_github_access
@@ -150,16 +240,19 @@ fi
 say "Creating the visible PRIME workspace and reserved Gate"
 session_name="opndrm-$(printf '%s' "$LANE" | tr '[:upper:].' '[:lower:]-')"
 ensure_herdr_session "$session_name"
-if ! herdr --session "$session_name" workspace create --cwd "$target" --label "$LANE — PRIME" --focus; then
+if ! prime_workspace_result="$(herdr --session "$session_name" workspace create --cwd "$target" --label "$LANE — PRIME · WAYFINDER: $repository_name" --focus)"; then
   fail "HERDR could not create the PRIME workspace. Setup is not complete and no Ready message was shown. The selected workspace at $target was kept untouched."
 fi
-if ! herdr --session "$session_name" tab create --cwd "$target" --label "NO MISTAKES GATE — RESERVED (INACTIVE)" --no-focus; then
+prime_pane_id="$(prime_pane_id_from_workspace "$prime_workspace_result" || true)"
+[[ -n "$prime_pane_id" ]] || fail "HERDR created PRIME but did not return its root pane. Setup is not complete and no Ready message was shown. The selected workspace at $target was kept untouched."
+if ! herdr --session "$session_name" tab create --cwd "$target" --label "NO MISTAKES GATE — RESERVED (INACTIVE) · ROOT: $target" --no-focus; then
   fail "HERDR could not create the reserved inactive No Mistakes Gate. Setup is not complete and no Ready message was shown. No Gate run was started."
 fi
+launch_prime_agent "$session_name" "$prime_pane_id" "$target"
 say "Preparing personal Buzz onboarding"
 buzz_state_dir="${XDG_CONFIG_HOME:-$HOME/.config}/opndrm/prime"
 mkdir -p "$buzz_state_dir"
-python3 - "$buzz_state_dir/${session_name}-buzz-onboarding.json" "$LANE" "$issue_tracker_url" "$buzz_relay_url" "$target" "$PRIVATE_REPOSITORY" <<'PY'
+python3 - "$buzz_state_dir/${session_name}-buzz-onboarding.json" "$LANE" "$issue_tracker_url" "$buzz_relay_url" "$target" "$repository_name" <<'PY'
 import json, pathlib, sys
 path, lane, issue_tracker, relay, workspace_path, repository = sys.argv[1:]
 record = {
@@ -175,7 +268,22 @@ record = {
 }
 pathlib.Path(path).write_text(json.dumps(record, indent=2) + "\n")
 PY
+wayfinder_state_file="$buzz_state_dir/${session_name}-wayfinder-onboarding.json"
+python3 - "$wayfinder_state_file" "$LANE" "$issue_tracker_url" "$target" "$repository_name" <<'PY'
+import json, pathlib, sys
+path, lane, issue_tracker, workspace_path, repository = sys.argv[1:]
+record = {
+    "status": "waiting-for-owner",
+    "workspace": lane,
+    "workspace_path": workspace_path,
+    "repository": repository,
+    "issue_tracker": issue_tracker,
+    "workflow": "Use only this repository's existing GitHub Issues/Wayfinder workflow. Onboarding created, assigned, labelled, edited, or published no issue, map, dependency, receipt, or decision.",
+    "next_owner_action": "Open the selected repository's existing issue workflow. Complete any personal GitHub browser sign-in it requires before taking an owner-authorized issue action.",
+}
+pathlib.Path(path).write_text(json.dumps(record, indent=2) + "\n")
+PY
 launch_herdr_workspace "$session_name" "$target"
-open -gja Buzz >/dev/null 2>&1 || printf 'Buzz is installed. Open it when ready to complete your personal sign-in.\n'
-printf "Buzz onboarding is prepared for %s at %s and is waiting for that person's own sign-in.\n" "$LANE" "$buzz_state_dir/${session_name}-buzz-onboarding.json"
-printf "\nReady: WezTerm is attached to the %s HERDR workspace rooted at %s. PRIME is the main workspace and NO MISTAKES GATE is reserved and inactive. No Gate run was started. Buzz onboarding is waiting for the employee's personal sign-in and Vault approval. Atomic Vault/CBF Remote requires the employee to complete the official owner-trust step.\n" "$session_name" "$target"
+launch_buzz_onboarding "$buzz_state_dir/${session_name}-buzz-onboarding.json"
+prepare_wayfinder_onboarding "$wayfinder_state_file"
+printf "\nReady: PRIME is running in the %s HERDR workspace rooted at %s. WezTerm was opened without blocking this Terminal; NO MISTAKES GATE is reserved and inactive, and no Gate run was started. Buzz is open but waiting for the employee's personal sign-in and Vault approval. Wayfinder/GitHub Issues is open only for %s. Atomic Vault/CBF Remote requires the employee to complete the official owner-trust step.\n" "$session_name" "$target" "$repository_name"
