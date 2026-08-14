@@ -24,6 +24,8 @@ CHOOSE MAC OR WINDOWS → COPY ONE COMMAND → OPEN PRIME → BUILD
 
 The installer prepares the shared tools and opens a named PRIME workspace. Daily work does **not** rerun the installer: open the saved workspace for the app you need.
 
+The public **OPNDRM APP** lane never starts GitHub device authorization. For private **ADAM** and **FRNKLY.ONE** lanes, GitHub CLI owns one personal web/device authorization before cloning: the teammate signs in with their own GitHub account and enters the one-time code only at GitHub’s official device page. The installer displays the authenticated username and verifies read access to the selected repository before cloning. It never uses an Open Dream shared login, repository-administrator role, token, or credential. If access is missing, the repository owner invites that personal account as a normal collaborator with the needed repository access; **FRNKLY.ONE requires that invitation**.
+
 ## THE WORKSPACE
 
 | Surface | Purpose |
@@ -47,6 +49,8 @@ GitHub remains the record for code, branches, reviews, and the work history.
 | **Atomic Vault + CBF Remote** | The employee’s personal credential boundary. Trust remains an owner action. |
 
 DeepSeek Flash, MiniMax M3 when installed, and every locally installed Ollama model are available to PRIME.
+
+The installer reports that the Open Dream Prime GitHub package installed successfully only after Prime Agent can list it. If that discoverability check fails, run `/reload` in Prime Agent; if it remains unavailable, repair the local Prime Agent setup and rerun the installer.
 
 ## OPEN A WORKSPACE
 

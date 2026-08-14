@@ -23,6 +23,30 @@ function Refresh-Path {
   $env:Path = "$machinePath;$userPath"
 }
 
+if ([string]::IsNullOrWhiteSpace($env:OPNDRM_PROJECTS_DIR)) {
+  $ProjectsRoot = Join-Path $env:USERPROFILE 'OPNDRM'
+} else {
+  $ProjectsRoot = $env:OPNDRM_PROJECTS_DIR
+}
+
+switch ($Lane) {
+  'ADAM' {
+    $PrivateRepository = 'opndrm/ADAM'
+    $repo = 'https://github.com/opndrm/ADAM.git'
+    $target = Join-Path $ProjectsRoot 'ADAM'
+  }
+  'FRNKLY.ONE' {
+    $PrivateRepository = 'frnklyone/frnkly-one-v2'
+    $repo = 'https://github.com/frnklyone/frnkly-one-v2.git'
+    $target = Join-Path $ProjectsRoot 'FRNKLY.ONE'
+  }
+  'OPNDRM-APP' {
+    $PrivateRepository = $null
+    $repo = $null
+    $target = Join-Path ([Environment]::GetFolderPath('Desktop')) 'OPNDRM APP'
+  }
+}
+
 $currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $currentPrincipal = [Security.Principal.WindowsPrincipal]::new($currentIdentity)
 $isAdministrator = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -50,16 +74,23 @@ if ($Lane -ne 'OPNDRM-APP') {
   gh auth status --hostname github.com *> $null
   if ($LASTEXITCODE -ne 0) {
     Write-Step 'Sign in to your own GitHub account'
-    Write-Host "GitHub’s sign-in page is opening now. First sign in with the account that has access to $Lane; GitHub then takes you to the page where you enter the one-time code shown here. No team password or token is used."
-    Start-Process 'https://github.com/login/device'
+    Write-Host 'GitHub CLI will open GitHub’s official device authorization flow. Sign in with your own GitHub account and enter the one-time code only at GitHub’s official device page. No shared Open Dream credential, personal access token, or GitHub administrator repository access is used.'
     gh auth login --hostname github.com --git-protocol https --web
-    if ($LASTEXITCODE -ne 0) { Stop-Install 'GitHub sign-in was not completed.' }
+    if ($LASTEXITCODE -ne 0) { Stop-Install 'GitHub sign-in was not completed. Sign in with your own GitHub account and run this installer again.' }
     gh auth status --hostname github.com *> $null
     if ($LASTEXITCODE -ne 0) { Stop-Install 'GitHub is not signed in for this Windows account.' }
   }
+  $GitHubUsername = gh api --hostname github.com user --jq '.login' 2>$null
+  if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($GitHubUsername)) { Stop-Install 'GitHub could not identify the signed-in account. Sign in with your own GitHub account and run this installer again.' }
+  Write-Host "GitHub is signed in as $GitHubUsername."
+  gh api --hostname github.com "repos/$PrivateRepository" --silent *> $null
+  if ($LASTEXITCODE -ne 0) { Stop-Install "Your GitHub account cannot read $PrivateRepository. Stop here without cloning. Ask the repository owner to invite this personal GitHub account as a normal collaborator with the repository access needed for $Lane, then run this installer again. No administrator role, shared account, token, or credential is required." }
   gh auth setup-git --hostname github.com
   if ($LASTEXITCODE -ne 0) { Stop-Install 'GitHub could not configure secure Git access for this Windows account.' }
 }
+# The public OPNDRM-APP lane never starts device authorization. Later public
+# GitHub downloads must fail with guidance instead of opening a sign-in prompt.
+$env:GH_PROMPT_DISABLED = '1'
 
 Write-Step 'Installing HERDR Windows preview'
 Invoke-RestMethod 'https://herdr.dev/install.ps1' | Invoke-Expression
@@ -89,7 +120,10 @@ try {
 Refresh-Path
 if (-not (Get-Command prime-agent -ErrorAction SilentlyContinue)) { Stop-Install 'Prime Agent is not available on PATH. Restart PowerShell, then run setup again.' }
 prime-agent package install git:github.com/opndrm/prime
-if ($LASTEXITCODE -ne 0) { Stop-Install 'The Open Dream Prime skill pack did not install.' }
+if ($LASTEXITCODE -ne 0) { Stop-Install 'The Open Dream Prime GitHub package did not install. Check your network and Prime Agent setup, then run this installer again.' }
+$installedPackages = prime-agent package list 2>&1
+if ($LASTEXITCODE -ne 0 -or $installedPackages -notmatch 'opndrm[- ]prime') { Stop-Install 'The Open Dream Prime GitHub package was installed but could not be found by Prime Agent. Run /reload in Prime Agent; if it is still missing, check your Prime Agent setup and run this installer again.' }
+Write-Host 'Open Dream Prime GitHub package installed successfully.'
 
 Write-Step 'Installing No Mistakes and Buzz'
 Invoke-RestMethod 'https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.ps1' | Invoke-Expression
@@ -112,14 +146,11 @@ try { Invoke-RestMethod 'http://127.0.0.1:11434/api/tags' | Out-Null } catch { S
 
 if ($Lane -eq 'OPNDRM-APP') {
   Write-Step 'Creating the Open Dream App workspace on the Desktop'
-  $target = Join-Path ([Environment]::GetFolderPath('Desktop')) 'OPNDRM APP'
   if (Test-Path -LiteralPath $target) { Stop-Install "Workspace already exists at $target." }
   New-Item -ItemType Directory -Path $target | Out-Null
   Set-Content -LiteralPath (Join-Path $target 'README.md') -Value "# Open Dream App`n`nA fresh Open Dream Prime workspace." -Encoding utf8
 } else {
   Write-Step 'Getting the team project and creating the workspace'
-  $repo = if ($Lane -eq 'ADAM') { 'https://github.com/opndrm/ADAM.git' } else { 'https://github.com/frnklyone/frnkly-one-v2.git' }
-  $target = Join-Path $env:USERPROFILE "OPNDRM\$Lane"
   if (Test-Path -LiteralPath $target) { Stop-Install "Workspace already exists at $target." }
   New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
   git clone $repo $target
