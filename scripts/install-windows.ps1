@@ -121,9 +121,9 @@ Refresh-Path
 if (-not (Get-Command prime-agent -ErrorAction SilentlyContinue)) { Stop-Install 'Prime Agent is not available on PATH. Restart PowerShell, then run setup again.' }
 prime-agent package install git:github.com/opndrm/prime
 if ($LASTEXITCODE -ne 0) { Stop-Install 'The Open Dream Prime GitHub package did not install. Check your network and Prime Agent setup, then run this installer again.' }
-$installedPackages = prime-agent package list 2>&1
-if ($LASTEXITCODE -ne 0 -or $installedPackages -notmatch 'opndrm[- ]prime') { Stop-Install 'The Open Dream Prime GitHub package was installed but could not be found by Prime Agent. Run /reload in Prime Agent; if it is still missing, check your Prime Agent setup and run this installer again.' }
-Write-Host 'Open Dream Prime GitHub package installed successfully.'
+$primeAgentHelp = prime-agent --help 2>&1
+if ($LASTEXITCODE -ne 0) { Stop-Install 'Prime Agent stopped responding after the Open Dream Prime package install. Restart Prime Agent, then run this installer again.' }
+Write-Host 'Open Dream Prime GitHub package installed successfully. It loads when Prime Agent starts or after /reload; setup will continue now.'
 
 Write-Step 'Installing No Mistakes and Buzz'
 Invoke-RestMethod 'https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.ps1' | Invoke-Expression

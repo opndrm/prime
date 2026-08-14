@@ -52,7 +52,7 @@ GitHub remains the record for code, branches, reviews, and the work history.
 
 DeepSeek Flash, MiniMax M3 when installed, and every locally installed Ollama model are available to PRIME.
 
-The installer reports that the Open Dream Prime GitHub package installed successfully only after Prime Agent can list it. If that discoverability check fails, run `/reload` in Prime Agent; if it remains unavailable, repair the local Prime Agent setup and rerun the installer.
+The installer treats a successful `prime-agent package install` as the package-install result, then verifies that Prime Agent still responds. The package loads when Prime Agent starts or after `/reload`; a running Prime Agent does not need to list the package before setup continues.
 
 ## OPEN A WORKSPACE
 

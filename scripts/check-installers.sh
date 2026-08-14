@@ -13,6 +13,12 @@ require_once() {
   count="$(rg -F -c "$2" "$1" || true)"
   [[ "$count" == 1 ]] || fail "expected one $2 in ${1#"$ROOT/"}, found $count"
 }
+require_before() {
+  local first_line second_line
+  first_line="$(rg -n -F -m 1 "$2" "$1" | cut -d: -f1)"
+  second_line="$(rg -n -F -m 1 "$3" "$1" | cut -d: -f1)"
+  [[ -n "$first_line" && -n "$second_line" && "$first_line" -lt "$second_line" ]] || fail "expected $2 before $3 in ${1#"$ROOT/"}"
+}
 
 bash -n "$MAC"
 if command -v shellcheck >/dev/null 2>&1; then
@@ -72,10 +78,15 @@ for script in "$MAC" "$WINDOWS"; do
   require_text "$script" "normal collaborator"
   require_text "$script" "Stop here without cloning"
   require_text "$script" "GH_PROMPT_DISABLED"
-  require_text "$script" "prime-agent package list"
-  require_text "$script" "Open Dream Prime GitHub package installed successfully."
+  require_text "$script" "prime-agent package install git:github.com/opndrm/prime"
+  require_text "$script" "Prime Agent starts or after /reload; setup will continue now."
+  forbid_text "$script" "prime-agent package list"
   require_text "$script" "Workspace already exists at"
 done
+require_text "$MAC" "prime-agent --help >/dev/null 2>&1"
+require_text "$WINDOWS" "\$primeAgentHelp = prime-agent --help 2>&1"
+require_before "$MAC" "prime-agent package install git:github.com/opndrm/prime" "curl -fsSL https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.sh | sh"
+require_before "$WINDOWS" "prime-agent package install git:github.com/opndrm/prime" "Write-Step 'Installing No Mistakes and Buzz'"
 require_text "$MAC" '[[ "$LANE" == '\''OPNDRM-APP'\'' ]] && return'
 require_text "$WINDOWS" "if (\$Lane -ne 'OPNDRM-APP')"
 require_text "$MAC" '"repos/$PRIVATE_REPOSITORY"'

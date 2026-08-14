@@ -17,4 +17,4 @@ Buzz is the team conversation space. Use it to discuss the work and link the rel
 
 Atomic Vault is personal. Do not share credentials, private keys, or Vault access. If Vault trust is waiting, ask the team lead for the official owner-approved step.
 
-The installer confirms that the Open Dream Prime GitHub package is installed and discoverable by Prime Agent. If that check fails, use `/reload` in Prime Agent; if it remains unavailable, check the local Prime Agent setup and run the installer again.
+The installer accepts a successful Open Dream Prime GitHub package install, then verifies that Prime Agent still responds. The package loads when Prime Agent starts or after `/reload`; a running Prime Agent does not need to list the package before setup continues.

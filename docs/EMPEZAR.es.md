@@ -17,4 +17,4 @@ Buzz es el espacio de conversación del equipo. Úselo para hablar del trabajo y
 
 Atomic Vault es personal. No comparta credenciales, claves privadas ni acceso al Vault. Si la confianza del Vault está pendiente, pida al líder del equipo el paso oficial aprobado por el propietario.
 
-El instalador confirma que el paquete de GitHub de Open Dream Prime está instalado y que Prime Agent puede encontrarlo. Si falla esa comprobación, use `/reload` en Prime Agent; si sigue sin estar disponible, revise la configuración local de Prime Agent y ejecute otra vez el instalador.
+El instalador acepta una instalación correcta del paquete de GitHub de Open Dream Prime y luego verifica que Prime Agent siga respondiendo. El paquete se carga cuando Prime Agent inicia o después de `/reload`; un Prime Agent que ya está ejecutándose no necesita listar el paquete para que la instalación continúe.

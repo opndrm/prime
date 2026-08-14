@@ -74,10 +74,10 @@ curl -fsSL https://app.primeintellect.ai/prime-agent/install.sh | sh
 if ! prime-agent package install git:github.com/opndrm/prime; then
   fail "The Open Dream Prime GitHub package did not install. Check your network and Prime Agent setup, then run this installer again."
 fi
-if ! prime-agent package list | grep -Eqi 'opndrm[- ]prime'; then
-  fail "The Open Dream Prime GitHub package was installed but could not be found by Prime Agent. Run /reload in Prime Agent; if it is still missing, check your Prime Agent setup and run this installer again."
+if ! prime-agent --help >/dev/null 2>&1; then
+  fail "Prime Agent stopped responding after the Open Dream Prime package install. Restart Prime Agent, then run this installer again."
 fi
-printf 'Open Dream Prime GitHub package installed successfully.\n'
+printf 'Open Dream Prime GitHub package installed successfully. It loads when Prime Agent starts or after /reload; setup will continue now.\n'
 curl -fsSL https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.sh | sh
 arch="$(uname -m)"; [[ "$arch" == arm64 ]] && asset='Buzz_*_aarch64.dmg' || asset='Buzz_*_x64.dmg'
 download_dir="$(mktemp -d)"; GH_PROMPT_DISABLED=1 gh release download --repo block/buzz --pattern "$asset" --dir "$download_dir"
