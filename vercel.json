@@ -1,7 +1,3 @@
 {
-  "outputDirectory": "site",
-  "rewrites": [
-    { "source": "/admin/login", "destination": "/admin/login.html" },
-    { "source": "/admin", "destination": "/api/admin" }
-  ]
+  "outputDirectory": "site"
 }

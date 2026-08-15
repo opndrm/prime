@@ -28,7 +28,9 @@ forbid "$MAC" 'qwen'
 forbid "$MAC" 'omlx'
 forbid "$MAC" 'apiKey'
 forbid "$MAC" 'no-mistakes'
-for path in "$ROOT"/README.md "$ROOT"/skills/opndrm-prime/SKILL.md "$ROOT"/docs/GETTING-STARTED.en.md; do
+forbid "$ROOT/site/index.html" '/admin'
+forbid "$ROOT/vercel.json" 'rewrites'
+for path in "$ROOT"/README.md "$ROOT"/site/index.html "$ROOT"/skills/opndrm-prime/SKILL.md "$ROOT"/docs/GETTING-STARTED.en.md; do
   forbid "$path" 'QM'
   forbid "$path" 'oMLX'
   forbid "$path" 'Qwen'
