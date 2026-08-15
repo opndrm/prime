@@ -7,6 +7,8 @@ fail(){ printf 'check failed: %s\n' "$*" >&2; exit 1; }
 require(){ rg -F --quiet -- "$2" "$1" || fail "missing $2 in ${1#$ROOT/}"; }
 forbid(){ ! rg -i -F --quiet -- "$2" "$1" || fail "forbidden $2 in ${1#$ROOT/}"; }
 bash -n "$MAC" "$ROOT/site/install-macos.sh"
+[[ -f "$ROOT/site/jcode-prime-workflow.md" ]] || fail "missing JCode workflow download"
+[[ -f "$ROOT/site/jcode-prime-workflow.es.md" ]] || fail "missing Spanish JCode workflow download"
 require "$MAC" 'prime-agent --cwd'
 require "$MAC" 'open -a Buzz'
 require "$MAC" 'Workspace already exists at'
@@ -14,6 +16,8 @@ require "$MAC" 'OPNDRM-APP|ADAM|FRNKLY.ONE'
 require "$MAC" 'configure_ollama_for_prime'
 require "$MAC" 'install_prime_buzz_bridge'
 require "$MAC" 'prime-agent package install git:github.com/opndrm/prime'
+require "$MAC" 'start_jcode'
+require "$MAC" 'JCode must be installed'
 forbid "$MAC" 'qwen'
 forbid "$MAC" 'omlx'
 forbid "$MAC" 'apiKey'

@@ -119,6 +119,13 @@ install_buzz() {
   hdiutil detach "$mount_dir" >/dev/null
 }
 
+start_jcode() {
+  local result pane
+  result="$(herdr --session "$SESSION" workspace create --cwd "$ROOT" --label "JCODE — $LANE" --no-focus)" || fail 'HERDR could not create the JCode workspace.'
+  pane="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])' <<<"$result")" || fail 'HERDR did not return a JCode pane.'
+  herdr --session "$SESSION" pane run "$pane" "exec jcode -C $(printf '%q' "$ROOT")" >/dev/null || fail 'HERDR could not launch JCode.'
+}
+
 start_prime() {
   local result pane command
   result="$(herdr --session "$SESSION" workspace create --cwd "$ROOT" --label "$LANE — PRIME" --focus)" || fail 'HERDR could not create the PRIME workspace.'
@@ -138,6 +145,7 @@ brew install git gh python herdr
 brew install --cask wezterm ollama
 require_github_for_private_lane
 say 'Installing or verifying Prime Agent and Buzz'
+command -v jcode >/dev/null 2>&1 || fail 'JCode must be installed and signed in by its owner before this workflow can start.'
 command -v prime-agent >/dev/null 2>&1 || curl -fsSL https://app.primeintellect.ai/prime-agent/install.sh | sh
 prime-agent --help >/dev/null 2>&1 || fail 'Prime Agent is unavailable after installation.'
 prime-agent package install git:github.com/opndrm/prime || fail 'The Open Dream Prime package could not be installed.'
@@ -146,6 +154,7 @@ install_prime_buzz_bridge
 install_buzz
 create_root
 start_herdr
+start_jcode
 start_prime
 open_visible_workspace
 open -a Buzz >/dev/null 2>&1 || fail 'Buzz could not open. Your workspace was preserved; no Ready claim is made.'
