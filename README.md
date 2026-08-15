@@ -2,7 +2,7 @@
 
 A local-first workflow installer for one person, one repository, and one visible workspace.
 
-**WezTerm → HERDR → Prime Agent → Buzz → GitHub**
+**WezTerm → HERDR → Prime Agent → JCode → Buzz → GitHub**
 
 Prime is not a dashboard, remote-run service, model host, or shared terminal. It is the public installer and guide for a calm, recoverable local workflow.
 
@@ -44,3 +44,7 @@ npm run check
 ```
 
 The public production target is the CREW Vercel team’s `opndrm_prime` project at `opndrm.com`.
+
+## Execution roles
+
+Prime Agent orchestrates approved work; JCode is the primary coding executor through its visible HERDR tab and bounded `jcode run`/ACP delegation.

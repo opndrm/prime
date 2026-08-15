@@ -17,6 +17,12 @@ One person → one repository checkout → one named HERDR session → one Prime
 | ADAM | `~/OPNDRM/ADAM` | `opndrm-adam` |
 | FRNKLY.ONE | `~/OPNDRM/FRNKLY.ONE` | `opndrm-frnkly-one` |
 
+## Execution roles
+
+- **Prime Agent:** orchestrates the work card, evidence review, and bounded delegation.
+- **JCode:** primary coding executor. Load `opndrm-jcode` for an approved coding task.
+- **Buzz:** personal coordination only after explicit owner approval.
+
 ## Workflow
 
 1. Confirm the requested lane, root, branch, and visible HERDR workspace.
