@@ -28,5 +28,5 @@ One person → one repository checkout → one named HERDR session → one Prime
 
 - Never overwrite a checkout, share a terminal session, handle a credential, or create a Buzz identity or agent without the owner’s explicit approval.
 - Do not install, configure, download, expose, or claim a model provider from this package. Local model setups are personal and outside this workflow.
-- Do not create a dashboard or remote-run service. For isolated ADAM or FRNKLY.ONE app work, load `opndrm-exe`; it owns the Exe sandbox boundary.
+- Do not create a dashboard, remote-run service, or remote sandbox integration here.
 - Never claim a visible workspace, Buzz connection, or gate result without current evidence.

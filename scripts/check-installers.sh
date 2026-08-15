@@ -7,8 +7,6 @@ fail(){ printf 'check failed: %s\n' "$*" >&2; exit 1; }
 require(){ rg -F --quiet -- "$2" "$1" || fail "missing $2 in ${1#$ROOT/}"; }
 forbid(){ ! rg -i -F --quiet -- "$2" "$1" || fail "forbidden $2 in ${1#$ROOT/}"; }
 bash -n "$MAC" "$ROOT/site/install-macos.sh"
-[[ -f "$ROOT/site/exe-sandbox-workflow.md" ]] || fail "missing English Exe workflow download"
-[[ -f "$ROOT/site/exe-sandbox-workflow.es.md" ]] || fail "missing Spanish Exe workflow download"
 require "$MAC" 'prime-agent --cwd'
 require "$MAC" 'open -a Buzz'
 require "$MAC" 'Workspace already exists at'
