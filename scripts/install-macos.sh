@@ -98,7 +98,6 @@ start_prime() {
   local result pane command
   result="$(herdr --session "$SESSION" workspace create --cwd "$ROOT" --label "$LANE — PRIME" --focus)" || fail 'HERDR could not create the PRIME workspace.'
   pane="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])' <<<"$result")" || fail 'HERDR did not return a PRIME pane.'
-  herdr --session "$SESSION" tab create --cwd "$ROOT" --label 'NO MISTAKES GATE — RESERVED (INACTIVE)' --no-focus >/dev/null || fail 'HERDR could not create the reserved Gate.'
   command="exec prime-agent --cwd $(printf '%q' "$ROOT")"
   herdr --session "$SESSION" pane run "$pane" "$command" >/dev/null || fail 'HERDR could not launch Prime Agent.'
 }
@@ -113,14 +112,13 @@ say 'Installing or verifying workflow tools'
 brew install git gh python herdr
 brew install --cask wezterm
 require_github_for_private_lane
-say 'Installing or verifying Prime Agent, No Mistakes, and Buzz'
+say 'Installing or verifying Prime Agent and Buzz'
 command -v prime-agent >/dev/null 2>&1 || curl -fsSL https://app.primeintellect.ai/prime-agent/install.sh | sh
 prime-agent --help >/dev/null 2>&1 || fail 'Prime Agent is unavailable after installation.'
-command -v no-mistakes >/dev/null 2>&1 || curl -fsSL https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.sh | sh
 install_buzz
 create_root
 start_herdr
 start_prime
 open_visible_workspace
 open -a Buzz >/dev/null 2>&1 || fail 'Buzz could not open. Your workspace was preserved; no Ready claim is made.'
-printf '\nReady: %s is open in WezTerm. PRIME is rooted at %s. The No Mistakes Gate is reserved and inactive. Buzz is waiting for your own sign-in. No model software or model configuration was installed.\n' "$SESSION" "$ROOT"
+printf '\nReady: %s is open in WezTerm. PRIME is rooted at %s. Buzz is waiting for your own sign-in. No model software or model configuration was installed.\n' "$SESSION" "$ROOT"
