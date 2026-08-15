@@ -1,89 +1,47 @@
-<div align="center">
+# Open Dream Prime
 
-# OPEN DREAM<br>PRIME
+A local-first workflow installer for one person, one repository, and one visible workspace.
 
-`ONE CLICK · ONE CALM WORKSPACE · MAC + WINDOWS`
+**WezTerm → HERDR → Prime Agent → reserved No Mistakes Gate → Buzz → GitHub**
 
-**The Open Dream coding workspace for people and agents.**
+Prime is not a dashboard, remote-run service, model host, or shared terminal. It is the public installer and guide for a calm, recoverable local workflow.
 
-[Open OPNDRM.com](https://opndrm.com) · [English guide](https://opndrm.com/guide/) · [Guía en español](https://opndrm.com/es/guide/) · [Team access](https://opndrm.com/admin)
+## Install on macOS
 
-![Open Dream Prime home](docs/opndrm-home.png)
-
-</div>
-
----
-
-## START HERE
-
-Open Dream Prime creates a fresh **OPNDRM APP** workspace on the Desktop. The public installer is intentionally simple:
-
-```
-CHOOSE MAC OR WINDOWS → COPY ONE COMMAND → OPEN PRIME → BUILD
+```sh
+curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- OPNDRM-APP
 ```
 
-The installer prepares the shared tools and opens a named PRIME workspace. Daily work does **not** rerun the installer: open the saved workspace for the app you need.
+Choose `ADAM` or `FRNKLY.ONE` only when you have been assigned that private repository and can authenticate with your own GitHub account.
 
-After the selected workspace root exists, the installer starts or reuses that lane's personal HERDR session, creates **PRIME** and a second **NO MISTAKES GATE — RESERVED (INACTIVE)** tab rooted in that checkout, then starts `prime-agent --cwd <selected-root>` in PRIME. The Gate is never started. It hands WezTerm off without keeping the originating Terminal open, visibly opens Buzz for the teammate’s own sign-in, and opens only the selected repository’s Wayfinder/GitHub Issues context. The local Buzz and Wayfinder records remain **waiting for owner**; onboarding never creates, assigns, labels, edits, or publishes an issue, map, receipt, or decision. It prints `Ready` only after those local handoffs succeed; on a HERDR, Prime Agent, Buzz, or Wayfinder launch failure it preserves the selected workspace and stops without a partial-ready claim.
+## What the installer does
 
-The public **OPNDRM APP** lane never starts GitHub device authorization. For private **ADAM** and **FRNKLY.ONE** lanes, GitHub CLI owns one personal web/device authorization before cloning: the teammate signs in with their own GitHub account and enters the one-time code only at GitHub’s official device page. The installer displays the authenticated username and verifies read access to the selected repository before cloning. It never uses an Open Dream shared login, repository-administrator role, token, or credential. If access is missing, the repository owner invites that personal account as a normal collaborator with the needed repository access; **FRNKLY.ONE requires that invitation**.
+- verifies Apple Command Line Tools and Homebrew;
+- installs or verifies WezTerm, HERDR, Git, GitHub CLI, Prime Agent, No Mistakes, and Buzz;
+- creates one named HERDR session for the selected lane;
+- starts one Prime Agent workspace in the exact selected root;
+- creates a visible **NO MISTAKES GATE — RESERVED (INACTIVE)** tab in that root;
+- opens Buzz for the person’s own sign-in; and
+- stops clearly if a prerequisite, checkout, visible workspace, or authentication step fails.
 
-The canonical FRNKLY.ONE Rust checkout is [`opndrm/Frnkly.one`](https://github.com/opndrm/Frnkly.one.git). The installer keeps its local workspace and session named **FRNKLY.ONE** while cloning that repository.
+The installer never starts a No Mistakes run, creates a Buzz account or agent, edits GitHub work, handles credentials, or overwrites an existing checkout.
 
-## THE WORKSPACE
+## Explicit exclusions
 
-| Surface | Purpose |
-| --- | --- |
-| **PRIME** | The main Prime Agent session for one bounded work card. |
-| **NO MISTAKES GATE** | A visible quality checkpoint. It remains inactive until the approved repository workflow uses it. |
-| **BUZZ** | The conversation space for people and agents. Never put credentials there. |
-| **WAYFINDER** | GitHub Issues: the plan, owner, decisions, and next work. |
+This repository and installer do **not** install or configure local model software, model downloads, model API keys, model providers, a dashboard, remote runs, or a shared terminal service. Any local model setup is personal, private, and outside this package.
 
-GitHub remains the record for code, branches, reviews, and the work history.
+## Daily workflow
 
-## WHAT GETS INSTALLED
+1. Open the selected HERDR session in WezTerm.
+2. Give Prime Agent one bounded work card: outcome, write boundary, quality gate, evidence, and stop condition.
+3. Use Buzz for human/agent conversation after personal sign-in.
+4. Keep code, reviews, and decisions in the selected repository’s GitHub workflow.
+5. Use No Mistakes only when the repository-authorized workflow calls for it.
 
-| System | Purpose |
-| --- | --- |
-| **WezTerm + HERDR** | The persistent local terminal workspace. |
-| **Prime Agent + Ollama** | The coding harness and local model catalog. |
-| **No Mistakes** | Installed as an inactive quality gate. |
-| **Buzz** | Human-and-agent coordination. |
-| **Git + GitHub CLI** | Version control and team collaboration. |
-| **Atomic Vault + CBF Remote** | The employee’s personal credential boundary. Trust remains an owner action. |
+## Validation
 
-DeepSeek Flash, MiniMax M3 when installed, and every locally installed Ollama model are available to PRIME.
+```sh
+npm run check
+```
 
-The installer treats a successful `prime-agent package install` as the package-install result, then verifies that Prime Agent still responds. The package loads when Prime Agent starts or after `/reload`; a running Prime Agent does not need to list the package before setup continues.
-
-## OPEN A WORKSPACE
-
-Use the published `/opndrm-prime` skill in English or Spanish:
-
-| Ask PRIME | Opens |
-| --- | --- |
-| `Open OPNDRM APP` / `abre OPNDRM APP` | The fresh Desktop workspace. |
-| `Open ADAM` / `abre ADAM` | The saved ADAM workspace. |
-| `Open FRNKLY.ONE` / `abre FRNKLY.ONE` | The saved FRNKLY.ONE workspace. |
-| `Open the last ADAM session` | That app’s most recent named HERDR session. |
-
-The same named-session behavior is designed for Mac and Windows. Windows remains a first-device preview until it passes a real Windows-device health check.
-
-## TEAM ACCESS
-
-The public page creates new **OPNDRM APP** workspaces. Existing team projects, including ADAM and FRNKLY.ONE, are available only through the protected **Open Dream Team** page after team access is verified. Each team app has its own one-click installer, purpose, and start instructions.
-
-## SAFETY BOUNDARIES
-
-- The installer never overwrites an existing workspace.
-- No Mistakes is installed but never started by onboarding.
-- Atomic Vault credentials and trust stay personal; no credential is placed in this repository.
-- A person’s project workspace, session, branch, and credentials remain separate from every other app and teammate.
-
----
-
-<div align="center">
-
-`OPNDRM · BUILD CALM · KEEP THE TEAM ALIGNED`
-
-</div>
+The public production target is the CREW Vercel team’s `opndrm_prime` project at `opndrm.com`.

@@ -1,13 +1,10 @@
 {
-  "name": "opndrm-prime-skills",
-  "version": "0.1.0",
+  "name": "opndrm-prime",
+  "version": "1.0.0",
   "private": true,
-  "description": "Open Dream Prime skills for Prime Agent.",
-  "keywords": ["pi-package", "prime-agent", "opndrm"],
+  "description": "Open Dream Prime local-first workflow installer and skill.",
   "scripts": {
     "check": "bash scripts/check-installers.sh"
   },
-  "pi": {
-    "skills": ["./skills"]
-  }
+  "pi": { "skills": ["./skills"] }
 }
