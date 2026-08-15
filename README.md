@@ -47,7 +47,7 @@ The public production target is the CREW Vercel team’s `opndrm_prime` project 
 
 ## Execution roles
 
-Prime Agent orchestrates approved work; JCode is the primary coding executor through its visible HERDR tab and bounded `jcode run`/ACP delegation.
+Prime Agent orchestrates approved work; JCode is installed from its official installer, then becomes the primary coding executor through its visible HERDR tab and bounded `jcode run`/ACP delegation.
 
 ## Standard HERDR layout
 

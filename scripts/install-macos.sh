@@ -162,8 +162,30 @@ say 'Installing or verifying WezTerm, Ollama, and Handy'
 brew install git gh python herdr
 brew install --cask wezterm ollama handy
 require_github_for_private_lane
-say 'Installing or verifying Prime Agent and Buzz'
-command -v jcode >/dev/null 2>&1 || fail 'JCode must be installed and signed in by its owner before this workflow can start.'
+install_jcode() {
+  command -v jcode >/dev/null 2>&1 && return
+  say 'Installing JCode'
+  curl -fsSL https://jcode.sh/install | bash
+  export PATH="$HOME/.local/bin:$PATH"
+  command -v jcode >/dev/null 2>&1 || fail 'JCode installed but is unavailable in this Terminal. Open a new Terminal and rerun this command.'
+}
+
+setup_handy() {
+  local handy_models superwhisper_turbo handy_turbo
+  handy_models="$HOME/Library/Application Support/com.pais.handy/models"
+  superwhisper_turbo="$HOME/Library/Application Support/superwhisper/ggml-large-v3-turbo.bin"
+  handy_turbo="$handy_models/ggml-large-v3-turbo.bin"
+  mkdir -p "$handy_models"
+  if [[ -f "$superwhisper_turbo" && ! -e "$handy_turbo" ]]; then
+    ln -s "$superwhisper_turbo" "$handy_turbo"
+    printf 'Handy will reuse the existing Superwhisper Turbo model without a duplicate download.\n'
+  fi
+  open /Applications/Handy.app >/dev/null 2>&1 || fail 'Handy could not open.'
+  printf 'Handy is open. Its owner must approve Microphone and Accessibility permissions and select a transcription model.\n'
+}
+
+say 'Installing or verifying Prime Agent, JCode, and Buzz'
+install_jcode
 command -v prime-agent >/dev/null 2>&1 || curl -fsSL https://app.primeintellect.ai/prime-agent/install.sh | sh
 prime-agent --help >/dev/null 2>&1 || fail 'Prime Agent is unavailable after installation.'
 prime-agent package install git:github.com/opndrm/prime || fail 'The Open Dream Prime package could not be installed.'
@@ -177,4 +199,4 @@ start_jcode
 start_prime
 open_visible_workspace
 open -a Buzz >/dev/null 2>&1 || fail 'Buzz could not open. Your workspace was preserved; no Ready claim is made.'
-printf '\nReady: %s is open in WezTerm. PRIME is rooted at %s. Buzz is waiting for your own sign-in. Handy is installed; grant its Microphone and Accessibility permissions and choose its model yourself. The existing local Ollama route was registered without downloading a model or changing the selected default.\n' "$SESSION" "$ROOT"
+printf '\nReady: %s is open in WezTerm. PRIME is rooted at %s. Buzz is waiting for your own sign-in. Handy is installed and opened; its owner grants Microphone and Accessibility permissions and chooses its model. The existing local Ollama route was registered without downloading a model or changing the selected default.\n' "$SESSION" "$ROOT"

@@ -8,3 +8,7 @@
 6. Give Prime Agent one bounded work card. Keep code and reviews in GitHub.
 
 The installer registers an existing local Ollama route for Prime Agent and Buzz without downloading a model, handling credentials, or changing the selected default.
+
+## Private app access
+
+Create and sign into your own GitHub account with `gh auth login`. Email the Open Dream repository owner your GitHub username for a normal collaborator invitation. Rerun the installer after the invitation is accepted; it will not use a shared account or credential.
