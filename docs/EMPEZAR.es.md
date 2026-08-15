@@ -7,4 +7,4 @@
 5. Completa tú mismo el inicio de sesión de Buzz. Conecta un agente solo con aprobación explícita.
 6. Da a Prime Agent una tarjeta de trabajo limitada. Mantén código y revisiones en GitHub.
 
-El instalador no instala ni configura modelos, credenciales, dashboards, ejecuciones remotas ni sandboxes.
+El instalador registra la ruta local existente de Ollama para Prime Agent y Buzz sin descargar modelos, manejar credenciales ni cambiar el modelo seleccionado.

@@ -7,4 +7,4 @@
 5. Complete Buzz sign-in yourself. Create or connect an agent only with explicit owner approval.
 6. Give Prime Agent one bounded work card. Keep code and reviews in GitHub.
 
-The installer does not install or configure any local model, model provider, credential, dashboard, remote run, or sandbox.
+The installer registers an existing local Ollama route for Prime Agent and Buzz without downloading a model, handling credentials, or changing the selected default.

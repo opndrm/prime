@@ -23,11 +23,11 @@ Choose `ADAM` or `FRNKLY.ONE` only when you have been assigned that private repo
 - opens Buzz for the person’s own sign-in; and
 - stops clearly if a prerequisite, checkout, visible workspace, or authentication step fails.
 
-The installer never creates a Buzz account or agent, edits GitHub work, handles credentials, or overwrites an existing checkout.
+The installer never creates a Buzz account or agent, edits GitHub work, handles credentials, downloads a model, changes the selected default model, or overwrites an existing checkout.
 
 ## Explicit exclusions
 
-This repository and installer do **not** install or configure local model software, model downloads, model API keys, model providers, a dashboard, remote runs, or a shared terminal service. Any local model setup is personal, private, and outside this package.
+The installer registers an existing local Ollama route with Prime Agent and the Buzz bridge without downloading a model or changing a default. It does not include personal model software, API keys, private local models, a dashboard, remote runs, or a shared terminal service.
 
 ## Daily workflow
 

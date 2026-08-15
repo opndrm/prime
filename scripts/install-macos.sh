@@ -78,6 +78,31 @@ create_root() {
   fi
 }
 
+configure_ollama_for_prime() {
+  say 'Configuring the existing Ollama route for Prime Agent'
+  open -gja Ollama >/dev/null 2>&1 || true
+  for _ in {1..30}; do curl -fsS http://127.0.0.1:11434/api/tags >/dev/null 2>&1 && break; sleep 1; done
+  curl -fsS http://127.0.0.1:11434/api/tags >/dev/null 2>&1 || fail 'Ollama is not reachable. Configure it locally, then rerun this installer.'
+  python3 "$(dirname "$0")/configure-prime-ollama.py" "${PRIME_AGENT_CONFIG_DIR:-$HOME/.prime/agent}"
+}
+
+install_prime_buzz_bridge() {
+  local bin_dir="$HOME/.local/bin" bridge state_dir
+  bin_dir="$HOME/.local/bin"; bridge="$bin_dir/opndrm-prime-acp"; state_dir="${XDG_CONFIG_HOME:-$HOME/.config}/opndrm/prime"
+  mkdir -p "$bin_dir" "$state_dir"
+  cat > "$bridge" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+cd "${ROOT}"
+exec prime-agent --mode acp "\$@"
+EOF
+  chmod 755 "$bridge"
+  cat > "$state_dir/buzz-prime-agent-harness.json" <<EOF
+{"agentCommand":"$bridge","agentArgs":[],"provider":"ollama","workspace":"$ROOT"}
+EOF
+  printf 'Buzz harness bridge installed at %s. Open Buzz and select its existing Prime Agent harness; personal sign-in and agent approval remain yours.\n' "$bridge"
+}
+
 install_buzz() {
   [[ -d /Applications/Buzz.app ]] && return
   local architecture pattern download_dir dmg mount_dir
@@ -110,15 +135,18 @@ require_clt
 require_brew
 say 'Installing or verifying workflow tools'
 brew install git gh python herdr
-brew install --cask wezterm
+brew install --cask wezterm ollama
 require_github_for_private_lane
 say 'Installing or verifying Prime Agent and Buzz'
 command -v prime-agent >/dev/null 2>&1 || curl -fsSL https://app.primeintellect.ai/prime-agent/install.sh | sh
 prime-agent --help >/dev/null 2>&1 || fail 'Prime Agent is unavailable after installation.'
+prime-agent package install git:github.com/opndrm/prime || fail 'The Open Dream Prime package could not be installed.'
+configure_ollama_for_prime
+install_prime_buzz_bridge
 install_buzz
 create_root
 start_herdr
 start_prime
 open_visible_workspace
 open -a Buzz >/dev/null 2>&1 || fail 'Buzz could not open. Your workspace was preserved; no Ready claim is made.'
-printf '\nReady: %s is open in WezTerm. PRIME is rooted at %s. Buzz is waiting for your own sign-in. No model software or model configuration was installed.\n' "$SESSION" "$ROOT"
+printf '\nReady: %s is open in WezTerm. PRIME is rooted at %s. Buzz is waiting for your own sign-in. The existing local Ollama route was registered without downloading a model or changing the selected default.\n' "$SESSION" "$ROOT"
