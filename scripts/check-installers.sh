@@ -7,6 +7,9 @@ require(){ rg -F --quiet -- "$2" "$1" || fail "missing $2 in ${1#$ROOT/}"; }
 forbid(){ ! rg -i -F --quiet -- "$2" "$1" || fail "forbidden $2 in ${1#$ROOT/}"; }
 bash -n "$MAC" "$ROOT/site/install-macos.sh"
 [[ -f "$ROOT/site/jcode-prime-workflow.md" ]] || fail "missing JCode workflow download"
+[[ -f "$ROOT/site/herdr-wezterm-layout.md" ]] || fail "missing HERDR layout download"
+[[ -f "$ROOT/config/herdr-layout.json" ]] || fail "missing HERDR layout manifest"
+python3 -m json.tool "$ROOT/config/herdr-layout.json" >/dev/null
 require "$MAC" 'prime-agent --cwd'
 require "$MAC" 'open -a Buzz'
 require "$MAC" 'Workspace already exists at'
