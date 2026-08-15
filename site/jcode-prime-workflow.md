@@ -8,3 +8,7 @@
 6. GitHub remains the code/review record. Buzz is personal coordination only after owner approval.
 
 Prime may delegate a non-interactive approved task with `jcode run -C <root> --tool-profile full --json "<work card>"`, or use JCode ACP when an ACP client explicitly needs it. Never change providers, credentials, push, deploy, or start a gate without separate owner approval.
+
+## Standard HERDR layout
+
+The installer preserves two General Research workspaces—**GENERAL RESEARCH** for Prime Agent and **JCODE — GENERAL RESEARCH** for JCode—then creates a separate **JCODE — <LANE>** and **PRIME — <LANE>** pair for the selected app. General Research JCode uses the owner-selected local Ollama route; this Mac uses DeepSeek V4 Flash with High effort.

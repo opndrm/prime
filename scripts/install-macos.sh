@@ -119,6 +119,24 @@ install_buzz() {
   hdiutil detach "$mount_dir" >/dev/null
 }
 
+workspace_exists() {
+  herdr --session "$SESSION" workspace list | python3 -c 'import json,sys; label=sys.argv[1]; print(any(w.get("label")==label for w in json.load(sys.stdin)["result"]["workspaces"]))' "$1" | grep -qx True
+}
+
+ensure_general_research() {
+  local result pane
+  if ! workspace_exists 'GENERAL RESEARCH'; then
+    result="$(herdr --session "$SESSION" workspace create --cwd "$HOME" --label 'GENERAL RESEARCH' --no-focus)" || fail 'HERDR could not create General Research.'
+    pane="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])' <<<"$result")"
+    herdr --session "$SESSION" pane run "$pane" "exec prime-agent --cwd $(printf '%q' "$HOME")" >/dev/null || fail 'HERDR could not launch General Research Prime Agent.'
+  fi
+  if ! workspace_exists 'JCODE — GENERAL RESEARCH'; then
+    result="$(herdr --session "$SESSION" workspace create --cwd "$HOME" --label 'JCODE — GENERAL RESEARCH' --no-focus)" || fail 'HERDR could not create General Research JCode.'
+    pane="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])' <<<"$result")"
+    herdr --session "$SESSION" pane run "$pane" "exec jcode -C $(printf '%q' "$HOME")" >/dev/null || fail 'HERDR could not launch General Research JCode.'
+  fi
+}
+
 start_jcode() {
   local result pane
   result="$(herdr --session "$SESSION" workspace create --cwd "$ROOT" --label "JCODE — $LANE" --no-focus)" || fail 'HERDR could not create the JCode workspace.'
@@ -128,7 +146,7 @@ start_jcode() {
 
 start_prime() {
   local result pane command
-  result="$(herdr --session "$SESSION" workspace create --cwd "$ROOT" --label "$LANE — PRIME" --focus)" || fail 'HERDR could not create the PRIME workspace.'
+  result="$(herdr --session "$SESSION" workspace create --cwd "$ROOT" --label "PRIME — $LANE" --focus)" || fail 'HERDR could not create the PRIME workspace.'
   pane="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])' <<<"$result")" || fail 'HERDR did not return a PRIME pane.'
   command="exec prime-agent --cwd $(printf '%q' "$ROOT")"
   herdr --session "$SESSION" pane run "$pane" "$command" >/dev/null || fail 'HERDR could not launch Prime Agent.'
@@ -154,6 +172,7 @@ install_prime_buzz_bridge
 install_buzz
 create_root
 start_herdr
+ensure_general_research
 start_jcode
 start_prime
 open_visible_workspace

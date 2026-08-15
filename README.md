@@ -48,3 +48,7 @@ The public production target is the CREW Vercel team’s `opndrm_prime` project 
 ## Execution roles
 
 Prime Agent orchestrates approved work; JCode is the primary coding executor through its visible HERDR tab and bounded `jcode run`/ACP delegation.
+
+## Standard HERDR layout
+
+The installer preserves two General Research workspaces—**GENERAL RESEARCH** for Prime Agent and **JCODE — GENERAL RESEARCH** for JCode—then creates a separate **JCODE — <LANE>** and **PRIME — <LANE>** pair for the selected app. General Research JCode uses the owner-selected local Ollama route; this Mac uses DeepSeek V4 Flash with High effort.
