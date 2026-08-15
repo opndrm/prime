@@ -158,9 +158,9 @@ open_visible_workspace() {
 
 require_clt
 require_brew
-say 'Installing or verifying workflow tools'
+say 'Installing or verifying WezTerm, Ollama, and Handy'
 brew install git gh python herdr
-brew install --cask wezterm ollama
+brew install --cask wezterm ollama handy
 require_github_for_private_lane
 say 'Installing or verifying Prime Agent and Buzz'
 command -v jcode >/dev/null 2>&1 || fail 'JCode must be installed and signed in by its owner before this workflow can start.'
@@ -177,4 +177,4 @@ start_jcode
 start_prime
 open_visible_workspace
 open -a Buzz >/dev/null 2>&1 || fail 'Buzz could not open. Your workspace was preserved; no Ready claim is made.'
-printf '\nReady: %s is open in WezTerm. PRIME is rooted at %s. Buzz is waiting for your own sign-in. The existing local Ollama route was registered without downloading a model or changing the selected default.\n' "$SESSION" "$ROOT"
+printf '\nReady: %s is open in WezTerm. PRIME is rooted at %s. Buzz is waiting for your own sign-in. Handy is installed; grant its Microphone and Accessibility permissions and choose its model yourself. The existing local Ollama route was registered without downloading a model or changing the selected default.\n' "$SESSION" "$ROOT"

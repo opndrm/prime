@@ -17,3 +17,7 @@ This is the portable macOS layout installed with Open Dream Prime. It reflects t
 Run the macOS installer once for each approved app checkout. It creates only roots the owner has locally; it never clones a private app without access, overwrites a checkout, starts a gate, handles credentials, or sets model configuration.
 
 Prime Agent orchestrates approved work. JCode is the primary coding executor. The portable machine-readable layout is `config/herdr-layout.json`.
+
+## Handy dictation
+
+The macOS installer installs [Handy](https://handy.computer/), a local speech-to-text app. It does not grant Microphone or Accessibility permissions and does not download or select a transcription model; each owner completes those choices locally.
