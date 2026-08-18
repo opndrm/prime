@@ -4,23 +4,25 @@ import Foundation
 
 @MainActor
 final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, NSTableViewDataSource, NSTableViewDelegate {
-    
+
     private var tableView: NSTableView!
     private var vmListView: NSView!
     private var contentView: NSView!
-    private var vmWindows: [String: OPNDRMVMWindowController] = [:]
-    private var controllers: [String: VirtualMachineController] = [:]
+    private var vmDisplayView: NSView!
+    private var welcomeLabel: NSTextField!
+    private var vmInstances: [String: VMInstance] = [:]
     private(set) var selectedVM: String?
+    private var layoutControl: NSSegmentedControl!
 
     init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 900, height: 600),
+            contentRect: NSRect(x: 0, y: 0, width: 1000, height: 650),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.title = "OPNDRM VM"
-        window.minSize = NSSize(width: 600, height: 400)
+        window.minSize = NSSize(width: 700, height: 450)
         super.init(window: window)
         window.delegate = self
         setupUI()
@@ -28,6 +30,21 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
     }
 
     required init?(coder: NSCoder) { nil }
+
+    // MARK: - VM Instance
+
+    private class VMInstance {
+        let name: String
+        let controller: VirtualMachineController
+        let windowController: OPNDRMVMWindowController
+        var vmView: VZVirtualMachineView?
+
+        init(name: String, controller: VirtualMachineController, windowController: OPNDRMVMWindowController) {
+            self.name = name
+            self.controller = controller
+            self.windowController = windowController
+        }
+    }
 
     // MARK: - UI Setup
 
@@ -53,7 +70,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         tableView.delegate = self
         tableView.headerView = nil
         tableView.backgroundColor = .clear
-        tableView.rowHeight = 44
+        tableView.rowHeight = 52
         tableView.selectionHighlightStyle = .regular
 
         let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("vm"))
@@ -70,9 +87,9 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         newButton.translatesAutoresizingMaskIntoConstraints = false
         vmListView.addSubview(newButton)
 
-        let layoutControl = NSSegmentedControl(labels: ["Single", "Split", "Triple", "Quad"],
-                                                trackingMode: .selectOne, target: self,
-                                                action: #selector(layoutChanged))
+        layoutControl = NSSegmentedControl(labels: ["Single", "Split", "Triple", "Quad"],
+                                            trackingMode: .selectOne, target: self,
+                                            action: #selector(layoutChanged))
         layoutControl.selectedSegment = 0
         layoutControl.translatesAutoresizingMaskIntoConstraints = false
         vmListView.addSubview(layoutControl)
@@ -98,7 +115,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         contentView.wantsLayer = true
         contentView.layer?.backgroundColor = NSColor.black.cgColor
 
-        let welcomeLabel = NSTextField(labelWithString: "Select a VM or create a new one")
+        welcomeLabel = NSTextField(labelWithString: "Select a VM or create a new one")
         welcomeLabel.font = NSFont.systemFont(ofSize: 16, weight: .medium)
         welcomeLabel.textColor = .secondaryLabelColor
         welcomeLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -110,7 +127,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
 
         splitView.addSubview(vmListView)
         splitView.addSubview(contentView)
-        splitView.setPosition(220, ofDividerAt: 0)
+        splitView.setPosition(250, ofDividerAt: 0)
 
         window.contentView = splitView
     }
@@ -131,22 +148,76 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let name = vmNames[row]
-        let cell = NSTextField(labelWithString: name)
-        let isRunning = controllers[name]?.lifecycle == .running
+        let isRunning = vmInstances[name]?.controller.lifecycle == .running
 
-        let container = NSView(frame: NSRect(x: 0, y: 0, width: tableView.bounds.width, height: 44))
-        let dot = NSView(frame: NSRect(x: 8, y: 16, width: 10, height: 10))
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: tableView.bounds.width, height: 52))
+
+        // Status dot
+        let dot = NSView(frame: NSRect(x: 8, y: 20, width: 10, height: 10))
         dot.wantsLayer = true
         dot.layer?.backgroundColor = isRunning ? NSColor.systemGreen.cgColor : NSColor.tertiaryLabelColor.cgColor
         dot.layer?.cornerRadius = 5
         container.addSubview(dot)
 
-        cell.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(cell)
+        // VM name
+        let nameLabel = NSTextField(labelWithString: name)
+        nameLabel.font = NSFont.systemFont(ofSize: 12, weight: .medium)
+        nameLabel.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(nameLabel)
+
+        // Status text
+        let statusText = isRunning ? "Running" : "Stopped"
+        let statusLabel = NSTextField(labelWithString: statusText)
+        statusLabel.font = NSFont.systemFont(ofSize: 10)
+        statusLabel.textColor = isRunning ? .systemGreen : .tertiaryLabelColor
+        statusLabel.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(statusLabel)
+
+        // Action buttons on the right side
+        let playButton = NSButton(image: NSImage(systemSymbolName: "play.fill", accessibilityDescription: "Play")!, target: self, action: #selector(playVM(_:)))
+        playButton.bezelStyle = .inline
+        playButton.tag = row
+        playButton.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(playButton)
+
+        let stopButton = NSButton(image: NSImage(systemSymbolName: "stop.fill", accessibilityDescription: "Stop")!, target: self, action: #selector(stopVM(_:)))
+        stopButton.bezelStyle = .inline
+        stopButton.tag = row
+        stopButton.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(stopButton)
+
+        let refreshButton = NSButton(image: NSImage(systemSymbolName: "arrow.clockwise", accessibilityDescription: "Refresh")!, target: self, action: #selector(refreshVM(_:)))
+        refreshButton.bezelStyle = .inline
+        refreshButton.tag = row
+        refreshButton.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(refreshButton)
+
+        let destroyButton = NSButton(image: NSImage(systemSymbolName: "trash", accessibilityDescription: "Destroy")!, target: self, action: #selector(destroyVM(_:)))
+        destroyButton.bezelStyle = .inline
+        destroyButton.tag = row
+        destroyButton.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(destroyButton)
+
         NSLayoutConstraint.activate([
-            cell.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 26),
-            cell.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            nameLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 26),
+            nameLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
+
+            statusLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 26),
+            statusLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 2),
+
+            destroyButton.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -8),
+            destroyButton.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+
+            refreshButton.trailingAnchor.constraint(equalTo: destroyButton.leadingAnchor, constant: -4),
+            refreshButton.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+
+            stopButton.trailingAnchor.constraint(equalTo: refreshButton.leadingAnchor, constant: -4),
+            stopButton.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+
+            playButton.trailingAnchor.constraint(equalTo: stopButton.leadingAnchor, constant: -4),
+            playButton.centerYAnchor.constraint(equalTo: container.centerYAnchor),
         ])
+
         return container
     }
 
@@ -157,24 +228,131 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         showVM(vmNames[row])
     }
 
+    // MARK: - Actions
+
+    @objc private func playVM(_ sender: NSButton) {
+        let row = sender.tag
+        guard row < vmNames.count else { return }
+        let name = vmNames[row]
+        showVM(name)
+    }
+
+    @objc private func stopVM(_ sender: NSButton) {
+        let row = sender.tag
+        guard row < vmNames.count else { return }
+        let name = vmNames[row]
+        vmInstances[name]?.controller.stop()
+        refreshVMList()
+    }
+
+    @objc private func refreshVM(_ sender: NSButton) {
+        refreshVMList()
+    }
+
+    @objc private func destroyVM(_ sender: NSButton) {
+        let row = sender.tag
+        guard row < vmNames.count else { return }
+        let name = vmNames[row]
+
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Destroy \(name)?"
+        alert.informativeText = "This will permanently delete the VM and all its files. This cannot be undone."
+        alert.addButton(withTitle: "Destroy")
+        alert.addButton(withTitle: "Cancel")
+        if alert.runModal() == .alertFirstButtonReturn {
+            vmInstances[name]?.controller.stop()
+            try? OPNDRMVMSnapshotManager.destroyVM(name: name)
+            vmInstances.removeValue(forKey: name)
+            if selectedVM == name {
+                selectedVM = nil
+                welcomeLabel.isHidden = false
+            }
+            refreshVMList()
+        }
+    }
+
+    @objc private func newVMClicked() {
+        let alert = NSAlert()
+        alert.alertStyle = .informational
+        alert.messageText = "Create New VM"
+        alert.informativeText = "Choose a VM type, name, and memory allocation."
+
+        let typePopup = NSPopUpButton(frame: NSRect(x: 0, y: 40, width: 200, height: 26), pullsDown: false)
+        typePopup.addItems(withTitles: ["Apple (macOS)", "Linux"])
+        let nameField = NSTextField(frame: NSRect(x: 0, y: 10, width: 200, height: 24))
+        nameField.placeholderString = "VM name"
+        let memField = NSTextField(frame: NSRect(x: 210, y: 10, width: 60, height: 24))
+        memField.stringValue = "16"
+        let memLabel = NSTextField(labelWithString: "GB")
+
+        let accessory = NSView(frame: NSRect(x: 0, y: 0, width: 280, height: 70))
+        accessory.addSubview(typePopup)
+        accessory.addSubview(nameField)
+        accessory.addSubview(memField)
+        accessory.addSubview(memLabel)
+        alert.accessoryView = accessory
+        alert.addButton(withTitle: "Create")
+        alert.addButton(withTitle: "Cancel")
+
+        if alert.runModal() == .alertFirstButtonReturn {
+            let name = nameField.stringValue.trimmingCharacters(in: .whitespaces)
+            guard !name.isEmpty else { return }
+            let memGB = Int(memField.stringValue) ?? 16
+            createVM(name: name, memoryGB: memGB)
+        }
+    }
+
+    func createVM(name: String, memoryGB: Int) {
+        // Create VM directory structure
+        let dir = AgentComputerStore.agentDir(name)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        refreshVMList()
+
+        // Try to boot it if state files exist
+        showVM(name)
+    }
+
+    @objc private func layoutChanged(_ control: NSSegmentedControl) {
+        // Phase 3: multi-VM layout
+    }
+
     // MARK: - VM Display
 
     func showVM(_ machineID: String) {
-        if let existing = vmWindows[machineID] {
-            existing.window?.makeKeyAndOrderFront(nil)
+        welcomeLabel.isHidden = true
+
+        // If already running, just focus
+        if let instance = vmInstances[machineID] {
+            instance.windowController.window?.makeKeyAndOrderFront(nil)
+            refreshVMList()
             return
         }
 
         let stateDir = AgentComputerStore.agentDir(machineID)
         guard FileManager.default.fileExists(atPath: stateDir.path) else { return }
 
-        // Boot the VM
+        // Check if this is a real VM with state files
+        let diskURL = stateDir.appendingPathComponent("Disk.img")
+        let machineIDURL = stateDir.appendingPathComponent("MachineIdentifier")
+
+        guard FileManager.default.fileExists(atPath: diskURL.path),
+              FileManager.default.fileExists(atPath: machineIDURL.path) else {
+            // No VM state files - show message
+            welcomeLabel.stringValue = "No VM image found for \(machineID). Use a saved VM state."
+            welcomeLabel.isHidden = false
+            return
+        }
+
+        // Boot the VM in a floating window
         let controller = VirtualMachineController()
-        controllers[machineID] = controller
-        bootVM(machineID: machineID, controller: controller)
+        let overlay = OPNDRMVMWindowController(controller: controller, machineName: machineID)
+        vmInstances[machineID] = VMInstance(name: machineID, controller: controller, windowController: overlay)
+
+        bootVM(machineID: machineID, controller: controller, overlay: overlay)
     }
 
-    private func bootVM(machineID: String, controller: VirtualMachineController) {
+    private func bootVM(machineID: String, controller: VirtualMachineController, overlay: OPNDRMVMWindowController) {
         let appSupport = try! FileManager.default.url(
             for: .applicationSupportDirectory, in: .userDomainMask,
             appropriateFor: nil, create: false
@@ -225,61 +403,11 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         try! config.validate()
 
         let vm = VZVirtualMachine(configuration: config)
-        let overlay = OPNDRMVMWindowController(controller: controller, machineName: machineID)
-        vmWindows[machineID] = overlay
-
         controller.setMachine(vm)
         vm.delegate = controller
         controller.start()
 
         overlay.window?.makeKeyAndOrderFront(nil)
         refreshVMList()
-    }
-
-    // MARK: - Actions
-
-    @objc private func newVMClicked() {
-        let alert = NSAlert()
-        alert.alertStyle = .informational
-        alert.messageText = "Create New VM"
-        alert.informativeText = "Choose a VM type, name, and memory allocation."
-
-        let typePopup = NSPopUpButton(frame: NSRect(x: 0, y: 40, width: 200, height: 26), pullsDown: false)
-        typePopup.addItems(withTitles: ["Apple (macOS)", "Linux"])
-        let nameField = NSTextField(frame: NSRect(x: 0, y: 10, width: 200, height: 24))
-        nameField.placeholderString = "VM name"
-        let memField = NSTextField(frame: NSRect(x: 210, y: 10, width: 60, height: 24))
-        memField.stringValue = "16"
-        let memLabel = NSTextField(labelWithString: "GB")
-
-        let accessory = NSView(frame: NSRect(x: 0, y: 0, width: 280, height: 70))
-        accessory.addSubview(typePopup)
-        accessory.addSubview(nameField)
-        accessory.addSubview(memField)
-        accessory.addSubview(memLabel)
-        alert.accessoryView = accessory
-        alert.addButton(withTitle: "Create")
-        alert.addButton(withTitle: "Cancel")
-
-        if alert.runModal() == .alertFirstButtonReturn {
-            let name = nameField.stringValue.trimmingCharacters(in: .whitespaces)
-            guard !name.isEmpty else { return }
-            let memGB = Int(memField.stringValue) ?? 16
-            createVM(name: name, memoryGB: memGB)
-        }
-    }
-
-    func createVM(name: String, memoryGB: Int) {
-        // Create VM directory structure
-        // VM creation from IPSW will be implemented in Phase 4
-            // For now just create the directory
-            let dir = AgentComputerStore.agentDir(name)
-            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        refreshVMList()
-        // Future: actually create from IPSW, provision, boot
-    }
-
-    @objc private func layoutChanged(_ control: NSSegmentedControl) {
-        // Phase 3 will implement multi-VM layout
     }
 }
