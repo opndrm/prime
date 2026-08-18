@@ -1,0 +1,1389 @@
+{
+  "builtTestProducts" : [
+    {
+      "binaryPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.xctest/Contents/MacOS/OPNDRMVMPackageTests",
+      "packagePath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm",
+      "productName" : "OPNDRMVMPackageTests"
+    }
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.OPNDRMGuestEngine-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/sources",
+      "importPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMGuestEngine/OpenAdaptGuestEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMProtocol.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "OPNDRMGuestEngine",
+      "moduleOutputPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMGuestEngine.swiftmodule",
+      "objects" : [
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/OpenAdaptGuestEngine.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/include/OPNDRMGuestEngine-Swift.h",
+        "-swift-version",
+        "6",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "opndrm_vm"
+      ],
+      "outputFileMapPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/OpenAdaptGuestEngine.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMGuestEngine.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMGuestEngine/OpenAdaptGuestEngine.swift"
+      ],
+      "tempsPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.OPNDRMGuestHelper-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestHelper.build/sources",
+      "importPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMGuestHelper/OPNDRMGuestHelper.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMGuestEngine.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMProtocol.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestHelper.build/sources"
+        }
+      ],
+      "isLibrary" : false,
+      "moduleName" : "OPNDRMGuestHelper",
+      "moduleOutputPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMGuestHelper.swiftmodule",
+      "objects" : [
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestHelper.build/OPNDRMGuestHelper.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-Xfrontend",
+        "-entry-point-function-name",
+        "-Xfrontend",
+        "OPNDRMGuestHelper_main",
+        "-parse-as-library",
+        "-swift-version",
+        "6",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "opndrm_vm"
+      ],
+      "outputFileMapPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestHelper.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestHelper.build/OPNDRMGuestHelper.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMGuestHelper.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMGuestHelper/OPNDRMGuestHelper.swift"
+      ],
+      "tempsPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestHelper.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.OPNDRMProtocol-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMProtocol.build/sources",
+      "importPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMProtocol/GuestCommandProtocol.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMProtocol.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "OPNDRMProtocol",
+      "moduleOutputPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMProtocol.swiftmodule",
+      "objects" : [
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMProtocol.build/GuestCommandProtocol.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMProtocol.build/include/OPNDRMProtocol-Swift.h",
+        "-swift-version",
+        "6",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "opndrm_vm"
+      ],
+      "outputFileMapPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMProtocol.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMProtocol.build/GuestCommandProtocol.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMProtocol.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMProtocol/GuestCommandProtocol.swift"
+      ],
+      "tempsPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMProtocol.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.OPNDRMVM-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/sources",
+      "importPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/AgentComputerStore.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/GuestControlState.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/GuestSocketClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/MacStateAdoption.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/OPNDRMVMApp.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/OPNDRMVMWindow.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/VirtualMachineController.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMProtocol.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/sources"
+        }
+      ],
+      "isLibrary" : false,
+      "moduleName" : "OPNDRMVM",
+      "moduleOutputPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMVM.swiftmodule",
+      "objects" : [
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/AgentComputerStore.swift.o",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/GuestControlState.swift.o",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/GuestSocketClient.swift.o",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/MacStateAdoption.swift.o",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/OPNDRMVMApp.swift.o",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/OPNDRMVMWindow.swift.o",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/VirtualMachineController.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-Xfrontend",
+        "-entry-point-function-name",
+        "-Xfrontend",
+        "OPNDRMVM_main",
+        "-swift-version",
+        "6",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "opndrm_vm"
+      ],
+      "outputFileMapPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/AgentComputerStore.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/GuestControlState.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/GuestSocketClient.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/MacStateAdoption.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/OPNDRMVMApp.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/OPNDRMVMWindow.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/VirtualMachineController.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMVM.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/AgentComputerStore.swift",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/GuestControlState.swift",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/GuestSocketClient.swift",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/MacStateAdoption.swift",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/OPNDRMVMApp.swift",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/OPNDRMVMWindow.swift",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/VirtualMachineController.swift"
+      ],
+      "tempsPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.OPNDRMVMPackageTests-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/sources",
+      "importPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.derived/runner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMVMTests.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "OPNDRMVMPackageTests",
+      "moduleOutputPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMVMPackageTests.swiftmodule",
+      "objects" : [
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/runner.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/include/OPNDRMVMPackageTests-Swift.h",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "opndrm_vm"
+      ],
+      "outputFileMapPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMVMPackageTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.derived/runner.swift"
+      ],
+      "tempsPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.OPNDRMVMTests-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMTests.build/sources",
+      "importPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Tests/OPNDRMVMTests/GuestCommandCodecTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Tests/OPNDRMVMTests/GuestControlStateTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Tests/OPNDRMVMTests/OpenAdaptGuestEngineTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMGuestEngine.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMProtocol.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/opndrm-vm"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "OPNDRMVMTests",
+      "moduleOutputPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMVMTests.swiftmodule",
+      "objects" : [
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMTests.build/GuestCommandCodecTests.swift.o",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMTests.build/GuestControlStateTests.swift.o",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMTests.build/OpenAdaptGuestEngineTests.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-swift-version",
+        "6",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "opndrm_vm"
+      ],
+      "outputFileMapPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMTests.build/GuestCommandCodecTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMTests.build/GuestControlStateTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMTests.build/OpenAdaptGuestEngineTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules/OPNDRMVMTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Tests/OPNDRMVMTests/GuestCommandCodecTests.swift",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Tests/OPNDRMVMTests/GuestControlStateTests.swift",
+        "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Tests/OPNDRMVMTests/OpenAdaptGuestEngineTests.swift"
+      ],
+      "tempsPath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMTests.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "OPNDRMGuestEngine" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "OPNDRMGuestEngine",
+      "-package-name",
+      "opndrm_vm",
+      "-c",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMGuestEngine/OpenAdaptGuestEngine.swift",
+      "-I",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/include/OPNDRMGuestEngine-Swift.h",
+      "-swift-version",
+      "6",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "opndrm_vm",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "OPNDRMGuestHelper" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "OPNDRMGuestHelper",
+      "-package-name",
+      "opndrm_vm",
+      "-c",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMGuestHelper/OPNDRMGuestHelper.swift",
+      "-I",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-Xfrontend",
+      "-entry-point-function-name",
+      "-Xfrontend",
+      "OPNDRMGuestHelper_main",
+      "-parse-as-library",
+      "-swift-version",
+      "6",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "opndrm_vm",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "OPNDRMProtocol" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "OPNDRMProtocol",
+      "-package-name",
+      "opndrm_vm",
+      "-c",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMProtocol/GuestCommandProtocol.swift",
+      "-I",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMProtocol.build/include/OPNDRMProtocol-Swift.h",
+      "-swift-version",
+      "6",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "opndrm_vm",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "OPNDRMVM" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "OPNDRMVM",
+      "-package-name",
+      "opndrm_vm",
+      "-c",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/AgentComputerStore.swift",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/GuestControlState.swift",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/GuestSocketClient.swift",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/MacStateAdoption.swift",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/OPNDRMVMApp.swift",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/OPNDRMVMWindow.swift",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/VirtualMachineController.swift",
+      "-I",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-Xfrontend",
+      "-entry-point-function-name",
+      "-Xfrontend",
+      "OPNDRMVM_main",
+      "-swift-version",
+      "6",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "opndrm_vm",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "OPNDRMVMPackageTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "OPNDRMVMPackageTests",
+      "-package-name",
+      "opndrm_vm",
+      "-c",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.derived/runner.swift",
+      "-I",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/include/OPNDRMVMPackageTests-Swift.h",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "opndrm_vm",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "OPNDRMVMTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "OPNDRMVMTests",
+      "-package-name",
+      "opndrm_vm",
+      "-c",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Tests/OPNDRMVMTests/GuestCommandCodecTests.swift",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Tests/OPNDRMVMTests/GuestControlStateTests.swift",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Tests/OPNDRMVMTests/OpenAdaptGuestEngineTests.swift",
+      "-I",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-swift-version",
+      "6",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "opndrm_vm",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "OPNDRMGuestEngine" : [
+      "OPNDRMProtocol"
+    ],
+    "OPNDRMGuestHelper" : [
+      "OPNDRMGuestEngine",
+      "OPNDRMProtocol"
+    ],
+    "OPNDRMProtocol" : [
+
+    ],
+    "OPNDRMVM" : [
+      "OPNDRMProtocol"
+    ],
+    "OPNDRMVMPackageTests" : [
+      "OPNDRMVMTests",
+      "OPNDRMVM",
+      "OPNDRMGuestEngine",
+      "OPNDRMProtocol"
+    ],
+    "OPNDRMVMTests" : [
+      "OPNDRMVM",
+      "OPNDRMGuestEngine",
+      "OPNDRMProtocol"
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+    "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.derived/runner.swift" : {
+      "inputs" : [
+
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.derived/runner.swift"
+        }
+      ]
+    }
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMGuestEngine/OpenAdaptGuestEngine.swift"
+        }
+      ],
+      "outputFilePath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/sources"
+    },
+    "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestHelper.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMGuestHelper/OPNDRMGuestHelper.swift"
+        }
+      ],
+      "outputFilePath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestHelper.build/sources"
+    },
+    "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMProtocol.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMProtocol/GuestCommandProtocol.swift"
+        }
+      ],
+      "outputFilePath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMProtocol.build/sources"
+    },
+    "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/AgentComputerStore.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/GuestControlState.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/GuestSocketClient.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/MacStateAdoption.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/OPNDRMVMApp.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/OPNDRMVMWindow.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMVM/VirtualMachineController.swift"
+        }
+      ],
+      "outputFilePath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/sources"
+    },
+    "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.derived/runner.swift"
+        }
+      ],
+      "outputFilePath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/sources"
+    },
+    "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/OpenAdaptGuestEngine.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMProtocol.build/GuestCommandProtocol.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/AgentComputerStore.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/GuestControlState.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/GuestSocketClient.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/MacStateAdoption.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/OPNDRMVMApp.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/OPNDRMVMWindow.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/VirtualMachineController.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMTests.build/GuestCommandCodecTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMTests.build/GuestControlStateTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMTests.build/OpenAdaptGuestEngineTests.swift.o"
+        }
+      ],
+      "outputFilePath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.product/Objects.LinkFileList"
+    },
+    "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Tests/OPNDRMVMTests/GuestCommandCodecTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Tests/OPNDRMVMTests/GuestControlStateTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Tests/OPNDRMVMTests/OpenAdaptGuestEngineTests.swift"
+        }
+      ],
+      "outputFilePath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMTests.build/sources"
+    },
+    "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/opndrm-guest-helper-entitlement.plist" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<entitlement-plist>"
+        },
+        {
+          "kind" : "virtual",
+          "name" : "<com.apple.security.get-task-allow>"
+        }
+      ],
+      "outputFilePath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/opndrm-guest-helper-entitlement.plist"
+    },
+    "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/opndrm-guest-helper.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/OpenAdaptGuestEngine.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestHelper.build/OPNDRMGuestHelper.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMProtocol.build/GuestCommandProtocol.swift.o"
+        }
+      ],
+      "outputFilePath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/opndrm-guest-helper.product/Objects.LinkFileList"
+    },
+    "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/opndrm-vm-entitlement.plist" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<entitlement-plist>"
+        },
+        {
+          "kind" : "virtual",
+          "name" : "<com.apple.security.get-task-allow>"
+        }
+      ],
+      "outputFilePath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/opndrm-vm-entitlement.plist"
+    },
+    "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/opndrm-vm.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMProtocol.build/GuestCommandProtocol.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/AgentComputerStore.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/GuestControlState.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/GuestSocketClient.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/MacStateAdoption.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/OPNDRMVMApp.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/OPNDRMVMWindow.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVM.build/VirtualMachineController.swift.o"
+        }
+      ],
+      "outputFilePath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/opndrm-vm.product/Objects.LinkFileList"
+    },
+    "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}

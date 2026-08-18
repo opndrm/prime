@@ -1,4 +1,0 @@
-# Keep the build context intentionally tiny and prevent accidental source,
-# credentials, or local tooling from becoming part of the baseline image.
-*
-!Containerfile

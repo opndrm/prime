@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/primary.swiftdeps"
+  },
+  "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.derived/runner.swift": {
+    "dependencies": "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/runner.d",
+    "object": "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/runner.swift.o",
+    "swiftmodule": "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/runner.swiftdeps",
+    "diagnostics": "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/runner.dia"
+  }
+}

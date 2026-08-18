@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/primary.swiftdeps"
+  },
+  "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/Sources/OPNDRMGuestEngine/OpenAdaptGuestEngine.swift": {
+    "dependencies": "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/OpenAdaptGuestEngine.d",
+    "object": "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/OpenAdaptGuestEngine.swift.o",
+    "swiftmodule": "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/OpenAdaptGuestEngine~partial.swiftmodule",
+    "swift-dependencies": "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/OpenAdaptGuestEngine.swiftdeps",
+    "diagnostics": "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/OpenAdaptGuestEngine.dia"
+  }
+}
