@@ -52,15 +52,21 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
 
     private func setupUI() {
         guard let window = window else { return }
-        let splitView = NSSplitView(frame: window.contentView!.bounds)
-        splitView.isVertical = true
-        splitView.dividerStyle = .thin
-        splitView.autoresizingMask = [.width, .height]
+
+        // Use an explicit Auto Layout root instead of NSSplitView. The previous
+        // split view allowed the black VM canvas to overlap the sidebar on some
+        // launches, making the manager look clipped/glitched. Fixed 280pt rail.
+        let rootView = NSView(frame: window.contentView?.bounds ?? window.frame)
+        rootView.autoresizingMask = [.width, .height]
+        rootView.wantsLayer = true
+        rootView.layer?.backgroundColor = NSColor.black.cgColor
 
         // Sidebar
         vmListView = NSView()
+        vmListView.translatesAutoresizingMaskIntoConstraints = false
         vmListView.wantsLayer = true
         vmListView.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+        rootView.addSubview(vmListView)
 
         let titleLabel = NSTextField(labelWithString: "Virtual Machines")
         titleLabel.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
@@ -76,6 +82,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         tableView.selectionHighlightStyle = .regular
 
         let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("vm"))
+        column.resizingMask = .autoresizingMask
         tableView.addTableColumn(column)
 
         let scrollView = NSScrollView()
@@ -123,9 +130,37 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         progressCancelButton.isHidden = true
         vmListView.addSubview(progressCancelButton)
 
+        // Content area - holds the layout view
+        contentView = NSView()
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.wantsLayer = true
+        contentView.layer?.backgroundColor = NSColor.black.cgColor
+        rootView.addSubview(contentView)
+
+        let separator = NSBox()
+        separator.boxType = .separator
+        separator.translatesAutoresizingMaskIntoConstraints = false
+        rootView.addSubview(separator)
+
         NSLayoutConstraint.activate([
+            vmListView.topAnchor.constraint(equalTo: rootView.topAnchor),
+            vmListView.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
+            vmListView.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
+            vmListView.widthAnchor.constraint(equalToConstant: 280),
+
+            separator.topAnchor.constraint(equalTo: rootView.topAnchor),
+            separator.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
+            separator.leadingAnchor.constraint(equalTo: vmListView.trailingAnchor),
+            separator.widthAnchor.constraint(equalToConstant: 1),
+
+            contentView.topAnchor.constraint(equalTo: rootView.topAnchor),
+            contentView.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
+            contentView.leadingAnchor.constraint(equalTo: separator.trailingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
+
             titleLabel.topAnchor.constraint(equalTo: vmListView.topAnchor, constant: 12),
             titleLabel.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor, constant: 12),
+            titleLabel.trailingAnchor.constraint(equalTo: vmListView.trailingAnchor, constant: -12),
 
             scrollView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
             scrollView.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor),
@@ -144,6 +179,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             progressCancelButton.bottomAnchor.constraint(equalTo: layoutControl.topAnchor, constant: -8),
 
             layoutControl.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor, constant: 12),
+            layoutControl.trailingAnchor.constraint(lessThanOrEqualTo: vmListView.trailingAnchor, constant: -12),
             layoutControl.bottomAnchor.constraint(equalTo: bootLayoutButton.topAnchor, constant: -8),
 
             bootLayoutButton.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor, constant: 12),
@@ -152,11 +188,6 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             newButton.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor, constant: 12),
             newButton.bottomAnchor.constraint(equalTo: vmListView.bottomAnchor, constant: -12),
         ])
-
-        // Content area - holds the layout view
-        contentView = NSView()
-        contentView.wantsLayer = true
-        contentView.layer?.backgroundColor = NSColor.black.cgColor
 
         welcomeLabel = NSTextField(labelWithString: "Select a VM or create a new one")
         welcomeLabel.font = NSFont.systemFont(ofSize: 16, weight: .medium)
@@ -169,7 +200,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         ])
 
         // Layout view for multi-VM display
-        layoutView = OPNDRMVMLayoutView(frame: contentView.bounds)
+        layoutView = OPNDRMVMLayoutView(frame: .zero)
         layoutView.translatesAutoresizingMaskIntoConstraints = false
         layoutView.isHidden = true
         contentView.addSubview(layoutView)
@@ -180,11 +211,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             layoutView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
         ])
 
-        splitView.addSubview(vmListView)
-        splitView.addSubview(contentView)
-        splitView.setPosition(260, ofDividerAt: 0)
-
-        window.contentView = splitView
+        window.contentView = rootView
     }
 
     // MARK: - VM List
