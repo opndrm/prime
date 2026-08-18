@@ -23,16 +23,22 @@ let package = Package(
                 .linkedFramework("Network"),
             ]
         ),
+        .target(
+            name: "BuzzBotGuestEngine",
+            dependencies: ["BuzzBotProtocol"],
+            path: "Sources/BuzzBotGuestEngine"
+        ),
         .executableTarget(
             name: "BuzzBotGuestHelper",
-            dependencies: ["BuzzBotProtocol"],
+            dependencies: ["BuzzBotGuestEngine", "BuzzBotProtocol"],
             path: "Sources/BuzzBotGuestHelper",
             exclude: ["com.opndrm.buzzbot-guest-helper.plist", "install-guest-helper.sh"],
-            sources: ["BuzzBotGuestHelper.swift"]
+            sources: ["BuzzBotGuestHelper.swift"],
+            linkerSettings: [.linkedFramework("AppKit")]
         ),
         .testTarget(
             name: "BuzzBotComputerServiceTests",
-            dependencies: ["BuzzBotProtocol", "BuzzBotComputerService"],
+            dependencies: ["BuzzBotGuestEngine", "BuzzBotProtocol", "BuzzBotComputerService"],
             path: "Tests/BuzzBotComputerServiceTests"
         ),
     ]

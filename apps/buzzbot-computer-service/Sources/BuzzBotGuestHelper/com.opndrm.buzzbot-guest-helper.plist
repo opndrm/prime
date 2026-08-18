@@ -12,6 +12,8 @@
     <dict>
         <key>OPENADAPT_PATH</key>
         <string>__OPENADAPT_CLI_PATH__</string>
+        <key>OPENADAPT_RECORDINGS_DIR</key>
+        <string>__OPENADAPT_RECORDINGS_DIR__</string>
     </dict>
     <key>RunAtLoad</key>
     <true/>

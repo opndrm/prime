@@ -14,6 +14,7 @@ PLIST_DEST="${LAUNCH_AGENT_DIR}/${PLIST_NAME}"
 USER_BIN_DIR="${HOME}/.local/bin"
 BIN_DEST="${USER_BIN_DIR}/buzzbot-guest-helper"
 LOG_DIR="${HOME}/Library/Logs/BuzzBot"
+RECORDINGS_DIR="${HOME}/Library/Application Support/BuzzBot/OpenAdapt/Recordings"
 
 find_openadapt() {
     local discovered=""
@@ -54,6 +55,15 @@ EOF
 fi
 
 printf '==> Using guest OpenAdapt CLI: %s\n' "${OPENADAPT_CLI}"
+if ! "${OPENADAPT_CLI}" capture start --help >/dev/null 2>&1 || \
+   ! "${OPENADAPT_CLI}" capture view --help >/dev/null 2>&1; then
+    cat >&2 <<'EOF'
+error: the selected executable does not expose the supported OpenAdapt
+`capture start` and `capture view` CLI surfaces. No Desktop/dashboard fallback
+will be installed or launched.
+EOF
+    exit 1
+fi
 echo "==> Building guest helper (release)..."
 swift build --package-path "${SERVICE_DIR}" -c release
 BUILD_BIN_DIR="$(swift build --package-path "${SERVICE_DIR}" -c release --show-bin-path)"
@@ -62,7 +72,8 @@ BIN_SRC="${BUILD_BIN_DIR}/buzzbot-guest-helper"
 echo "   [OK] Build complete: ${BIN_SRC}"
 
 echo "==> Installing user binary to ${BIN_DEST}..."
-mkdir -p "${USER_BIN_DIR}" "${LAUNCH_AGENT_DIR}" "${LOG_DIR}"
+mkdir -p "${USER_BIN_DIR}" "${LAUNCH_AGENT_DIR}" "${LOG_DIR}" "${RECORDINGS_DIR}"
+chmod 0700 "${RECORDINGS_DIR}"
 /usr/bin/install -m 0755 "${BIN_SRC}" "${BIN_DEST}"
 
 echo "==> Installing user LaunchAgent to ${PLIST_DEST}..."
@@ -71,6 +82,7 @@ trap 'rm -f "${PLIST_TMP}"' EXIT
 cp "${PLIST_SRC}" "${PLIST_TMP}"
 /usr/bin/plutil -replace ProgramArguments.0 -string "${BIN_DEST}" "${PLIST_TMP}"
 /usr/bin/plutil -replace EnvironmentVariables.OPENADAPT_PATH -string "${OPENADAPT_CLI}" "${PLIST_TMP}"
+/usr/bin/plutil -replace EnvironmentVariables.OPENADAPT_RECORDINGS_DIR -string "${RECORDINGS_DIR}" "${PLIST_TMP}"
 /usr/bin/plutil -replace StandardErrorPath -string "${LOG_DIR}/guest-helper.err.log" "${PLIST_TMP}"
 /usr/bin/plutil -replace StandardOutPath -string "${LOG_DIR}/guest-helper.out.log" "${PLIST_TMP}"
 /usr/bin/plutil -lint "${PLIST_TMP}" >/dev/null

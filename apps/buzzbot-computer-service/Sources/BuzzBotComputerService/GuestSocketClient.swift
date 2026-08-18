@@ -17,7 +17,8 @@ final class GuestSocketClient: NSObject {
 
     private static let connectTimeout: TimeInterval = 5
     private static let writeTimeout: TimeInterval = 5
-    private static let readTimeout: TimeInterval = 15
+    private static let readTimeout: TimeInterval = 60
+    private static let consentReadTimeout: TimeInterval = 300
     private static let maximumResponseBytes = 64 * 1024
 
     private let socketDevice: VZVirtioSocketDevice
@@ -58,7 +59,13 @@ final class GuestSocketClient: NSObject {
 
         let responseData: Data
         do {
-            responseData = try await exchange(connection: connection, requestData: requestData)
+            responseData = try await exchange(
+                connection: connection,
+                requestData: requestData,
+                readTimeout: request.action == .recordStart
+                    ? Self.consentReadTimeout
+                    : Self.readTimeout
+            )
         } catch let error as GuestSocketError {
             throw record(error)
         } catch {
@@ -76,7 +83,8 @@ final class GuestSocketClient: NSObject {
 
     private func exchange(
         connection: VZVirtioSocketConnection,
-        requestData: Data
+        requestData: Data,
+        readTimeout: TimeInterval
     ) async throws -> Data {
         activeConnectionCount += 1
         isConnected = true
@@ -87,7 +95,6 @@ final class GuestSocketClient: NSObject {
 
         let connectionBox = GuestSocketConnectionBox(connection)
         let writeTimeout = Self.writeTimeout
-        let readTimeout = Self.readTimeout
         let maximumResponseBytes = Self.maximumResponseBytes
 
         return try await withCheckedThrowingContinuation { continuation in
