@@ -292,6 +292,10 @@ final class OPNDRMAgentHarnessHolder {
         First verify/control the assigned VM through OPNDRM's local socket if needed:
         printf '{"action":"boot","name":"\(vmName)"}\n' | nc -w 2 127.0.0.1 7777
         printf '{"action":"status"}\n' | nc -w 2 127.0.0.1 7777
+        printf '{"action":"console.write","name":"\(vmName)","text":"root\n"}\n' | nc -w 2 127.0.0.1 7777
+        printf '{"action":"console.read","name":"\(vmName)","limit":4000}\n' | nc -w 2 127.0.0.1 7777
+
+        For Linux actions, use console.write with shell commands and console.read for proof. Do not just describe work; operate the VM when the user asks.
 
         Reply in the OPNDRM voice: curious, helpful, minimal, truthful. A tiny smart joke is okay; fake certainty is not.
         If a requested guest action is not available through the current VM API, say that clearly and offer the next useful step.
@@ -356,8 +360,13 @@ final class OPNDRMAgentHarnessHolder {
         - Protocol: one newline-delimited JSON object per command.
 
         Boot/check your VM:
-        printf '{"action":"boot","name":"\(vmName)"}\\n' | nc 127.0.0.1 7777
-        printf '{"action":"status"}\\n' | nc 127.0.0.1 7777
+        printf '{"action":"boot","name":"\(vmName)"}\n' | nc 127.0.0.1 7777
+        printf '{"action":"status"}\n' | nc 127.0.0.1 7777
+
+        Linux console control:
+        printf '{"action":"console.write","name":"\(vmName)","text":"root\n"}\n' | nc 127.0.0.1 7777
+        printf '{"action":"console.write","name":"\(vmName)","text":"uname -a\n"}\n' | nc 127.0.0.1 7777
+        printf '{"action":"console.read","name":"\(vmName)","limit":4000}\n' | nc 127.0.0.1 7777
 
         Chat bridge:
         - OPNDRM_AGENT_CHAT points to the in-app chat log for this agent.

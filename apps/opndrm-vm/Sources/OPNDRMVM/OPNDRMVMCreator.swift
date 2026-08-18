@@ -525,7 +525,7 @@ final class OPNDRMVMCreator: NSObject {
         let machineIdentifier = VZGenericMachineIdentifier()
         try machineIdentifier.dataRepresentation.write(to: stateDir.appendingPathComponent("GenericMachineIdentifier"))
 
-        let commandLine = "console=tty0 console=hvc0 modules=loop,squashfs,sd-mod,usb-storage,virtio_blk,virtio_net,virtio_gpu modloop=\(alpineBaseURL)/modloop-virt alpine_repo=https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/"
+        let commandLine = "console=tty0 console=hvc0 modules=loop,squashfs,sd-mod,usb-storage,virtio_blk,virtio_net,virtio_gpu modloop=\(alpineBaseURL)/modloop-virt alpine_repo=https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/ init=/bin/sh"
         try commandLine.write(to: stateDir.appendingPathComponent("LinuxCommandLine"), atomically: true, encoding: .utf8)
         try VMType.linux.rawValue.write(to: stateDir.appendingPathComponent("vm-type.txt"), atomically: true, encoding: .utf8)
         try writePlist([
@@ -562,11 +562,24 @@ final class OPNDRMVMCreator: NSObject {
 
         let bootLoader = VZLinuxBootLoader(kernelURL: kernelURL)
         bootLoader.initialRamdiskURL = initrdURL
-        bootLoader.commandLine = (try? String(contentsOf: commandLineURL, encoding: .utf8)) ?? "console=tty0 console=hvc0"
+        var commandLine = (try? String(contentsOf: commandLineURL, encoding: .utf8)) ?? "console=tty0 console=hvc0"
+        if !commandLine.contains("init=/bin/sh") {
+            commandLine += " init=/bin/sh"
+            try? commandLine.write(to: commandLineURL, atomically: true, encoding: .utf8)
+        }
+        bootLoader.commandLine = commandLine
 
         let diskAttachment = try VZDiskImageStorageDeviceAttachment(url: diskURL, readOnly: false)
         let disk = VZVirtioBlockDeviceConfiguration(attachment: diskAttachment)
         disk.blockDeviceIdentifier = "opndrm-linux"
+
+        let consoleInputPipe = Pipe()
+        let consoleOutputPipe = Pipe()
+        let serialPort = VZVirtioConsoleDeviceSerialPortConfiguration()
+        serialPort.attachment = VZFileHandleSerialPortAttachment(
+            fileHandleForReading: consoleInputPipe.fileHandleForReading,
+            fileHandleForWriting: consoleOutputPipe.fileHandleForWriting
+        )
 
         let config = VZVirtualMachineConfiguration()
         config.platform = platform
@@ -585,6 +598,7 @@ final class OPNDRMVMCreator: NSObject {
         networkConfig.attachment = VZNATNetworkDeviceAttachment()
         config.networkDevices = [networkConfig]
         config.socketDevices = [VZVirtioSocketDeviceConfiguration()]
+        config.serialPorts = [serialPort]
         config.entropyDevices = [VZVirtioEntropyDeviceConfiguration()]
         config.memoryBalloonDevices = [VZVirtioTraditionalMemoryBalloonDeviceConfiguration()]
 
@@ -593,6 +607,10 @@ final class OPNDRMVMCreator: NSObject {
         let vm = VZVirtualMachine(configuration: config)
         let controller = VirtualMachineController()
         controller.setMachine(vm)
+        controller.attachLinuxConsole(
+            input: consoleInputPipe.fileHandleForWriting,
+            output: consoleOutputPipe.fileHandleForReading
+        )
         vm.delegate = controller
         let view = VZVirtualMachineView()
         view.virtualMachine = vm

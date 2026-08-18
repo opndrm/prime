@@ -231,6 +231,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         scrollView.hasVerticalScroller = true
         scrollView.drawsBackground = true
         scrollView.backgroundColor = .clear
+        scrollView.isHidden = true
         transcriptView.isEditable = false
         transcriptView.isSelectable = true
         transcriptView.font = NSFont.systemFont(ofSize: 14)
@@ -637,6 +638,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
     }
 
     @objc private func showVMClicked() {
+        alphaValue = 0
         isHidden = true
         onHideRequested?()
     }

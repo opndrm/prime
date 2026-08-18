@@ -274,6 +274,8 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         }
         agentCanvasConsole.onHideRequested = { [weak self] in
             self?.window?.makeFirstResponder(nil)
+            self?.agentCanvasConsole.alphaValue = 0
+            self?.agentCanvasConsole.isHidden = true
             self?.displayVMInLayout()
         }
         contentView.addSubview(agentCanvasConsole, positioned: .above, relativeTo: layoutView)
@@ -436,6 +438,19 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             }
             bootVM(name)
             return ["ok": true, "message": "boot requested: \(name)"]
+        case "console.write", "type", "sendKeys":
+            let name = (request["name"] as? String) ?? selectedVM ?? ""
+            guard !name.isEmpty else { return ["ok": false, "message": "console.write requires a selected VM or name"] }
+            let text = (request["text"] as? String) ?? (request["keys"] as? String) ?? ""
+            guard !text.isEmpty else { return ["ok": false, "message": "console.write requires text"] }
+            guard let controller = vmInstances[name]?.controller else { return ["ok": false, "message": "\(name) is not running in this window"] }
+            let ok = controller.writeLinuxConsole(text)
+            return ["ok": ok, "message": ok ? "sent to \(name) console" : "\(name) has no writable Linux console"]
+        case "console.read":
+            let name = (request["name"] as? String) ?? selectedVM ?? ""
+            guard !name.isEmpty else { return ["ok": false, "message": "console.read requires a selected VM or name"] }
+            guard let controller = vmInstances[name]?.controller else { return ["ok": false, "message": "\(name) is not running in this window"] }
+            return ["ok": true, "name": name, "console": controller.readLinuxConsole(limit: Self.intValue(request["limit"], defaultValue: 4000))]
         case "stop":
             guard let name = request["name"] as? String, !name.isEmpty else {
                 return ["ok": false, "message": "stop requires name"]
@@ -656,6 +671,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         guard AgentComputerStore.hasVMState(vmName) else { return }
         let existing = agentHolders.values.first { $0.vmName == vmName }
         agentCanvasConsole.layer?.zPosition = 9_999
+        agentCanvasConsole.alphaValue = 1
         contentView.addSubview(agentCanvasConsole, positioned: .above, relativeTo: layoutView)
         agentCanvasConsole.configure(vmName: vmName, existingHolder: existing)
     }

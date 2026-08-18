@@ -150,12 +150,26 @@ final class OPNDRMVMApp: NSObject, NSApplicationDelegate, OPNDRMVMSocketDelegate
         case "hide":
             overlayController?.window?.orderOut(nil)
             return ["ok": true, "message": "hidden"]
+        case "console.write", "type", "sendKeys":
+            let text = (request["text"] as? String) ?? (request["keys"] as? String) ?? ""
+            guard !text.isEmpty else { return ["ok": false, "message": "console.write requires text"] }
+            let ok = controller?.writeLinuxConsole(text) ?? false
+            return ["ok": ok, "message": ok ? "sent to console" : "no writable Linux console"]
+        case "console.read":
+            return ["ok": true, "console": controller?.readLinuxConsole(limit: Self.intValue(request["limit"], defaultValue: 4000)) ?? ""]
         case "stop":
             controller?.stop()
             return ["ok": true, "message": "stopping"]
         default:
             return ["ok": false, "message": "unknown or unavailable action: \(action)"]
         }
+    }
+
+    private static func intValue(_ value: Any?, defaultValue: Int) -> Int {
+        if let int = value as? Int { return int }
+        if let number = value as? NSNumber { return number.intValue }
+        if let string = value as? String, let int = Int(string) { return int }
+        return defaultValue
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {

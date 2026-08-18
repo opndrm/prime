@@ -28,6 +28,11 @@ final class VirtualMachineController: NSObject, VZVirtualMachineDelegate {
     /// Guest command client, created when the VM starts and the socket device is available.
     private(set) var guestSocketClient: GuestSocketClient?
 
+    private var linuxConsoleInput: FileHandle?
+    private var linuxConsoleOutput: FileHandle?
+    private var linuxConsoleBuffer = ""
+    private var didSendLinuxAutologin = false
+
     var mayTerminateProcess: Bool { machine == nil }
 
     func setMachine(_ vm: VZVirtualMachine) {
@@ -53,6 +58,7 @@ final class VirtualMachineController: NSObject, VZVirtualMachineDelegate {
                     self.lifecycle = .running
                     FileHandle.standardError.write(Data("OPNDRMVM: VM started successfully\n".utf8))
                     self.setupGuestSocketClient(machine)
+                    self.startLinuxConsoleAutologinIfNeeded()
                     self.machineDidStart?(machine)
                 case .failure(let error):
                     self.fail(error)
@@ -73,6 +79,67 @@ final class VirtualMachineController: NSObject, VZVirtualMachineDelegate {
         FileHandle.standardError.write(Data("OPNDRMVM: no VZVirtioSocketDevice found\n".utf8))
     }
 
+    func attachLinuxConsole(input: FileHandle, output: FileHandle) {
+        linuxConsoleInput = input
+        linuxConsoleOutput = output
+        linuxConsoleBuffer = ""
+        didSendLinuxAutologin = false
+        output.readabilityHandler = { [weak self] handle in
+            let data = handle.availableData
+            guard !data.isEmpty else { return }
+            let text = String(data: data, encoding: .utf8) ?? ""
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.linuxConsoleBuffer.append(text)
+                if self.linuxConsoleBuffer.count > 16_000 {
+                    self.linuxConsoleBuffer = String(self.linuxConsoleBuffer.suffix(16_000))
+                }
+                if !self.didSendLinuxAutologin,
+                   self.linuxConsoleBuffer.localizedCaseInsensitiveContains("login:") {
+                    self.didSendLinuxAutologin = true
+                    _ = self.writeLinuxConsole("root\n")
+                    self.statusText = "Linux console is opening…"
+                    self.stateDidChange?(self.lifecycle, self.statusText)
+                }
+                if self.linuxConsoleBuffer.contains("~ #") || self.linuxConsoleBuffer.contains("localhost:~#") {
+                    self.statusText = "Linux shell is ready."
+                    self.stateDidChange?(self.lifecycle, self.statusText)
+                }
+            }
+        }
+    }
+
+    @discardableResult
+    func writeLinuxConsole(_ text: String) -> Bool {
+        guard let linuxConsoleInput else { return false }
+        guard let data = text.data(using: .utf8) else { return false }
+        do {
+            try linuxConsoleInput.write(contentsOf: data)
+            return true
+        } catch {
+            statusText = "Console write failed: \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    func readLinuxConsole(limit: Int = 4000) -> String {
+        String(linuxConsoleBuffer.suffix(max(0, limit)))
+    }
+
+    private func startLinuxConsoleAutologinIfNeeded() {
+        guard linuxConsoleInput != nil else { return }
+        statusText = "Linux is booting; opening console…"
+        for delay in [2.0, 5.0, 9.0, 13.0, 18.0] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                guard let self, self.lifecycle == .running, !self.didSendLinuxAutologin else { return }
+                if self.linuxConsoleBuffer.localizedCaseInsensitiveContains("login:") {
+                    self.didSendLinuxAutologin = true
+                    _ = self.writeLinuxConsole("root\n")
+                }
+            }
+        }
+    }
+
     func stop() {
         guard let machine, lifecycle == .running || lifecycle == .paused else { return }
         lifecycle = .stopping
@@ -83,6 +150,7 @@ final class VirtualMachineController: NSObject, VZVirtualMachineDelegate {
                 if let error {
                     self.fail(error)
                 } else {
+                    self.linuxConsoleOutput?.readabilityHandler = nil
                     self.machine?.delegate = nil
                     self.machine = nil
                     self.statusText = "Guest stopped."
