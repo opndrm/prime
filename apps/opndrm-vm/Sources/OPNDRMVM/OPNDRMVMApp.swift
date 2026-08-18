@@ -52,10 +52,6 @@ final class OPNDRMVMApp: NSObject, NSApplicationDelegate, OPNDRMVMSocketDelegate
     }
 
     private func bootVM(machineID: String) {
-        let appSupport = try! FileManager.default.url(
-            for: .applicationSupportDirectory, in: .userDomainMask,
-            appropriateFor: nil, create: false
-        ).standardizedFileURL
         let stateDir = AgentComputerStore.agentDir(machineID)
 
         guard FileManager.default.fileExists(atPath: stateDir.path) else {
@@ -129,6 +125,36 @@ final class OPNDRMVMApp: NSObject, NSApplicationDelegate, OPNDRMVMSocketDelegate
         controller.start()
     }
 
+    func handleAICommand(_ request: [String: Any]) -> [String: Any] {
+        if let mainWindowController {
+            return mainWindowController.handleAICommand(request)
+        }
+
+        let action = (request["action"] as? String) ?? ""
+        switch action {
+        case "ping":
+            return ["ok": true, "message": "pong"]
+        case "status":
+            return [
+                "ok": true,
+                "mode": "direct",
+                "lifecycle": controller?.lifecycle.rawValue ?? "unknown",
+                "status": controller?.statusText ?? ""
+            ]
+        case "show":
+            overlayController?.window?.orderFront(nil)
+            return ["ok": true, "message": "showing VM"]
+        case "hide":
+            overlayController?.window?.orderOut(nil)
+            return ["ok": true, "message": "hidden"]
+        case "stop":
+            controller?.stop()
+            return ["ok": true, "message": "stopping"]
+        default:
+            return ["ok": false, "message": "unknown or unavailable action: \(action)"]
+        }
+    }
+
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard let controller else { return .terminateNow }
         if controller.requestOrderlyStopForTermination() { return .terminateNow }
@@ -143,6 +169,7 @@ final class OPNDRMVMApp: NSObject, NSApplicationDelegate, OPNDRMVMSocketDelegate
 protocol OPNDRMVMSocketDelegate: AnyObject {
     var controller: VirtualMachineController? { get }
     var overlayController: OPNDRMVMWindowController? { get }
+    func handleAICommand(_ request: [String: Any]) -> [String: Any]
 }
 
 @MainActor
@@ -187,9 +214,19 @@ final class OPNDRMVMSocketServer {
     }
 
     private func handleCommand(_ cmd: String) -> String {
+        if let data = cmd.data(using: .utf8),
+           let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            let response = delegate.handleAICommand(object)
+            if let responseData = try? JSONSerialization.data(withJSONObject: response, options: [.sortedKeys]),
+               let responseText = String(data: responseData, encoding: .utf8) {
+                return responseText + "\n"
+            }
+            return "{\"ok\":false,\"message\":\"failed to encode response\"}\n"
+        }
+
         let parts = cmd.split(separator: " ", maxSplits: 1)
-        let action = String(parts[0])
-        
+        let action = String(parts.first ?? "")
+
         switch action {
         case "show":
             overlayController?.window?.orderFront(nil)

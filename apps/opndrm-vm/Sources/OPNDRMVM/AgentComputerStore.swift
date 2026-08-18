@@ -68,7 +68,32 @@ struct AgentComputerStore {
     /// Check if a VM has actual state files (not just an empty directory)
     static func hasVMState(_ name: String) -> Bool {
         let dir = agentDir(name)
-        return FileManager.default.fileExists(atPath: dir.appendingPathComponent("Disk.img").path)
+        switch vmType(name) {
+        case .linux:
+            return FileManager.default.fileExists(atPath: dir.appendingPathComponent("Disk.img").path)
+                && FileManager.default.fileExists(atPath: dir.appendingPathComponent("LinuxKernel").path)
+                && FileManager.default.fileExists(atPath: dir.appendingPathComponent("LinuxInitrd").path)
+        case .apple:
+            return FileManager.default.fileExists(atPath: dir.appendingPathComponent("Disk.img").path)
+                && FileManager.default.fileExists(atPath: dir.appendingPathComponent("MachineIdentifier").path)
+                && FileManager.default.fileExists(atPath: dir.appendingPathComponent("Lifecycle.plist").path)
+                && FileManager.default.fileExists(atPath: dir.appendingPathComponent("AuxiliaryStorage").path)
+        }
+    }
+
+    /// Determine the VM type. Old VMs without a marker are treated as Apple/macOS VMs.
+    static func vmType(_ name: String) -> VMType {
+        let dir = agentDir(name)
+        let markerURL = dir.appendingPathComponent("vm-type.txt")
+        if let raw = try? String(contentsOf: markerURL, encoding: .utf8)
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+           let type = VMType(rawValue: raw) {
+            return type
+        }
+        if FileManager.default.fileExists(atPath: dir.appendingPathComponent("LinuxKernel").path) {
+            return .linux
+        }
+        return .apple
     }
 
 }

@@ -12,6 +12,15 @@ enum VMLayoutMode: Int, CaseIterable {
         case .quad: return 4
         }
     }
+
+    var description: String {
+        switch self {
+        case .single: return "single"
+        case .split: return "split"
+        case .triple: return "triple"
+        case .quad: return "quad"
+        }
+    }
 }
 
 @MainActor
@@ -21,6 +30,7 @@ final class OPNDRMVMLayoutView: NSView {
     }
     private var tiles: [OPNDRMVMLayoutTile] = []
     private let containerView = NSView()
+    private var activeConstraints: [NSLayoutConstraint] = []
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -40,7 +50,6 @@ final class OPNDRMVMLayoutView: NSView {
             containerView.leadingAnchor.constraint(equalTo: leadingAnchor),
             containerView.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
-        relayout()
     }
 
     func setVMViews(_ views: [VZVirtualMachineView]) {
@@ -54,51 +63,46 @@ final class OPNDRMVMLayoutView: NSView {
     }
 
     private func relayout() {
+        NSLayoutConstraint.deactivate(activeConstraints)
+        activeConstraints.removeAll()
         tiles.forEach { $0.removeFromSuperview() }
+
         let count = min(tiles.count, layoutMode.tileCount)
         let active = Array(tiles.prefix(count))
+        guard !active.isEmpty else { return }
 
         for tile in active {
             containerView.addSubview(tile)
             tile.translatesAutoresizingMaskIntoConstraints = false
         }
 
-        let bounds = containerView.bounds
+        let constraints: [NSLayoutConstraint]
         switch layoutMode {
         case .single:
-            guard let tile = active.first else { return }
-            NSLayoutConstraint.activate([
-                tile.topAnchor.constraint(equalTo: containerView.topAnchor),
-                tile.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-                tile.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-                tile.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            ])
+            constraints = singleConstraints(active[0])
         case .split:
-            guard active.count >= 2 else { fallBackToSingle(active) ; return }
-            let half = bounds.width / 2
-            NSLayoutConstraint.activate([
+            guard active.count >= 2 else { fallBackToSingle(active); return }
+            constraints = [
                 active[0].topAnchor.constraint(equalTo: containerView.topAnchor),
                 active[0].bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
                 active[0].leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-                active[0].widthAnchor.constraint(equalToConstant: half),
+                active[0].widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.5),
 
                 active[1].topAnchor.constraint(equalTo: containerView.topAnchor),
                 active[1].bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
                 active[1].leadingAnchor.constraint(equalTo: active[0].trailingAnchor),
                 active[1].trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            ])
+            ]
         case .triple:
-            guard active.count >= 3 else { fallBackToSingle(active) ; return }
-            let half = bounds.width / 2
-            let thirdHeight = bounds.height / 2
-            NSLayoutConstraint.activate([
+            guard active.count >= 3 else { fallBackToSingle(active); return }
+            constraints = [
                 active[0].topAnchor.constraint(equalTo: containerView.topAnchor),
                 active[0].bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
                 active[0].leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-                active[0].widthAnchor.constraint(equalToConstant: half),
+                active[0].widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.5),
 
                 active[1].topAnchor.constraint(equalTo: containerView.topAnchor),
-                active[1].heightAnchor.constraint(equalToConstant: thirdHeight),
+                active[1].heightAnchor.constraint(equalTo: containerView.heightAnchor, multiplier: 0.5),
                 active[1].leadingAnchor.constraint(equalTo: active[0].trailingAnchor),
                 active[1].trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
 
@@ -106,43 +110,50 @@ final class OPNDRMVMLayoutView: NSView {
                 active[2].bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
                 active[2].leadingAnchor.constraint(equalTo: active[0].trailingAnchor),
                 active[2].trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            ])
+            ]
         case .quad:
-            guard active.count >= 4 else { fallBackToSingle(active) ; return }
-            let half = bounds.width / 2
-            let halfHeight = bounds.height / 2
-            NSLayoutConstraint.activate([
+            guard active.count >= 4 else { fallBackToSingle(active); return }
+            constraints = [
                 active[0].topAnchor.constraint(equalTo: containerView.topAnchor),
-                active[0].heightAnchor.constraint(equalToConstant: halfHeight),
+                active[0].heightAnchor.constraint(equalTo: containerView.heightAnchor, multiplier: 0.5),
                 active[0].leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-                active[0].widthAnchor.constraint(equalToConstant: half),
+                active[0].widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.5),
 
                 active[1].topAnchor.constraint(equalTo: containerView.topAnchor),
-                active[1].heightAnchor.constraint(equalToConstant: halfHeight),
+                active[1].heightAnchor.constraint(equalTo: containerView.heightAnchor, multiplier: 0.5),
                 active[1].leadingAnchor.constraint(equalTo: active[0].trailingAnchor),
                 active[1].trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
 
                 active[2].topAnchor.constraint(equalTo: active[0].bottomAnchor),
                 active[2].bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
                 active[2].leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-                active[2].widthAnchor.constraint(equalToConstant: half),
+                active[2].widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.5),
 
                 active[3].topAnchor.constraint(equalTo: active[1].bottomAnchor),
                 active[3].bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
                 active[3].leadingAnchor.constraint(equalTo: active[2].trailingAnchor),
                 active[3].trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            ])
+            ]
         }
+
+        activeConstraints = constraints
+        NSLayoutConstraint.activate(activeConstraints)
     }
 
     private func fallBackToSingle(_ active: [OPNDRMVMLayoutTile]) {
         guard let tile = active.first else { return }
-        NSLayoutConstraint.activate([
+        let constraints = singleConstraints(tile)
+        activeConstraints = constraints
+        NSLayoutConstraint.activate(constraints)
+    }
+
+    private func singleConstraints(_ tile: OPNDRMVMLayoutTile) -> [NSLayoutConstraint] {
+        [
             tile.topAnchor.constraint(equalTo: containerView.topAnchor),
             tile.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
             tile.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
             tile.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-        ])
+        ]
     }
 }
 
