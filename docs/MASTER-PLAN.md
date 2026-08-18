@@ -17,6 +17,39 @@ Qwen3.8) is not baked in. It's an optional one-click install: the user opens
 a VM, copies a command from the in-app docs, and pulls the full workflow from
 GitHub. The VM is clean until they choose to install it.
 
+## What's Already Built
+
+The VM engine works. It's proven. Right now it can:
+
+- Create an Apple Virtualization Framework VM from a saved state
+- Boot, display in a floating window, and stop the VM
+- Inject keyboard and mouse input to the guest
+- Communicate with a guest helper over VSOCK (port 2222)
+- Serve a socket API on port 7777 for any external client
+- Show title-bar controls (Record, Recordings, Check Guest)
+- Run the OpenAdapt guest recording engine (capture command, consent, artifacts)
+
+The Swift source is 6 core files + 3 support files + tests. It builds and
+passes 21/21 tests. It's codesigned with the virtualization entitlement.
+
+**What's missing is everything around the engine:**
+
+| Missing | Description |
+|---------|-------------|
+| Onboarding | First-run experience: download, install, create first VM |
+| VM list UI | UTM-style sidebar showing all VMs with status |
+| Create flow | "New VM" dialog: choose Apple or Linux, name, memory |
+| Multi-VM layout | Quad/split/triple/single view of multiple VMs on screen |
+| Save/restore/clone | Snapshot disk image, restore from snapshot, duplicate |
+| Disk management | Visual disk usage, per-VM breakdown, cleanup |
+| Settings window | Sidebar + content tabs (VMs, Disk, AI, Recording, Docs) |
+| Docs tab | One-click install command for the Open Dream workflow |
+| Packaging | .pkg/.dmg installer, downloadable from opndrm.com |
+| Rename | BuzzBot → OPNDRM VM everywhere |
+| Repo thinning | Remove 90+ non-product files |
+
+The engine is done. We're building the shell around it.
+
 ## Priority Order
 
 1. **First class — the VM manager.** Create, save, restore, destroy, lay out
@@ -374,31 +407,82 @@ opndrm/prime/
 
 ## Phases
 
+The engine is built. These phases build the product around it.
+
 ### Phase 1 — Rename and thin (P0)
+
 BuzzBot → OPNDRM VM everywhere. Remove 90+ non-product files. Simplify
-first-boot script. Get the repo to ~20 files.
+first-boot script. Get the repo to ~20 files. Tests still pass.
 
-### Phase 2 — Multi-VM + layout (P0)
-Support multiple VMs. Quad/split/triple/single layout. VM type selection
-(Apple or Linux). One agent per VM binding.
+**Why first:** everything else builds on a clean, correctly-named codebase.
 
-### Phase 3 — VM lifecycle (P0)
-Create, save, restore, destroy, clone. Disk space management UI. Golden
-image build (optional).
+### Phase 2 — VM management UI (P0)
 
-### Phase 4 — Recording loop (P1)
+The UTM-style app shell:
+
+- Main window with sidebar (VM list) + content area
+- "New VM" dialog: choose Apple or Linux, name, memory
+- VM cards: status indicator, OS type, memory, disk, action buttons
+- Start/Stop/Save/Clone/Destroy buttons on each card
+- Snapshots list under each VM with Restore buttons
+- Layout selector: Single / Split / Triple / Quad
+
+**This is the core product experience.** The user opens the app and sees
+their VMs, like UTM. Everything else is secondary.
+
+### Phase 3 — Multi-VM layout (P0)
+
+Display multiple VMs simultaneously:
+
+- Single: one VM fills the content area
+- Split: two VMs side by side
+- Triple: one large + two small
+- Quad: 2×2 grid
+
+Each tile shows a live VZVirtualMachineView. Drag to resize, click to focus.
+Top bar controls follow the focused VM. One agent per VM — the socket server
+tracks bindings.
+
+### Phase 4 — Save / restore / clone / disk (P0)
+
+- Save: stop VM, copy disk image to snapshot directory
+- Restore: swap disk image, restart VM from snapshot
+- Clone: copy snapshot to new VM name
+- Destroy: delete VM + snapshots + files (confirmed)
+- Disk management panel: visual usage, per-VM breakdown, cleanup
+
+### Phase 5 — Onboarding (P1)
+
+First-run experience:
+
+1. User downloads and installs OPNDRM VM.app
+2. App opens, shows a welcome screen
+3. "Create your first VM" button
+4. Choose type (Apple or Linux), name, memory
+5. VM creates and boots
+6. Docs tab shows the one-click workflow install command
+7. User is now in the VM management UI
+
+### Phase 6 — Recording loop (P1)
+
 Fix OpenAdapt video capture for VM guests. Record → Stop → Playback.
+This is the AI training differentiator but comes after the core VM
+management experience works.
 
-### Phase 5 — Settings UI (P1)
-UTM-style sidebar + content. VMs tab, Disk tab, AI tab, Recording tab,
-Docs tab. One-click workflow install command in Docs.
+### Phase 7 — Open Dream workflow installer (P1)
 
-### Phase 6 — Open Dream workflow installer (P1)
-The `curl | bash` one-click that installs the full stack inside any VM.
-HERDR four-workspace layout. Ollama Cloud. oMLX + Qwen3.8.
+The `curl -fsSL https://opndrm.com/install | bash` one-click that installs
+the full stack inside any VM: WezTerm, HERDR, Prime Agent, JCode, Ollama,
+oMLX, Qwen3.8, OpenAdapt, Handy. Creates the four-workspace HERDR session.
+Documented in the Docs tab.
 
-### Phase 7 — Packaging (P2)
-.pkg installer. opndrm.com/install. One command → working VM manager.
+### Phase 8 — Packaging and distribution (P2)
+
+- .pkg/.dmg installer for OPNDRM VM.app
+- Hosted at opndrm.com/install
+- Vercel landing page
+- Codesigned with virtualization entitlement
+- One download → installed app → create VM → ready
 
 ## Swarm Execution
 
