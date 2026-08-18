@@ -149,13 +149,14 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let name = vmNames[row]
         let isRunning = vmInstances[name]?.controller.lifecycle == .running
+        let hasState = AgentComputerStore.hasVMState(name)
 
         let container = NSView(frame: NSRect(x: 0, y: 0, width: tableView.bounds.width, height: 52))
 
         // Status dot
         let dot = NSView(frame: NSRect(x: 8, y: 20, width: 10, height: 10))
         dot.wantsLayer = true
-        dot.layer?.backgroundColor = isRunning ? NSColor.systemGreen.cgColor : NSColor.tertiaryLabelColor.cgColor
+        dot.layer?.backgroundColor = isRunning ? NSColor.systemGreen.cgColor : (hasState ? NSColor.tertiaryLabelColor.cgColor : NSColor.systemOrange.cgColor)
         dot.layer?.cornerRadius = 5
         container.addSubview(dot)
 
@@ -166,7 +167,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         container.addSubview(nameLabel)
 
         // Status text
-        let statusText = isRunning ? "Running" : "Stopped"
+        let statusText = isRunning ? "Running" : (hasState ? "Stopped" : "No State")
         let statusLabel = NSTextField(labelWithString: statusText)
         statusLabel.font = NSFont.systemFont(ofSize: 10)
         statusLabel.textColor = isRunning ? .systemGreen : .tertiaryLabelColor
@@ -333,13 +334,8 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         guard FileManager.default.fileExists(atPath: stateDir.path) else { return }
 
         // Check if this is a real VM with state files
-        let diskURL = stateDir.appendingPathComponent("Disk.img")
-        let machineIDURL = stateDir.appendingPathComponent("MachineIdentifier")
-
-        guard FileManager.default.fileExists(atPath: diskURL.path),
-              FileManager.default.fileExists(atPath: machineIDURL.path) else {
-            // No VM state files - show message
-            welcomeLabel.stringValue = "No VM image found for \(machineID). Use a saved VM state."
+        guard AgentComputerStore.hasVMState(machineID) else {
+            welcomeLabel.stringValue = "No VM image for \(machineID). Create a VM from IPSW or clone an existing one."
             welcomeLabel.isHidden = false
             return
         }
@@ -357,9 +353,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             for: .applicationSupportDirectory, in: .userDomainMask,
             appropriateFor: nil, create: false
         ).standardizedFileURL
-        let stateDir = appSupport
-            .appendingPathComponent("OPNDRM-VM/AgentComputers/TrustedMacStates", isDirectory: true)
-            .appendingPathComponent(machineID, isDirectory: true)
+        let stateDir = AgentComputerStore.agentDir(machineID)
 
         let diskURL = stateDir.appendingPathComponent("Disk.img")
         let auxURL = stateDir.appendingPathComponent("AuxiliaryStorage")

@@ -56,9 +56,7 @@ final class OPNDRMVMApp: NSObject, NSApplicationDelegate, OPNDRMVMSocketDelegate
             for: .applicationSupportDirectory, in: .userDomainMask,
             appropriateFor: nil, create: false
         ).standardizedFileURL
-        let stateDir = appSupport
-            .appendingPathComponent("OPNDRM-VM/AgentComputers/TrustedMacStates", isDirectory: true)
-            .appendingPathComponent(machineID, isDirectory: true)
+        let stateDir = AgentComputerStore.agentDir(machineID)
 
         guard FileManager.default.fileExists(atPath: stateDir.path) else {
             FileHandle.standardError.write(Data("OPNDRMVM: machine \(machineID) not found\n".utf8))

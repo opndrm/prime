@@ -10,33 +10,65 @@ struct AgentComputerStore {
         return appSupport.appendingPathComponent("OPNDRM-VM/AgentComputers", isDirectory: true)
     }()
 
+    // Legacy path for backward compatibility with existing BuzzBot VMs
+    static let legacyBaseDir: URL = {
+        let appSupport = (try? FileManager.default.url(
+            for: .applicationSupportDirectory, in: .userDomainMask,
+            appropriateFor: nil, create: true
+        )) ?? URL(fileURLWithPath: "/tmp")
+        return appSupport.appendingPathComponent("BuzzBot/AgentComputers", isDirectory: true)
+    }()
+
     static let trustedMacStates = baseDir.appendingPathComponent("TrustedMacStates", isDirectory: true)
+    static let legacyTrustedMacStates = legacyBaseDir.appendingPathComponent("TrustedMacStates", isDirectory: true)
 
     /// Ensure directories exist
     static func ensureDirectories() {
         try? FileManager.default.createDirectory(at: trustedMacStates, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
     }
 
-    /// List all agent VMs by their directory names
+    /// List all agent VMs by their directory names (checks both new and legacy paths)
     static func listMachines() -> [String]
     {
         listAgents()
     }
 
     static func listAgents() -> [String] {
-        guard let items = try? FileManager.default.contentsOfDirectory(at: trustedMacStates, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]) else {
-            return []
+        var names: [String] = []
+        // New path
+        if let items = try? FileManager.default.contentsOfDirectory(at: trustedMacStates, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]) {
+            names.append(contentsOf: items.filter { $0.hasDirectoryPath }.map { $0.lastPathComponent })
         }
-        return items.filter { $0.hasDirectoryPath }.map { $0.lastPathComponent }
+        // Legacy path (BuzzBot)
+        if let items = try? FileManager.default.contentsOfDirectory(at: legacyTrustedMacStates, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]) {
+            for item in items where item.hasDirectoryPath {
+                let name = item.lastPathComponent
+                if !names.contains(name) {
+                    names.append(name)
+                }
+            }
+        }
+        return names
     }
 
-    /// Check if an agent VM exists
-    static func agentExists(_ name: String) -> Bool {
-        FileManager.default.fileExists(atPath: trustedMacStates.appendingPathComponent(name).path)
-    }
-
-    /// Get the VM directory for an agent
+    /// Get the VM directory for an agent (checks new path first, then legacy)
     static func agentDir(_ name: String) -> URL {
-        trustedMacStates.appendingPathComponent(name, isDirectory: true)
+        let newPath = trustedMacStates.appendingPathComponent(name, isDirectory: true)
+        if FileManager.default.fileExists(atPath: newPath.appendingPathComponent("Disk.img").path) {
+            return newPath
+        }
+        let legacyPath = legacyTrustedMacStates.appendingPathComponent(name, isDirectory: true)
+        if FileManager.default.fileExists(atPath: legacyPath.appendingPathComponent("Disk.img").path) {
+            return legacyPath
+        }
+        // Return new path as default (for new VMs)
+        return newPath
     }
+
+    /// Check if a VM has actual state files (not just an empty directory)
+    static func hasVMState(_ name: String) -> Bool {
+        let dir = agentDir(name)
+        return FileManager.default.fileExists(atPath: dir.appendingPathComponent("Disk.img").path)
+    }
+
 }
