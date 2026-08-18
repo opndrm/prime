@@ -16,10 +16,9 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
     private var progressBar: NSProgressIndicator!
     private var progressCancelButton: NSButton!
     private var layoutView: OPNDRMVMLayoutView!
+    private var agentCanvasConsole: OPNDRMAgentCanvasConsoleView!
     private var isCreationCancelled = false
     private var agentHolders: [String: OPNDRMAgentHarnessHolder] = [:]
-    private var agentChatWindows: [String: OPNDRMAgentChatWindowController] = [:]
-    private var pendingAgentsAfterCreate: [String: OPNDRMAgentHarnessHolder] = [:]
 
     private class VMInstance {
         let name: String
@@ -104,10 +103,6 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         bootLayoutButton.translatesAutoresizingMaskIntoConstraints = false
         vmListView.addSubview(bootLayoutButton)
 
-        let aiSetupButton = NSButton(title: "+ Agent", target: self, action: #selector(aiSetupClicked))
-        aiSetupButton.bezelStyle = .rounded
-        aiSetupButton.translatesAutoresizingMaskIntoConstraints = false
-        vmListView.addSubview(aiSetupButton)
 
         layoutControl = NSSegmentedControl(labels: ["Single", "Split", "Triple", "Quad"],
                                             trackingMode: .selectOne, target: self,
@@ -188,10 +183,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
 
             layoutControl.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor, constant: 12),
             layoutControl.trailingAnchor.constraint(lessThanOrEqualTo: vmListView.trailingAnchor, constant: -12),
-            layoutControl.bottomAnchor.constraint(equalTo: aiSetupButton.topAnchor, constant: -8),
-
-            aiSetupButton.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor, constant: 12),
-            aiSetupButton.bottomAnchor.constraint(equalTo: bootLayoutButton.topAnchor, constant: -8),
+            layoutControl.bottomAnchor.constraint(equalTo: bootLayoutButton.topAnchor, constant: -8),
 
             bootLayoutButton.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor, constant: 12),
             bootLayoutButton.bottomAnchor.constraint(equalTo: newButton.topAnchor, constant: -8),
@@ -220,6 +212,24 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             layoutView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             layoutView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             layoutView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+        ])
+
+        // First Mate chooser/chat overlay. This is the stress-free product
+        // surface: users choose Prime Agent or JCode in the VM canvas, then chat.
+        agentCanvasConsole = OPNDRMAgentCanvasConsoleView(frame: .zero)
+        agentCanvasConsole.isHidden = true
+        agentCanvasConsole.onStartRequested = { [weak self] vmName, kind in
+            self?.startFirstMate(vmName: vmName, kind: kind)
+        }
+        agentCanvasConsole.onHideRequested = { [weak self] in
+            self?.window?.makeFirstResponder(nil)
+        }
+        contentView.addSubview(agentCanvasConsole)
+        NSLayoutConstraint.activate([
+            agentCanvasConsole.topAnchor.constraint(equalTo: contentView.topAnchor),
+            agentCanvasConsole.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            agentCanvasConsole.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            agentCanvasConsole.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
         ])
 
         window.contentView = rootView
@@ -435,134 +445,46 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         displayVMInLayout()
     }
 
-    @objc private func aiSetupClicked() {
-        let defaultVM = selectedVM
-            ?? vmNames.first(where: { AgentComputerStore.hasVMState($0) })
-            ?? "agent-vm-1"
+    private func showFirstMateConsole(for vmName: String) {
+        guard AgentComputerStore.hasVMState(vmName) else { return }
+        let existing = agentHolders.values.first { $0.vmName == vmName && $0.agentName == "First Mate" }
+        agentCanvasConsole.configure(vmName: vmName, existingHolder: existing)
+    }
 
-        let alert = NSAlert()
-        alert.alertStyle = .informational
-        alert.messageText = "Create Agent"
-        alert.informativeText = "Name an agent, choose Prime Agent or JCode, assign one VM, then chat with it in OPNDRM. Handy is used for speech input."
-
-        let emojiLabel = NSTextField(labelWithString: "Emoji")
-        emojiLabel.frame = NSRect(x: 0, y: 198, width: 88, height: 18)
-        let emojiField = NSTextField(frame: NSRect(x: 96, y: 194, width: 70, height: 24))
-        emojiField.stringValue = "🤖"
-
-        let nameLabel = NSTextField(labelWithString: "Name")
-        nameLabel.frame = NSRect(x: 0, y: 164, width: 88, height: 18)
-        let nameField = NSTextField(frame: NSRect(x: 96, y: 160, width: 290, height: 24))
-        nameField.stringValue = "Helper"
-
-        let vmLabel = NSTextField(labelWithString: "VM")
-        vmLabel.frame = NSRect(x: 0, y: 130, width: 88, height: 18)
-        let vmField = NSTextField(frame: NSRect(x: 96, y: 126, width: 290, height: 24))
-        vmField.stringValue = defaultVM
-
-        let harnessLabel = NSTextField(labelWithString: "Harness")
-        harnessLabel.frame = NSRect(x: 0, y: 96, width: 88, height: 18)
-        let harnessPopup = NSPopUpButton(frame: NSRect(x: 96, y: 92, width: 290, height: 26), pullsDown: false)
-        harnessPopup.addItems(withTitles: OPNDRMAgentHarnessHolder.Kind.allCases.map { $0.displayName })
-        harnessPopup.selectItem(at: 0)
-
-        let instructionsLabel = NSTextField(labelWithString: "Instructions")
-        instructionsLabel.frame = NSRect(x: 0, y: 66, width: 88, height: 18)
-        let instructionsScroll = NSScrollView(frame: NSRect(x: 96, y: 0, width: 290, height: 82))
-        instructionsScroll.hasVerticalScroller = true
-        let instructionsText = NSTextView(frame: instructionsScroll.bounds)
-        instructionsText.font = NSFont.systemFont(ofSize: 12)
-        instructionsText.string = "Help me inside your VM. Ask before destructive changes."
-        instructionsScroll.documentView = instructionsText
-
-        let accessory = NSView(frame: NSRect(x: 0, y: 0, width: 396, height: 226))
-        accessory.addSubview(emojiLabel)
-        accessory.addSubview(emojiField)
-        accessory.addSubview(nameLabel)
-        accessory.addSubview(nameField)
-        accessory.addSubview(vmLabel)
-        accessory.addSubview(vmField)
-        accessory.addSubview(harnessLabel)
-        accessory.addSubview(harnessPopup)
-        accessory.addSubview(instructionsLabel)
-        accessory.addSubview(instructionsScroll)
-        alert.accessoryView = accessory
-        alert.addButton(withTitle: "Create Agent")
-        alert.addButton(withTitle: "Cancel")
-
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-
-        let agentName = nameField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? "Helper"
-            : nameField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        let emoji = emojiField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? "🤖"
-            : emojiField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        let vmName = vmField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? defaultVM
-            : vmField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        let kind = OPNDRMAgentHarnessHolder.Kind.allCases[safe: harnessPopup.indexOfSelectedItem] ?? .prime
-        let instructions = instructionsText.string.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        let holder = OPNDRMAgentHarnessHolder(
+    @discardableResult
+    private func startFirstMate(vmName: String, kind: OPNDRMAgentHarnessHolder.Kind) -> OPNDRMAgentHarnessHolder {
+        let key = "\(vmName):\(kind.safeName):First-Mate"
+        let holder = agentHolders[key] ?? OPNDRMAgentHarnessHolder(
             vmName: vmName,
             kind: kind,
-            agentName: agentName,
-            emoji: emoji,
-            instructions: instructions
+            agentName: "First Mate",
+            emoji: "🧭",
+            instructions: "Keep the conversation simple and stress-free. Work only inside your assigned VM. Automate inside the VM when possible. Ask before destructive changes. Do not show Prime Agent or JCode terminal output to the user."
         )
-        createOrStartAgent(holder)
-    }
-
-    private func createOrStartAgent(_ holder: OPNDRMAgentHarnessHolder) {
-        if AgentComputerStore.hasVMState(holder.vmName) {
-            startAgent(holder)
-            return
-        }
-
-        pendingAgentsAfterCreate[holder.vmName] = holder
-        progressLabel.isHidden = false
-        progressLabel.stringValue = "Creating Linux VM for \(holder.displayTitle)…"
-        createVM(name: holder.vmName, type: .linux, memoryGB: 4)
-    }
-
-    private func startPendingAgentIfNeeded(for vmName: String) {
-        guard let holder = pendingAgentsAfterCreate.removeValue(forKey: vmName) else { return }
-        startAgent(holder)
-    }
-
-    private func startAgent(_ holder: OPNDRMAgentHarnessHolder) {
-        selectedVM = holder.vmName
-        if AgentComputerStore.hasVMState(holder.vmName) {
-            bootVM(holder.vmName)
-        }
-
-        let key = holder.agentID
         holder.stateDidChange = { [weak self] _, status in
             self?.progressLabel.isHidden = false
             self?.progressLabel.stringValue = status
-            self?.agentChatWindows[key]?.refreshTranscript()
+            self?.agentCanvasConsole.setStatus(status)
+            self?.agentCanvasConsole.refreshTranscript()
         }
         agentHolders[key] = holder
-        openAgentChat(holder)
+
+        if let instance = vmInstances[vmName] {
+            if instance.controller.lifecycle == .ready || instance.controller.lifecycle == .stopped || instance.controller.lifecycle == .paused {
+                bootVM(vmName)
+            }
+        } else if AgentComputerStore.hasVMState(vmName) {
+            bootVM(vmName)
+        }
 
         do {
             try holder.start()
         } catch {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(holder.bindingPrompt(), forType: .string)
-            showError("Could not start hidden \(holder.kind.displayName): \(error.localizedDescription)\n\nThe VM-bound prompt was copied. You can still type/speak to \(holder.displayTitle) in OPNDRM while the harness bridge is configured.")
+            agentCanvasConsole.setStatus("Hidden \(kind.displayName) could not start yet. The VM-bound prompt was copied; no terminal output will be shown.")
         }
-    }
-
-    private func openAgentChat(_ holder: OPNDRMAgentHarnessHolder) {
-        let key = holder.agentID
-        let chat = agentChatWindows[key] ?? OPNDRMAgentChatWindowController(holder: holder)
-        agentChatWindows[key] = chat
-        chat.showWindow(nil)
-        chat.window?.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-        chat.refreshTranscript()
+        return holder
     }
 
     @objc private func newVMClicked() {
@@ -675,11 +597,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
                         if self.isCreationCancelled { return }
                         switch result {
                         case .success:
-                            if self.pendingAgentsAfterCreate[name] != nil {
-                                self.startPendingAgentIfNeeded(for: name)
-                            } else {
-                                self.bootVM(name)
-                            }
+                            self.bootVM(name)
                         case .failure(let error):
                             self.showError("Failed to create \(name): \(error.localizedDescription)")
                         }
@@ -700,11 +618,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
                     switch result {
                     case .success:
                         self.refreshVMList()
-                        if self.pendingAgentsAfterCreate[name] != nil {
-                            self.startPendingAgentIfNeeded(for: name)
-                        } else {
-                            self.bootVM(name)
-                        }
+                        self.bootVM(name)
                     case .failure(let error):
                         self.showError("Failed to create \(name): \(error.localizedDescription)")
                     }
@@ -754,6 +668,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             selectedVM = machineID
             refreshVMList()
             displayVMInLayout()
+            showFirstMateConsole(for: machineID)
             return
         }
 
@@ -773,12 +688,14 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             prepared.controller.machineDidStart = { [weak self] _ in
                 self?.refreshVMList()
                 self?.displayVMInLayout()
+                self?.showFirstMateConsole(for: machineID)
             }
             vmInstances[machineID] = instance
             selectedVM = machineID
             prepared.controller.start()
             refreshVMList()
             displayVMInLayout()
+            showFirstMateConsole(for: machineID)
         } catch {
             showError("Cannot boot \(machineID): \(error.localizedDescription)")
         }
@@ -799,6 +716,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         if visibleVMs.isEmpty || selected == nil {
             welcomeLabel.isHidden = false
             layoutView.isHidden = true
+            agentCanvasConsole?.isHidden = true
             return
         }
 
