@@ -32,7 +32,7 @@ let package = Package(
         ),
         .testTarget(
             name: "BuzzBotComputerServiceTests",
-            dependencies: ["BuzzBotProtocol"],
+            dependencies: ["BuzzBotProtocol", "BuzzBotComputerService"],
             path: "Tests/BuzzBotComputerServiceTests"
         ),
     ]

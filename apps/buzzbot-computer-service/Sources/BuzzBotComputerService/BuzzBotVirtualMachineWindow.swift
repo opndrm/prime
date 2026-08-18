@@ -7,12 +7,13 @@ import QuartzCore
 final class BuzzBotVirtualMachineWindowController: NSWindowController, NSWindowDelegate {
     private let controller: VirtualMachineController
     private let virtualMachineView = VZVirtualMachineView()
-    private var attachedMachine: VZVirtualMachine?
     private let machineName: String
 
-    // Title bar buttons — styled as clean small pills, not grey boxes
-    private let recordButton = NSButton(title: "●", target: nil, action: nil)
-    private let refreshButton = NSButton(title: "↻", target: nil, action: nil)
+    // Native title-bar controls. Their labels and enabled state must describe
+    // guest capabilities only; neither control claims to repair the VM display.
+    private let recordButton = NSButton(title: "Record Unavailable", target: nil, action: nil)
+    private let guestCheckButton = NSButton(title: "Check Guest", target: nil, action: nil)
+    private var guestReadiness: GuestReadiness = .unconfirmed
     private var isRecording = false
     private var commandPending = false
     private var redGlowTimer: Timer?
@@ -112,26 +113,34 @@ final class BuzzBotVirtualMachineWindowController: NSWindowController, NSWindowD
             ])
         }
 
-        // Style title bar buttons as clean pills
-        styleTitleBarButton(recordButton, title: "●")
+        // Style title bar buttons as clean pills. Record begins visibly disabled;
+        // a configured socket is not enough to claim that the guest is ready.
+        styleTitleBarButton(recordButton, title: "Record Unavailable")
         recordButton.action = #selector(recordButtonClicked)
         recordButton.target = self
+        recordButton.setAccessibilityLabel("Guest recording")
 
-        styleTitleBarButton(refreshButton, title: "↻")
-        refreshButton.action = #selector(refreshButtonClicked)
-        refreshButton.target = self
+        styleTitleBarButton(guestCheckButton, title: "Check Guest")
+        guestCheckButton.action = #selector(guestCheckButtonClicked)
+        guestCheckButton.target = self
+        guestCheckButton.setAccessibilityLabel("Check guest readiness")
 
         if let themeFrame = panel.contentView?.superview {
             themeFrame.addSubview(recordButton, positioned: .above, relativeTo: nil)
-            themeFrame.addSubview(refreshButton, positioned: .above, relativeTo: nil)
+            themeFrame.addSubview(guestCheckButton, positioned: .above, relativeTo: nil)
         }
 
+        updateControlAvailability()
         buildRecordingsPanel()
 
         panel.orderOut(nil)
 
         controller.machineDidStart = { [weak self] machine in
             self?.showVirtualMachine(machine)
+        }
+        controller.stateDidChange = { [weak self] lifecycle, _ in
+            guard lifecycle != .running else { return }
+            self?.guestBecameUnavailable(for: lifecycle)
         }
     }
 
@@ -153,9 +162,9 @@ final class BuzzBotVirtualMachineWindowController: NSWindowController, NSWindowD
         guard let themeFrame = window?.contentView?.superview else { return }
         let width = themeFrame.bounds.width
         let y: CGFloat = themeFrame.isFlipped ? 3 : themeFrame.bounds.height - 22
-        // Keep both controls centered in the top title-bar strip on either frame orientation.
-        recordButton.frame = NSRect(x: width - 62, y: y, width: 28, height: 18)
-        refreshButton.frame = NSRect(x: width - 92, y: y, width: 26, height: 18)
+        // Keep both explicit text controls centered in the title-bar strip.
+        recordButton.frame = NSRect(x: width - 132, y: y, width: 122, height: 18)
+        guestCheckButton.frame = NSRect(x: width - 224, y: y, width: 88, height: 18)
     }
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
@@ -169,13 +178,24 @@ final class BuzzBotVirtualMachineWindowController: NSWindowController, NSWindowD
         window?.orderOut(nil)
     }
 
+    private func guestBecameUnavailable(for lifecycle: MachineLifecycle) {
+        let message = "Guest is not running (\(lifecycle.rawValue))."
+        if lifecycle == .stopped || lifecycle == .failed {
+            isRecording = false
+            stopRedGlow()
+        }
+        setGuestReadiness(.unavailable(message))
+        setDrawerState(.guestUnavailable(message))
+    }
+
     private func showVirtualMachine(_ machine: VZVirtualMachine) {
         virtualMachineView.virtualMachine = machine
-        attachedMachine = machine
         if controller.guestSocketClient == nil {
+            setGuestReadiness(.unavailable("Guest helper connection is not configured"))
             setDrawerState(.guestUnavailable("Guest helper connection is not configured"))
         } else {
-            updateControlAvailability()
+            // Confirm the helper over vsock before exposing any recording action.
+            checkGuestReadiness()
         }
         NSApp.setActivationPolicy(.regular)
         window?.makeKeyAndOrderFront(nil)
@@ -448,10 +468,46 @@ final class BuzzBotVirtualMachineWindowController: NSWindowController, NSWindowD
         updateControlAvailability()
     }
 
+    private func setGuestReadiness(_ readiness: GuestReadiness) {
+        guestReadiness = readiness
+        updateControlAvailability()
+    }
+
     private func updateControlAvailability() {
-        recordButton.isEnabled = !commandPending && controller.guestSocketClient != nil
+        let state = GuestControlState(
+            readiness: guestReadiness,
+            clientConfigured: controller.guestSocketClient != nil,
+            commandPending: commandPending,
+            isRecording: isRecording
+        )
+
+        recordButton.isEnabled = state.recordEnabled
+        recordButton.title = state.recordTitle
+        recordButton.toolTip = state.recordHelp
+        recordButton.setAccessibilityHelp(state.recordHelp)
+        recordButton.setAccessibilityValue(state.recordEnabled ? "Available" : "Unavailable")
+        recordButton.alphaValue = state.recordEnabled ? 1.0 : 0.45
+
+        guestCheckButton.isEnabled = state.guestCheckEnabled
+        guestCheckButton.title = state.guestCheckTitle
+        guestCheckButton.toolTip = state.guestCheckHelp
+        guestCheckButton.setAccessibilityHelp(state.guestCheckHelp)
+        guestCheckButton.setAccessibilityValue(state.guestCheckEnabled ? "Available" : "Unavailable")
+        guestCheckButton.alphaValue = state.guestCheckEnabled ? 1.0 : 0.45
+
+        if isRecording {
+            recordButton.layer?.backgroundColor = NSColor.systemRed.cgColor
+        } else {
+            // An unconfirmed or failed start must never leave a red treatment behind.
+            stopRedGlow()
+            recordButton.layer?.backgroundColor = state.recordEnabled
+                ? NSColor(calibratedWhite: 0.15, alpha: 0.7).cgColor
+                : NSColor(calibratedWhite: 0.24, alpha: 0.45).cgColor
+        }
+
         for button in playButtons {
-            button.isEnabled = !commandPending
+            button.isEnabled = state.guestActionsEnabled
+            button.alphaValue = state.guestActionsEnabled ? 1.0 : 0.45
         }
     }
 
@@ -460,7 +516,9 @@ final class BuzzBotVirtualMachineWindowController: NSWindowController, NSWindowD
     func fetchRecordingsFromGuest() {
         guard !commandPending else { return }
         guard let client = controller.guestSocketClient else {
-            setDrawerState(.guestUnavailable("Guest helper is not connected"))
+            let message = "Guest helper is not connected"
+            setGuestReadiness(.unavailable(message))
+            setDrawerState(.guestUnavailable(message))
             FileHandle.standardError.write(Data("BuzzBot: no guest socket client — guest helper unreachable\n".utf8))
             return
         }
@@ -472,6 +530,8 @@ final class BuzzBotVirtualMachineWindowController: NSWindowController, NSWindowD
             do {
                 let response = try await client.send(.init(action: .recordingsList))
                 if response.ok {
+                    // Any valid success response also confirms the guest command path.
+                    self.setGuestReadiness(.ready)
                     self.cachedRecordings = response.recordings ?? []
                     self.selectedRecordingIndex = self.cachedRecordings.isEmpty ? nil : 0
                     if self.isRecording {
@@ -486,7 +546,8 @@ final class BuzzBotVirtualMachineWindowController: NSWindowController, NSWindowD
                 }
             } catch {
                 FileHandle.standardError.write(Data("BuzzBot: guest socket error: \(error.localizedDescription)\n".utf8))
-                // Preserve cached metadata and expose connection failure honestly.
+                // Preserve cached metadata, revoke readiness, and expose the failure honestly.
+                self.setGuestReadiness(.unavailable(error.localizedDescription))
                 self.setDrawerState(.guestUnavailable(error.localizedDescription))
             }
         }
@@ -552,8 +613,14 @@ final class BuzzBotVirtualMachineWindowController: NSWindowController, NSWindowD
 
     private func playRecordingInGuest(named recordingName: String) {
         guard !commandPending else { return }
+        guard guestReadiness.isReady else {
+            setDrawerState(.guestUnavailable(guestReadiness.unavailableReason))
+            return
+        }
         guard let client = controller.guestSocketClient else {
-            setDrawerState(.guestUnavailable("Guest helper is not connected"))
+            let message = "Guest helper is not connected"
+            setGuestReadiness(.unavailable(message))
+            setDrawerState(.guestUnavailable(message))
             FileHandle.standardError.write(Data("BuzzBot: cannot play — guest helper unreachable\n".utf8))
             return
         }
@@ -572,6 +639,7 @@ final class BuzzBotVirtualMachineWindowController: NSWindowController, NSWindowD
                     FileHandle.standardError.write(Data("BuzzBot: guest play failed: \(response.message)\n".utf8))
                 }
             } catch {
+                self.setGuestReadiness(.unavailable(error.localizedDescription))
                 self.setDrawerState(.guestUnavailable(error.localizedDescription))
                 FileHandle.standardError.write(Data("BuzzBot: play socket error: \(error.localizedDescription)\n".utf8))
             }
@@ -581,22 +649,62 @@ final class BuzzBotVirtualMachineWindowController: NSWindowController, NSWindowD
     // MARK: - Record Button — clean pill, not ugly grey box
 
     @objc private func recordButtonClicked() {
+        let state = GuestControlState(
+            readiness: guestReadiness,
+            clientConfigured: controller.guestSocketClient != nil,
+            commandPending: commandPending,
+            isRecording: isRecording
+        )
+        guard state.recordEnabled else { return }
         isRecording ? stopRecording() : startRecording()
     }
 
-    @objc private func refreshButtonClicked() {
-        guard let machine = attachedMachine else { return }
-        virtualMachineView.virtualMachine = nil
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.virtualMachineView.virtualMachine = machine
-            self?.window?.makeKeyAndOrderFront(nil)
+    @objc private func guestCheckButtonClicked() {
+        checkGuestReadiness()
+    }
+
+    /// Checks only the guest command path and OpenAdapt helper readiness.
+    /// This deliberately does not detach, reattach, wake, or repair the VM display.
+    private func checkGuestReadiness() {
+        guard !commandPending else { return }
+        guard let client = controller.guestSocketClient else {
+            let message = "Guest helper connection is not configured"
+            setGuestReadiness(.unavailable(message))
+            setDrawerState(.guestUnavailable(message))
+            return
+        }
+
+        setCommandPending(true)
+        setGuestReadiness(.checking)
+        setDrawerState(.connecting)
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            defer { self.setCommandPending(false) }
+            do {
+                let response = try await client.send(.init(action: .status))
+                if response.ok {
+                    self.setGuestReadiness(.ready)
+                    self.setDrawerState(.ready)
+                    FileHandle.standardError.write(Data("BuzzBot: guest readiness confirmed\n".utf8))
+                } else {
+                    self.setGuestReadiness(.unavailable(response.message))
+                    self.setDrawerState(self.failureState(for: response.message))
+                    FileHandle.standardError.write(Data("BuzzBot: guest readiness check failed: \(response.message)\n".utf8))
+                }
+            } catch {
+                self.setGuestReadiness(.unavailable(error.localizedDescription))
+                self.setDrawerState(.guestUnavailable(error.localizedDescription))
+                FileHandle.standardError.write(Data("BuzzBot: guest readiness socket error: \(error.localizedDescription)\n".utf8))
+            }
         }
     }
 
     private func startRecording() {
-        guard !commandPending else { return }
+        guard !commandPending, guestReadiness.isReady else { return }
         guard let client = controller.guestSocketClient else {
-            setDrawerState(.guestUnavailable("Guest helper is not connected"))
+            let message = "Guest helper is not connected"
+            setGuestReadiness(.unavailable(message))
+            setDrawerState(.guestUnavailable(message))
             FileHandle.standardError.write(Data("BuzzBot: cannot record — guest helper unreachable\n".utf8))
             return
         }
@@ -614,11 +722,6 @@ final class BuzzBotVirtualMachineWindowController: NSWindowController, NSWindowD
                 if response.ok {
                     // The red treatment starts only after the guest confirms record.start.
                     self.isRecording = true
-                    self.recordButton.layer?.backgroundColor = NSColor.systemRed.cgColor
-                    self.recordButton.attributedTitle = NSAttributedString(
-                        string: "■",
-                        attributes: [.foregroundColor: NSColor.white, .font: NSFont.systemFont(ofSize: 9, weight: .bold)]
-                    )
                     self.startRedGlow()
                     self.setDrawerState(.recording)
                     FileHandle.standardError.write(Data("BuzzBot: guest recording started (\(recID))\n".utf8))
@@ -627,6 +730,7 @@ final class BuzzBotVirtualMachineWindowController: NSWindowController, NSWindowD
                     FileHandle.standardError.write(Data("BuzzBot: guest record.start failed: \(response.message)\n".utf8))
                 }
             } catch {
+                self.setGuestReadiness(.unavailable(error.localizedDescription))
                 self.setDrawerState(.guestUnavailable(error.localizedDescription))
                 FileHandle.standardError.write(Data("BuzzBot: record socket error: \(error.localizedDescription)\n".utf8))
             }
@@ -634,9 +738,11 @@ final class BuzzBotVirtualMachineWindowController: NSWindowController, NSWindowD
     }
 
     private func stopRecording() {
-        guard !commandPending else { return }
+        guard !commandPending, guestReadiness.isReady else { return }
         guard let client = controller.guestSocketClient else {
-            setDrawerState(.guestUnavailable("Guest helper is not connected"))
+            let message = "Guest helper is not connected"
+            setGuestReadiness(.unavailable(message))
+            setDrawerState(.guestUnavailable(message))
             FileHandle.standardError.write(Data("BuzzBot: cannot stop — guest helper unreachable\n".utf8))
             return
         }
@@ -657,12 +763,6 @@ final class BuzzBotVirtualMachineWindowController: NSWindowController, NSWindowD
                 if response.ok {
                     self.isRecording = false
                     self.stopRedGlow()
-                    self.recordButton.layer?.backgroundColor = NSColor(calibratedWhite: 0.15, alpha: 0.7).cgColor
-                    self.recordButton.attributedTitle = NSAttributedString(
-                        string: "●",
-                        attributes: [.foregroundColor: NSColor(calibratedWhite: 0.85, alpha: 1.0),
-                                     .font: NSFont.systemFont(ofSize: 9, weight: .medium)]
-                    )
                     self.setDrawerState(.ready)
                     refreshAfterStop = true
                     FileHandle.standardError.write(Data("BuzzBot: guest recording stopped\n".utf8))
@@ -672,7 +772,9 @@ final class BuzzBotVirtualMachineWindowController: NSWindowController, NSWindowD
                     FileHandle.standardError.write(Data("BuzzBot: guest record.stop failed: \(response.message)\n".utf8))
                 }
             } catch {
-                // Connection loss does not prove the recording stopped.
+                // Connection loss does not prove the recording stopped, but controls
+                // remain disabled until readiness is confirmed again.
+                self.setGuestReadiness(.unavailable(error.localizedDescription))
                 self.setDrawerState(.guestUnavailable(error.localizedDescription))
                 FileHandle.standardError.write(Data("BuzzBot: stop socket error: \(error.localizedDescription)\n".utf8))
             }
