@@ -11,11 +11,13 @@ final class OPNDRMVMApp: NSObject, NSApplicationDelegate, OPNDRMVMSocketDelegate
     private var socketServer: OPNDRMVMSocketServer?
     private var terminationAwaitingOrderlyStop = false
 
+    private var mainWindowController: OPNDRMVMMainWindowController?
+
     static func main() {
         let application = NSApplication.shared
         let delegate = OPNDRMVMApp()
         application.delegate = delegate
-        application.setActivationPolicy(.accessory)
+        application.setActivationPolicy(.regular)
         application.run()
     }
 
@@ -32,19 +34,21 @@ final class OPNDRMVMApp: NSObject, NSApplicationDelegate, OPNDRMVMSocketDelegate
                 i += 1
             } else { i += 1 }
         }
-        guard let machineID, !machineID.isEmpty else {
-            FileHandle.standardError.write(Data("Usage: opndrm-vm --machine <machine-id>\n".utf8))
-            NSApp.terminate(nil)
-            return
-        }
-
-        // Boot VM directly
-        bootVM(machineID: machineID)
 
         // Start socket server for CLI communication
         socketServer = OPNDRMVMSocketServer(delegate: self)
         socketServer?.start(port: 7777)
         FileHandle.standardError.write(Data("OPNDRMVM: socket server listening on port 7777\n".utf8))
+
+        if let machineID, !machineID.isEmpty {
+            // Direct boot mode: boot a specific VM
+            bootVM(machineID: machineID)
+        } else {
+            // Manager mode: show the UTM-style main window
+            mainWindowController = OPNDRMVMMainWindowController()
+            mainWindowController?.window?.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+        }
     }
 
     private func bootVM(machineID: String) {

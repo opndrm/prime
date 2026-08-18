@@ -18,6 +18,11 @@ struct AgentComputerStore {
     }
 
     /// List all agent VMs by their directory names
+    static func listMachines() -> [String]
+    {
+        listAgents()
+    }
+
     static func listAgents() -> [String] {
         guard let items = try? FileManager.default.contentsOfDirectory(at: trustedMacStates, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]) else {
             return []
