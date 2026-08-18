@@ -32,6 +32,7 @@ final class VirtualMachineController: NSObject, VZVirtualMachineDelegate {
     private var linuxConsoleOutput: FileHandle?
     private var linuxConsoleBuffer = ""
     private var didSendLinuxAutologin = false
+    private var didPrepareLinuxDisplay = false
 
     var mayTerminateProcess: Bool { machine == nil }
 
@@ -84,6 +85,7 @@ final class VirtualMachineController: NSObject, VZVirtualMachineDelegate {
         linuxConsoleOutput = output
         linuxConsoleBuffer = ""
         didSendLinuxAutologin = false
+        didPrepareLinuxDisplay = false
         output.readabilityHandler = { [weak self] handle in
             let data = handle.availableData
             guard !data.isEmpty else { return }
@@ -102,6 +104,7 @@ final class VirtualMachineController: NSObject, VZVirtualMachineDelegate {
                     self.stateDidChange?(self.lifecycle, self.statusText)
                 }
                 if self.linuxConsoleBuffer.contains("~ #") || self.linuxConsoleBuffer.contains("localhost:~#") {
+                    self.prepareVisibleLinuxDisplayIfNeeded()
                     self.statusText = "Linux shell is ready."
                     self.stateDidChange?(self.lifecycle, self.statusText)
                 }
@@ -124,6 +127,14 @@ final class VirtualMachineController: NSObject, VZVirtualMachineDelegate {
 
     func readLinuxConsole(limit: Int = 4000) -> String {
         String(linuxConsoleBuffer.suffix(max(0, limit)))
+    }
+
+    private func prepareVisibleLinuxDisplayIfNeeded() {
+        guard !didPrepareLinuxDisplay else { return }
+        didPrepareLinuxDisplay = true
+        _ = writeLinuxConsole("clear > /dev/tty0\n")
+        _ = writeLinuxConsole("printf 'OPNDRM Linux Quick Start\\n\\n' > /dev/tty0\n")
+        _ = writeLinuxConsole("printf 'Shell is ready. Agents run commands through the console bridge.\\n' >> /dev/tty0\n")
     }
 
     private func startLinuxConsoleAutologinIfNeeded() {

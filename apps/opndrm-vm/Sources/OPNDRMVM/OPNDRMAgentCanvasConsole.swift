@@ -92,8 +92,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
 
     override func hitTest(_ point: NSPoint) -> NSView? {
         guard !isHidden, alphaValue > 0 else { return nil }
-        let hit = super.hitTest(point)
-        return hit === self ? nil : hit
+        return super.hitTest(point) ?? self
     }
 
     override func mouseDown(with event: NSEvent) {
@@ -149,7 +148,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
     private func setupUI() {
         translatesAutoresizingMaskIntoConstraints = false
         wantsLayer = true
-        layer?.backgroundColor = NSColor.clear.cgColor
+        layer?.backgroundColor = NSColor(calibratedWhite: 0.015, alpha: 0.98).cgColor
         layer?.zPosition = 20
 
         // Left agent rail.
@@ -196,16 +195,16 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         rail.addSubview(vmStatusLabel)
 
         // Center chat area.
-        let center = OPNDRMClickThroughView()
+        let center = NSView()
         center.translatesAutoresizingMaskIntoConstraints = false
         center.wantsLayer = true
-        center.layer?.backgroundColor = NSColor.clear.cgColor
+        center.layer?.backgroundColor = NSColor(calibratedWhite: 0.015, alpha: 0.98).cgColor
         addSubview(center)
 
-        let topBar = OPNDRMClickThroughView()
+        let topBar = NSView()
         topBar.translatesAutoresizingMaskIntoConstraints = false
         topBar.wantsLayer = true
-        topBar.layer?.backgroundColor = NSColor.clear.cgColor
+        topBar.layer?.backgroundColor = NSColor(calibratedWhite: 0.015, alpha: 0.98).cgColor
         center.addSubview(topBar)
 
         let topTitle = NSTextField(labelWithString: "New Agent")
@@ -230,13 +229,12 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.hasVerticalScroller = true
         scrollView.drawsBackground = true
-        scrollView.backgroundColor = .clear
-        scrollView.isHidden = true
+        scrollView.backgroundColor = .black
         transcriptView.isEditable = false
         transcriptView.isSelectable = true
         transcriptView.font = NSFont.systemFont(ofSize: 14)
         transcriptView.textColor = NSColor(calibratedWhite: 0.9, alpha: 1)
-        transcriptView.backgroundColor = .clear
+        transcriptView.backgroundColor = .black
         transcriptView.textContainerInset = NSSize(width: 24, height: 24)
         scrollView.documentView = transcriptView
         center.addSubview(scrollView)
@@ -638,6 +636,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
     }
 
     @objc private func showVMClicked() {
+        window?.makeFirstResponder(nil)
         alphaValue = 0
         isHidden = true
         onHideRequested?()

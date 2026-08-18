@@ -273,10 +273,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             )
         }
         agentCanvasConsole.onHideRequested = { [weak self] in
-            self?.window?.makeFirstResponder(nil)
-            self?.agentCanvasConsole.alphaValue = 0
-            self?.agentCanvasConsole.isHidden = true
-            self?.displayVMInLayout()
+            self?.hideAgentConsole()
         }
         contentView.addSubview(agentCanvasConsole, positioned: .above, relativeTo: layoutView)
         agentCanvasConsole.layer?.zPosition = 9_999
@@ -451,13 +448,22 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             guard !name.isEmpty else { return ["ok": false, "message": "console.read requires a selected VM or name"] }
             guard let controller = vmInstances[name]?.controller else { return ["ok": false, "message": "\(name) is not running in this window"] }
             return ["ok": true, "name": name, "console": controller.readLinuxConsole(limit: Self.intValue(request["limit"], defaultValue: 4000))]
+        case "showVM", "hideAgent":
+            hideAgentConsole()
+            return ["ok": true, "message": "showing VM visualizer"]
         case "stop":
             guard let name = request["name"] as? String, !name.isEmpty else {
                 return ["ok": false, "message": "stop requires name"]
             }
-            vmInstances[name]?.controller.stop()
+            if let instance = vmInstances[name] {
+                instance.controller.stop()
+                instance.vmView?.removeFromSuperview()
+                vmInstances.removeValue(forKey: name)
+            }
+            if selectedVM == name { selectedVM = nil }
+            displayVMInLayout()
             refreshVMList()
-            return ["ok": true, "message": "stop requested: \(name)"]
+            return ["ok": true, "message": "stopped \(name); press/play boot to recreate the visualizer"]
         case "layout", "setLayout":
             let rawMode = (request["mode"] as? String)?.lowercased() ?? "single"
             let mode: VMLayoutMode
@@ -578,8 +584,16 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         let row = sender.tag
         guard row < vmNames.count else { return }
         let name = vmNames[row]
-        vmInstances[name]?.controller.stop()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { self.refreshVMList() }
+        if let instance = vmInstances[name] {
+            instance.controller.stop()
+            instance.vmView?.removeFromSuperview()
+            vmInstances.removeValue(forKey: name)
+        }
+        if selectedVM == name { selectedVM = nil }
+        displayVMInLayout()
+        progressLabel.isHidden = false
+        progressLabel.stringValue = "\(name) stopped. Press Play to start it again."
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { self.refreshVMList() }
     }
 
     @objc private func destroyVM(_ sender: NSButton) {
@@ -636,6 +650,10 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
     }
 
     @objc private func showAgentClicked() {
+        if agentCanvasConsole.isHidden == false {
+            hideAgentConsole()
+            return
+        }
         let candidate = selectedVM
             ?? vmNames.first(where: { AgentComputerStore.vmType($0) == .linux && AgentComputerStore.hasVMState($0) })
             ?? vmNames.first(where: { AgentComputerStore.hasVMState($0) })
@@ -665,6 +683,15 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             bootVM(name)
         }
         displayVMInLayout()
+    }
+
+    private func hideAgentConsole() {
+        window?.makeFirstResponder(nil)
+        agentCanvasConsole.alphaValue = 0
+        agentCanvasConsole.isHidden = true
+        displayVMInLayout()
+        progressLabel.isHidden = false
+        progressLabel.stringValue = selectedVM.map { "Showing \($0)." } ?? "Showing VM."
     }
 
     private func showFirstMateConsole(for vmName: String) {
@@ -900,14 +927,34 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
                 displayVMInLayout()
                 return
             }
-            if existing.controller.lifecycle == .ready {
+
+            switch existing.controller.lifecycle {
+            case .ready:
                 existing.controller.start()
+                selectedVM = machineID
+                refreshVMList()
+                displayVMInLayout()
+                return
+            case .running, .starting:
+                selectedVM = machineID
+                refreshVMList()
+                displayVMInLayout()
+                progressLabel.stringValue = existing.controller.lifecycle == .running ? "\(machineID) is running." : "\(machineID) is starting…"
+                return
+            case .paused:
+                existing.controller.resume()
+                selectedVM = machineID
+                refreshVMList()
+                displayVMInLayout()
+                return
+            case .stopped, .failed, .unconfigured, .stopping, .pausing:
+                // A stopped VZVirtualMachine cannot be restarted after its
+                // machine has been torn down. Throw away the dead view and load
+                // a fresh visualizer/controller from disk below.
+                existing.controller.stop()
+                existing.vmView?.removeFromSuperview()
+                vmInstances.removeValue(forKey: machineID)
             }
-            selectedVM = machineID
-            refreshVMList()
-            displayVMInLayout()
-            progressLabel.stringValue = existing.controller.lifecycle == .running ? "\(machineID) is running." : "\(machineID): \(existing.controller.statusText)"
-            return
         }
 
         guard AgentComputerStore.hasVMState(machineID) else {
