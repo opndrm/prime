@@ -15,6 +15,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
     private var vmName = ""
     private var holder: OPNDRMAgentHarnessHolder?
     private var didCreateAgent = false
+    private var cursorTrackingArea: NSTrackingArea?
 
     private let agentRowLabel = NSTextField(labelWithString: "")
     private let vmStatusLabel = NSTextField(labelWithString: "")
@@ -41,8 +42,49 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
 
     required init?(coder: NSCoder) { nil }
 
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        window?.acceptsMouseMovedEvents = true
+    }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let cursorTrackingArea {
+            removeTrackingArea(cursorTrackingArea)
+        }
+        let area = NSTrackingArea(
+            rect: bounds,
+            options: [.activeAlways, .inVisibleRect, .mouseEnteredAndExited, .mouseMoved, .cursorUpdate],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(area)
+        cursorTrackingArea = area
+    }
+
     override func resetCursorRects() {
         addCursorRect(bounds, cursor: .arrow)
+    }
+
+    override func cursorUpdate(with event: NSEvent) {
+        showHostCursor()
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        showHostCursor()
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        showHostCursor()
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        showHostCursor()
+    }
+
+    private func showHostCursor() {
+        NSCursor.unhide()
+        NSCursor.arrow.set()
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
@@ -51,6 +93,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
     }
 
     override func mouseDown(with event: NSEvent) {
+        showHostCursor()
         window?.makeFirstResponder(messageField)
         super.mouseDown(with: event)
     }
@@ -60,6 +103,8 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         self.holder = existingHolder
         self.didCreateAgent = existingHolder != nil
         isHidden = false
+        window?.acceptsMouseMovedEvents = true
+        showHostCursor()
 
         if let existingHolder {
             nameField.stringValue = existingHolder.agentName
