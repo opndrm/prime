@@ -4,7 +4,14 @@
   "private": true,
   "description": "Open Dream Prime local-first workflow installer and skill.",
   "scripts": {
-    "check": "bash scripts/check-installers.sh"
+    "check": "bash scripts/check-installers.sh",
+    "agent-computer": "node containers/apple-container/agent-computer-server.mjs",
+    "agent-computer:status": "bash containers/apple-container/agent-computer.sh status",
+    "agent-computer:start": "bash containers/apple-container/agent-computer.sh start",
+    "agent-computer:stop": "bash containers/apple-container/agent-computer.sh stop",
+    "agent-computer:terminal": "bash containers/apple-container/agent-computer.sh terminal",
+    "buzz-container:build": "bash containers/apple-container/build-buzz-container.sh",
+    "buzz-container:verify": "bash containers/apple-container/verify-buzz-container.sh"
   },
   "pi": { "skills": ["./skills"] }
 }

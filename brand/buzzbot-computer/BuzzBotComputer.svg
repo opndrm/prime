@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">BuzzBot private computer icon</title>
+  <desc id="desc">An original electric green magnetic B orbit on an obsidian rounded square.</desc>
+  <defs>
+    <linearGradient id="surface" x1="110" y1="70" x2="910" y2="954" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#252a32"/>
+      <stop offset="0.46" stop-color="#0d1015"/>
+      <stop offset="1" stop-color="#050608"/>
+    </linearGradient>
+    <radialGradient id="aura" cx="512" cy="493" r="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#84ff16" stop-opacity=".17"/>
+      <stop offset=".39" stop-color="#57d80c" stop-opacity=".06"/>
+      <stop offset="1" stop-color="#0b0e12" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="lime" x1="277" y1="260" x2="736" y2="764" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e1ff5a"/>
+      <stop offset=".38" stop-color="#9dff18"/>
+      <stop offset="1" stop-color="#45df08"/>
+    </linearGradient>
+    <linearGradient id="orbit" x1="218" y1="352" x2="808" y2="669" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#68ed0d"/>
+      <stop offset=".5" stop-color="#e9ff75"/>
+      <stop offset="1" stop-color="#62ef0c"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="34"/>
+    </filter>
+  </defs>
+  <!-- Original obsidian app tile -->
+  <rect width="1024" height="1024" rx="226" fill="#030405"/>
+  <rect x="20" y="20" width="984" height="984" rx="208" fill="url(#surface)"/>
+  <rect x="21" y="21" width="982" height="982" rx="207" fill="none" stroke="#5b6570" stroke-opacity=".36" stroke-width="3"/>
+  <rect x="42" y="42" width="940" height="940" rx="188" fill="url(#aura)"/>
+  <path d="M151 328C215 168 411 91 587 137" fill="none" stroke="#c9d4dc" stroke-opacity=".09" stroke-width="22" stroke-linecap="round"/>
+  <!-- ambient field behind the mark -->
+  <ellipse cx="512" cy="516" rx="318" ry="184" transform="rotate(-23 512 516)" fill="none" stroke="#79f713" stroke-opacity=".18" stroke-width="54" filter="url(#soft)"/>
+  <!-- A deliberately asymmetric orbit, interrupted to establish depth -->
+  <path d="M224 657C194 536 344 351 543 279C730 211 858 261 875 370" fill="none" stroke="url(#orbit)" stroke-width="26" stroke-linecap="round" filter="url(#glow)"/>
+  <path d="M866 440C830 575 638 724 439 770C317 798 237 759 213 681" fill="none" stroke="url(#orbit)" stroke-width="26" stroke-linecap="round" filter="url(#glow)"/>
+  <!-- The B is drawn as a private magnetic signal rather than a wordmark -->
+  <g fill="none" stroke="url(#lime)" stroke-width="70" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+    <path d="M350 275V749"/>
+    <path d="M367 276C584 243 692 314 685 422C678 516 575 534 390 506"/>
+    <path d="M391 507C591 483 714 551 704 668C694 776 579 797 367 748"/>
+  </g>
+  <!-- small magnetic polarity caps make the orbit recognizably its own -->
+  <g filter="url(#glow)">
+    <circle cx="219" cy="669" r="31" fill="#dfff65"/>
+    <circle cx="219" cy="669" r="13" fill="#11170b"/>
+    <circle cx="877" cy="392" r="31" fill="#dfff65"/>
+    <circle cx="877" cy="392" r="13" fill="#11170b"/>
+  </g>
+  <circle cx="350" cy="275" r="13" fill="#ecff92"/>
+  <circle cx="350" cy="749" r="13" fill="#ecff92"/>
+</svg>

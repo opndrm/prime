@@ -1,0 +1,33 @@
+# OpenDream Prime's local Linux development foundation.
+#
+# Pin both the Rust toolchain tag and the resolved multi-platform manifest.
+# Refresh this only through a reviewed change so later Rust work has an
+# explicit, reproducible baseline.
+FROM docker.io/library/rust:1.97.1-slim-bookworm@sha256:2775a09d208ff0d7c1f50490c45b62db929e87ba1dcbc3f2132ac71a704bcdd3
+
+LABEL org.opencontainers.image.title="OpenDream Prime Apple Container foundation" \
+      org.opencontainers.image.description="Isolated Rust-ready Linux baseline; no application service is included." \
+      org.opencontainers.image.source="https://github.com/opndrm/prime"
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    CARGO_HOME=/usr/local/cargo \
+    RUSTUP_HOME=/usr/local/rustup
+
+# These are build prerequisites only. Firecrawl, OpenAdapt Desktop, credentials,
+# host mounts, and application services are intentionally out of this image.
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
+        build-essential \
+        ca-certificates \
+        curl \
+        git \
+        libssl-dev \
+        pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd --create-home --shell /bin/bash opndrm
+
+USER opndrm
+WORKDIR /workspace
+
+CMD ["bash"]

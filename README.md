@@ -56,3 +56,54 @@ The installer preserves two General Research workspaces—**GENERAL RESEARCH** f
 ## Handy dictation
 
 The macOS installer installs [Handy](https://handy.computer/), a local speech-to-text app. It does not grant Microphone or Accessibility permissions and does not download or select a transcription model; each owner completes those choices locally.
+
+## Apple Container foundation
+
+The isolated Linux foundation for later approved Rust/Firecrawl work lives in
+[`containers/apple-container/`](containers/apple-container/). It is separate
+from the Prime installer and intentionally contains no OpenAdapt Desktop,
+approval tooling, JCode, or pipeline integration.
+
+## PRIME local agent computer
+
+The first agent computer is a local Apple Container-backed workspace for
+**PRIME — Prime Agent**. It is persistent only inside this checkout at
+`.opndrm/agent-computers/prime/`, runs as the image's non-root `opndrm` user,
+and has no network, DNS, published ports, SSH forwarding, inherited
+credentials, or writable root filesystem. Its one writable mount is the
+project-local PRIME workspace.
+
+First validate the baseline, then start the loopback-only view:
+
+```sh
+./containers/apple-container/verify.sh
+npm run agent-computer
+```
+
+Open the printed `http://127.0.0.1:4177` address. From that local page, the
+owner can see the true lifecycle state and scoped file index, start, stop,
+restart, explicitly clean the PRIME workspace, and copy the command for a
+real interactive container terminal. No terminal transcript or file contents
+are exposed in the page. Browser control is intentionally not included yet.
+
+The remote provider contract is present only as an unavailable placeholder.
+No remote provider, account, billing setup, credential, VM, deployment, or
+remote session is configured or created by this repository.
+
+## CleanShot X local bridge
+
+The optional [CleanShot X bridge](integrations/cleanshot-x/) is a fixed macOS
+host adapter for CleanShot's official Record Screen URL scheme. It can inspect
+the local bundle and prepare the action without launching CleanShot. Opening
+the native Record Screen requires an explicit confirmation flag and never
+starts a capture, uploads a file, or uses CleanShot Cloud. Buzz wiring is not
+configured or claimed as live. OpenAdapt remains a separate optional pilot.
+
+## Future recording providers
+
+CleanShot is optional native video evidence through its local URL-scheme
+bridge. OpenAdapt remains in the product architecture as the future optional
+structured record/compile/replay provider; the existing local pilot is
+preserved but its reliability is **not yet proven**. Neither provider is wired
+to Buzz, and no OpenAdapt Vision/runtime investigation or implementation is
+part of the current build.

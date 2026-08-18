@@ -33,9 +33,51 @@
       .grid p:not(.eyebrow), .contract { max-width: 30rem; font-size: 1.1rem; line-height: 1.25; }
       .contract { max-width: 48rem; font-size: clamp(1.5rem, 3.5vw, 3rem); line-height: 1.04; letter-spacing: -.05em; }
       .install-copy { max-width: 48rem; margin-top: 1.5rem; padding: 1rem; border: 1px solid var(--ink); background: var(--paper); font-size: .83rem; line-height: 1.5; overflow: auto; }
+      .record-prototype { margin-top: 1.5rem; border: 1px solid var(--ink); background: var(--paper); }
+      .agent-computer { min-height: clamp(18rem, 38vw, 32rem); padding: 1rem; background: linear-gradient(135deg, color-mix(in srgb, var(--warm) 76%, var(--paper)), var(--paper)); }
+      .record-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: center; gap: 1rem; padding: .75rem 1rem; border-bottom: 1px solid var(--ink); background: var(--ink); color: var(--paper); }
+      .record-agent, .record-status, .record-time { font: 700 .72rem/1.2 "SFMono-Regular", Consolas, monospace; letter-spacing: .09em; text-transform: uppercase; }
+      .record-status { color: color-mix(in srgb, var(--paper) 72%, transparent); }
+      .record-stop, .record-save { min-height: 2.5rem; padding: 0 .85rem; border: 1px solid currentColor; background: transparent; color: inherit; font: 700 .72rem/1 "SFMono-Regular", Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+      .record-stop:hover, .record-stop:focus-visible { background: var(--paper); color: var(--ink); }
+      .agent-canvas { height: 100%; min-height: 15rem; border: 1px dashed color-mix(in srgb, var(--ink) 36%, transparent); padding: clamp(1rem, 3vw, 2rem); display: flex; align-items: end; }
+      .agent-canvas p { max-width: 22rem; margin: 0; font-size: clamp(1.15rem, 2.4vw, 1.7rem); line-height: 1.06; letter-spacing: -.04em; }
+      .record-review { padding: clamp(1.25rem, 4vw, 2.5rem); }
+      .record-review[hidden], .record-live[hidden] { display: none; }
+      .record-review h3 { max-width: 16ch; margin: .55rem 0 1rem; font-size: clamp(2rem, 4vw, 3.6rem); line-height: .9; letter-spacing: -.07em; }
+      .record-review p:not(.eyebrow) { max-width: 32rem; font-size: 1.05rem; line-height: 1.35; }
+      .record-save { margin-top: 1rem; background: var(--ink); color: var(--paper); border-color: var(--ink); }
+      .record-save:hover, .record-save:focus-visible { background: var(--paper); color: var(--ink); }
+      .record-save:disabled { cursor: default; opacity: .65; }
+      .computer-shell { margin-top: 1.5rem; border: 1px solid var(--ink); background: var(--paper); }
+      .computer-toolbar, .computer-actions { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; padding: .75rem 1rem; border-bottom: 1px solid var(--ink); }
+      .computer-toolbar { justify-content: space-between; background: var(--ink); color: var(--paper); }
+      .computer-label, .computer-state, .computer-mode, .computer-path, .computer-files li, .computer-command, .computer-note { font: 700 .72rem/1.35 "SFMono-Regular", Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; }
+      .computer-state { padding: .25rem .45rem; border: 1px solid currentColor; }
+      .computer-mode { color: color-mix(in srgb, var(--paper) 72%, transparent); }
+      .computer-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(18rem, .8fr); }
+      .computer-panel { min-height: 18rem; padding: 1.25rem; }
+      .computer-panel + .computer-panel { border-left: 1px solid var(--ink); }
+      .computer-panel h3 { margin: .45rem 0 1rem; font-size: clamp(1.7rem, 3vw, 2.6rem); line-height: .9; letter-spacing: -.065em; }
+      .computer-copy { max-width: 32rem; margin: 0; font-size: 1rem; line-height: 1.35; }
+      .computer-facts { display: grid; grid-template-columns: 8rem 1fr; gap: .55rem 1rem; margin: 1.5rem 0 0; padding-top: 1rem; border-top: 1px solid var(--ink); }
+      .computer-facts dt { font: 700 .68rem/1.25 "SFMono-Regular", Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; }
+      .computer-facts dd { margin: 0; font: .82rem/1.35 "SFMono-Regular", Consolas, monospace; overflow-wrap: anywhere; }
+      .computer-files { min-height: 8rem; margin: 1rem 0 0; padding: 0; list-style: none; border-top: 1px solid var(--ink); }
+      .computer-files li { display: flex; justify-content: space-between; gap: 1rem; padding: .55rem 0; border-bottom: 1px solid color-mix(in srgb, var(--ink) 25%, transparent); text-transform: none; letter-spacing: .02em; }
+      .computer-empty { padding: .8rem 0; font-size: .95rem; line-height: 1.3; }
+      .computer-actions { border-top: 1px solid var(--ink); border-bottom: 0; }
+      .computer-action { min-height: 2.5rem; padding: 0 .8rem; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); font: 700 .72rem/1 "SFMono-Regular", Consolas, monospace; letter-spacing: .07em; text-transform: uppercase; cursor: pointer; }
+      .computer-action--primary { background: var(--ink); color: var(--paper); }
+      .computer-action:hover, .computer-action:focus-visible { outline: 0; background: var(--warm); color: var(--ink); }
+      .computer-action:disabled { cursor: wait; opacity: .55; }
+      .computer-notice { flex: 1 1 18rem; margin: 0; font-size: .86rem; line-height: 1.35; }
+      .computer-command { display: block; max-width: 100%; margin-top: 1rem; padding: .65rem; border: 1px solid var(--ink); background: var(--warm); overflow-wrap: anywhere; text-transform: none; letter-spacing: 0; }
+      .computer-remote { margin: 0; padding: 1rem 1.25rem; border-top: 1px solid var(--ink); font-size: .95rem; line-height: 1.35; }
+      .computer-remote strong { font: 700 .72rem/1.25 "SFMono-Regular", Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; }
       footer { border-top: 1px solid var(--ink); display: flex; gap: 1rem; flex-wrap: wrap; padding: 1rem 0; }
       footer a { color: inherit; }
-      @media (max-width: 42rem) { .page { width: min(100% - 1.25rem, 88rem); } .theme-toggle { top: 1rem; } .grid { grid-template-columns: 1fr; } .grid article:nth-child(2) { border-top: 1px solid var(--ink); } .button--quiet { margin-left: 0; } }
+      @media (max-width: 42rem) { .page { width: min(100% - 1.25rem, 88rem); } .theme-toggle { top: 1rem; } .grid, .computer-grid { grid-template-columns: 1fr; } .grid article:nth-child(2) { border-top: 1px solid var(--ink); } .button--quiet { margin-left: 0; } .record-bar { grid-template-columns: 1fr auto; gap: .65rem; } .record-status { grid-column: 1 / -1; grid-row: 2; } .record-time { grid-column: 1; grid-row: 3; } .record-stop { grid-column: 2; grid-row: 3; } .computer-panel + .computer-panel { border-left: 0; border-top: 1px solid var(--ink); } .computer-facts { grid-template-columns: 6.5rem 1fr; } }
     </style>
   </head>
   <body>
@@ -73,6 +115,70 @@
         <article><p class="eyebrow">BUZZ</p><h2>TALK</h2><p>Humans and agents discuss the work together, attached to the relevant GitHub issue.</p></article>
         <article><p class="eyebrow">WAYFINDER</p><h2>PLAN</h2><p>GitHub Issues make decisions, ownership, and the next work visible.</p></article>
       </section>
+      <section id="buzz-record">
+        <p class="eyebrow">BUZZ RECORD · AGENT WORKSPACE</p>
+        <h2>WATCH.<br>LEARN.</h2>
+        <p class="lead">A single calm layer over the agent computer—nothing to configure while the work is being taught.</p>
+        <div class="record-prototype" aria-label="Buzz Record prototype">
+          <div class="record-live" id="record-live">
+            <div class="record-bar">
+              <span class="record-agent">PRIME — GENERAL RESEARCH</span>
+              <span class="record-status">is watching and learning</span>
+              <time class="record-time" id="record-time" datetime="PT0S">00:00</time>
+              <button class="record-stop" type="button" id="record-stop">Stop</button>
+            </div>
+            <div class="agent-computer"><div class="agent-canvas"><p>The agent computer stays visible while Buzz learns the path.</p></div></div>
+          </div>
+          <article class="record-review" id="record-review" hidden aria-live="polite">
+            <p class="eyebrow">REVIEW · TASK SUMMARY</p>
+            <h3>Teach Prime the project handoff.</h3>
+            <p><strong>Verification pending.</strong> Review the path before this becomes an automation.</p>
+            <button class="record-save" type="button" id="record-save">Save automation</button>
+          </article>
+        </div>
+      </section>
+      <section id="agent-computer">
+        <p class="eyebrow">PRIME · LOCAL AGENT COMPUTER</p>
+        <h2>LOCAL.<br>ALIVE.</h2>
+        <p class="lead">A persistent, isolated work desk for PRIME on this Mac. The local view shows only the computer’s state and its scoped workspace—not terminal transcripts or captured activity.</p>
+        <div class="computer-shell" id="agent-computer-shell" aria-label="PRIME local agent computer">
+          <div class="computer-toolbar">
+            <span class="computer-label">PRIME — PRIME AGENT</span>
+            <span class="computer-state" id="agent-computer-state">CHECKING</span>
+            <span class="computer-mode">APPLE CONTAINER · LOCAL</span>
+          </div>
+          <div class="computer-grid">
+            <article class="computer-panel">
+              <p class="eyebrow">LIVE VIEW · LOCAL SESSION</p>
+              <h3 id="agent-computer-heading">Local computer</h3>
+              <p class="computer-copy" id="agent-computer-summary">Start the local view to read the actual Apple Container state.</p>
+              <dl class="computer-facts">
+                <dt>Provider</dt><dd id="agent-computer-provider">Apple Container — This Mac</dd>
+                <dt>Workspace</dt><dd id="agent-computer-workspace">Project-local / not checked</dd>
+                <dt>Snapshot</dt><dd id="agent-computer-snapshot">Not created — metadata only</dd>
+                <dt>Browser</dt><dd>Not included in this first local slice</dd>
+              </dl>
+              <code class="computer-command" id="agent-computer-command">npm run agent-computer</code>
+            </article>
+            <article class="computer-panel">
+              <p class="eyebrow">PERSISTENT FILES · PRIME ONLY</p>
+              <h3>Workspace</h3>
+              <p class="computer-copy">This is the only writable host mount. File names appear here when the local service is running; file contents stay private.</p>
+              <ul class="computer-files" id="agent-computer-files"><li class="computer-empty">No local workspace index yet.</li></ul>
+            </article>
+          </div>
+          <div class="computer-actions">
+            <button class="computer-action computer-action--primary" type="button" data-agent-action="start">Start local</button>
+            <button class="computer-action" type="button" data-agent-action="restart">Restart</button>
+            <button class="computer-action" type="button" data-agent-action="stop">Stop</button>
+            <button class="computer-action" type="button" data-agent-action="terminal">Copy terminal command</button>
+            <button class="computer-action" type="button" data-agent-action="buzz-view">Copy local view for Buzz</button>
+            <button class="computer-action" type="button" data-agent-action="clean">Clean local workspace</button>
+            <p class="computer-notice" id="agent-computer-notice" aria-live="polite">Local service required: run <code>npm run agent-computer</code>, then open the loopback link it prints.</p>
+          </div>
+          <p class="computer-remote"><strong>Remote computer · unavailable / not configured.</strong> No provider, account, billing, credential, VM, or deployment has been selected or created. A remote session remains intentionally impossible until the owner makes and approves those separate decisions.</p>
+        </div>
+      </section>
       <section><p class="eyebrow">THE CONTRACT</p><p class="contract"><strong>Buzz</strong> is the conversation. <strong>Wayfinder</strong> is the plan. <strong>GitHub</strong> is the record. <strong>Atomic Vault</strong> keeps credentials personal.</p></section>
       <footer><span>OPEN DREAM PRIME</span><a href="https://github.com/opndrm/prime">GITHUB</a></footer>
     </main>
@@ -85,6 +191,119 @@
         await navigator.clipboard.writeText(document.querySelector('#install-command').textContent);
         document.querySelector('#copy-install').textContent = 'COPIED — PASTE IN TERMINAL';
       });
+      const recordLive = document.querySelector('#record-live');
+      const recordReview = document.querySelector('#record-review');
+      const recordTime = document.querySelector('#record-time');
+      const recordStop = document.querySelector('#record-stop');
+      const recordSave = document.querySelector('#record-save');
+      let elapsedSeconds = 0;
+      const recordClock = window.setInterval(() => {
+        elapsedSeconds += 1;
+        const minutes = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+        const seconds = String(elapsedSeconds % 60).padStart(2, '0');
+        recordTime.textContent = `${minutes}:${seconds}`;
+        recordTime.dateTime = `PT${elapsedSeconds}S`;
+      }, 1000);
+      recordStop.addEventListener('click', () => {
+        window.clearInterval(recordClock);
+        recordLive.hidden = true;
+        recordReview.hidden = false;
+        recordSave.focus();
+      });
+      recordSave.addEventListener('click', () => {
+        recordSave.disabled = true;
+        recordSave.textContent = 'Automation ready for review';
+      });
+      const computerState = document.querySelector('#agent-computer-state');
+      const computerHeading = document.querySelector('#agent-computer-heading');
+      const computerSummary = document.querySelector('#agent-computer-summary');
+      const computerProvider = document.querySelector('#agent-computer-provider');
+      const computerWorkspace = document.querySelector('#agent-computer-workspace');
+      const computerSnapshot = document.querySelector('#agent-computer-snapshot');
+      const computerCommand = document.querySelector('#agent-computer-command');
+      const computerFiles = document.querySelector('#agent-computer-files');
+      const computerNotice = document.querySelector('#agent-computer-notice');
+      const computerButtons = [...document.querySelectorAll('[data-agent-action]')];
+      let localComputerAvailable = false;
+      function setComputerNotice(message) { computerNotice.textContent = message; }
+      function showComputerStatus(status) {
+        const architecture = status.architecture;
+        localComputerAvailable = true;
+        computerState.textContent = status.state.toUpperCase();
+        computerHeading.textContent = status.state === 'ready' ? 'Local computer ready.' : status.state === 'starting' ? 'Starting local computer.' : status.state === 'failed' ? 'Local computer needs attention.' : 'Local computer stopped.';
+        computerSummary.textContent = status.state === 'ready' ? 'Apple Container is running the isolated PRIME workspace on this Mac.' : status.state === 'starting' ? 'Apple Container is preparing the isolated PRIME workspace on this Mac.' : 'The PRIME workspace remains project-local. Start it when you need an interactive session.';
+        computerProvider.textContent = `${architecture.activeProvider.displayName} · ${architecture.activeProvider.state}`;
+        computerWorkspace.textContent = `${status.workspace.state} · ${status.workspace.path}`;
+        computerSnapshot.textContent = `${architecture.persistence.snapshot.state} · provider-neutral metadata only`;
+        computerCommand.textContent = status.terminalCommand;
+      }
+      function showWorkspaceFiles(index) {
+        computerFiles.replaceChildren();
+        if (!index.files.length) {
+          const item = document.createElement('li');
+          item.className = 'computer-empty';
+          item.textContent = 'No files in the scoped workspace yet.';
+          computerFiles.append(item);
+          return;
+        }
+        index.files.forEach((file) => {
+          const item = document.createElement('li');
+          const name = document.createElement('span');
+          const kind = document.createElement('span');
+          name.textContent = file.name;
+          kind.textContent = file.kind;
+          item.append(name, kind);
+          computerFiles.append(item);
+        });
+      }
+      async function refreshComputer() {
+        try {
+          const [statusResponse, filesResponse] = await Promise.all([fetch('/api/agent-computer/status'), fetch('/api/agent-computer/files')]);
+          if (!statusResponse.ok || !filesResponse.ok) throw new Error('The local agent computer service is not available here.');
+          const [status, files] = await Promise.all([statusResponse.json(), filesResponse.json()]);
+          showComputerStatus(status);
+          showWorkspaceFiles(files);
+          setComputerNotice(status.state === 'ready' ? 'Live view is local status plus a scoped file index. Browser control is deliberately not included.' : 'The local computer is stopped. Its workspace remains persistent until you explicitly clean it.');
+        } catch (error) {
+          localComputerAvailable = false;
+          computerState.textContent = 'LOCAL SERVICE OFFLINE';
+          computerHeading.textContent = 'Open the local view.';
+          computerSummary.textContent = 'This public page cannot control a Mac container. Run the local service from this Prime checkout, then use its loopback address.';
+          setComputerNotice('Run npm run agent-computer locally. No remote provider is configured.');
+        }
+      }
+      async function computerAction(action) {
+        if (action === 'buzz-view') {
+          const link = `${window.location.origin}/#agent-computer`;
+          try { await navigator.clipboard.writeText(link); setComputerNotice('Local view link copied. It works only on this Mac; no Buzz relay or agent connection was created.'); } catch { setComputerNotice(`Local-only view: ${link}`); }
+          return;
+        }
+        if (!localComputerAvailable) {
+          setComputerNotice('Start the local service first with npm run agent-computer.');
+          return;
+        }
+        if (action === 'clean' && !window.confirm('Clean only the PRIME local agent computer workspace? This removes its container and persistent workspace.')) return;
+        computerButtons.forEach((button) => { button.disabled = true; });
+        try {
+          const response = await fetch(`/api/agent-computer/${action}`, { method: 'POST', headers: action === 'clean' ? { 'X-OPNDRM-Confirm': 'clean-prime-local-agent-computer' } : {} });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Local agent computer action failed.');
+          if (action === 'terminal') {
+            computerCommand.textContent = result.terminalCommand;
+            try { await navigator.clipboard.writeText(result.terminalCommand); setComputerNotice('Real terminal command copied. Run it in Terminal or WezTerm on this Mac.'); } catch { setComputerNotice('Run the displayed command in Terminal or WezTerm on this Mac.'); }
+          } else {
+            showComputerStatus(result);
+            await refreshComputer();
+          }
+        } catch (error) {
+          setComputerNotice(error.message || 'Local agent computer action failed.');
+        } finally {
+          computerButtons.forEach((button) => { button.disabled = false; });
+        }
+      }
+      computerButtons.forEach((button) => button.addEventListener('click', () => computerAction(button.dataset.agentAction)));
+      refreshComputer();
+      window.setInterval(refreshComputer, 5000);
     </script>
   </body>
 </html>

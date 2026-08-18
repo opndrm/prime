@@ -35,4 +35,13 @@ for path in "$ROOT"/README.md "$ROOT"/skills/opndrm-prime/SKILL.md "$ROOT"/docs/
   forbid "$path" 'No Mistakes'
 done
 node --check <(sed -n '/<script>/,/<\/script>/p' "$ROOT/site/index.html" | sed '1d;$d')
+bash "$ROOT/scripts/check-agent-computer.sh"
+bash "$ROOT/containers/apple-container/check-orchard-agent-computers-lifecycle.sh"
+bash "$ROOT/containers/apple-container/check-orchard-agent-computers-visual-proof.sh"
+bash "$ROOT/containers/apple-container/visual-vm/check-visual-linux-vm-contract.sh"
+bash -n "$ROOT/evaluations/openadapt-desktop/managed-vision.sh"
+require "$ROOT/evaluations/openadapt-desktop/managed-vision.sh" 'OPENADAPT_CONFIG_TOML'
+require "$ROOT/evaluations/openadapt-desktop/managed-vision.sh" 'OPENADAPT_DATA_DIR'
+require "$ROOT/evaluations/openadapt-desktop/offline-pilot.toml" 'storage_mode = "air-gapped"'
+require "$ROOT/evaluations/openadapt-desktop/offline-pilot.toml" 'runner_enabled = false'
 printf 'Open Dream Prime static checks passed.\n'

@@ -1,0 +1,3 @@
+# TEMPLATE ONLY — deliberately invalid. Do not use as a checksum receipt.
+# Required one-line fields: contract<TAB>consent-id<TAB>fixed-binary-relative-path<TAB>sha256-lowercase
+acp-gateway-v1	REPLACE_CONSENT_ID	bin/prime-agent-acp	REPLACE_WITH_64_LOWERCASE_HEX

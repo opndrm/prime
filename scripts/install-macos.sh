@@ -119,6 +119,87 @@ install_buzz() {
   hdiutil detach "$mount_dir" >/dev/null
 }
 
+install_buzzbot() {
+  local bin_dir="$HOME/.local/bin" repo_dir="$HOME/Desktop/opndrm_prime" service_src entitlements
+  bin_dir="$HOME/.local/bin"
+  repo_dir="$HOME/Desktop/opndrm_prime"
+  service_src="$repo_dir/apps/buzzbot-computer-service"
+  entitlements="/tmp/buzzbot.entitlements"
+
+  say 'Installing BuzzBot Agent Computer'
+  mkdir -p "$bin_dir"
+
+  # Clone or update the OPNDRM Prime repo (contains BuzzBot source)
+  if [[ ! -d "$repo_dir/.git" ]]; then
+    git clone https://github.com/opndrm/prime.git "$repo_dir" || fail 'Could not clone opndrm/prime for BuzzBot source.'
+  else
+    git -C "$repo_dir" pull --ff-only 2>/dev/null || true
+  fi
+
+  # Build the BuzzBot computer service
+  if [[ -d "$service_src" ]]; then
+    (cd "$service_src" && swift build -c release 2>&1 | tail -3) || fail 'BuzzBot service build failed.'
+
+    cat > "$entitlements" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.virtualization</key>
+    <true/>
+</dict>
+</plist>
+EOF
+    codesign --sign - --force --entitlements "$entitlements" "$service_src/.build/release/buzzbot-computer-service" 2>/dev/null || true
+    cp "$service_src/.build/release/buzzbot-computer-service" "$bin_dir/buzzbot-computer-service" 2>/dev/null || true
+    echo 'BuzzBot service built and codesigned'
+  else
+    fail "BuzzBot source not found at $service_src"
+  fi
+
+  # Install guest bootstrap
+  if [[ -f "$service_src/guest-bootstrap.sh" ]]; then
+    cp "$service_src/guest-bootstrap.sh" "$bin_dir/buzzbot-guest-bootstrap" 2>/dev/null || true
+    chmod +x "$bin_dir/buzzbot-guest-bootstrap" 2>/dev/null || true
+  fi
+
+  # Install buzzbot CLI if not present
+  if [[ ! -f "$bin_dir/buzzbot" ]]; then
+    cat > "$bin_dir/buzzbot" <<'BZ'
+#!/bin/bash
+set -e
+PORT=7777
+BUZZBOT_DIR="$HOME/Library/Application Support/BuzzBot/AgentComputers"
+SERVICE_BIN="$HOME/.local/bin/buzzbot-computer-service"
+ENTITLEMENTS="/tmp/buzzbot.entitlements"
+usage() { echo "Usage: buzzbot <show|hide|stop|destroy|list|provision|status|ping> [agent]"; }
+send_cmd() { echo "$1" | nc -w 3 localhost $PORT 2>/dev/null || echo "error: daemon not running"; }
+ensure_entitlements() { cat > "$ENTITLEMENTS" << 'E'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict><key>com.apple.security.virtualization</key><true/></dict></plist>
+E
+}
+start_daemon() { local a="${1:-buzzbot-mac-002}"; pgrep -f buzzbot-computer-service >/dev/null 2>&1 || { ensure_entitlements; codesign --sign - --force --entitlements "$ENTITLEMENTS" "$SERVICE_BIN" 2>/dev/null || true; "$SERVICE_BIN" --machine "$a" & sleep 2; }; }
+CMD="${1:-}"; AGENT="${2:-buzzbot-mac-002}"
+case "$CMD" in
+  show) start_daemon "$AGENT"; send_cmd "show" ;;
+  hide) send_cmd "hide" ;;
+  stop) send_cmd "stop" ;;
+  destroy) [ -d "$BUZZBOT_DIR/TrustedMacStates/$AGENT" ] && { send_cmd "stop"; sleep 2; rm -rf "$BUZZBOT_DIR/TrustedMacStates/$AGENT"; echo "Destroyed $AGENT"; } || echo "Not found" ;;
+  list) [ -d "$BUZZBOT_DIR/TrustedMacStates" ] && ls -1 "$BUZZBOT_DIR/TrustedMacStates" || echo "(none)" ;;
+  provision) echo "Run inside guest: curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- OPNDRM-APP" ;;
+  status) echo "Daemon: $(send_cmd ping)"; echo "VM: $(send_cmd status)" ;;
+  connect) mkdir -p "$HOME/.${2:-buzz}/.agents/skills/buzzbot" 2>/dev/null; echo "Connected to $2" ;;
+  ping) send_cmd "ping" ;;
+  *) usage ;;
+esac
+BZ
+    chmod +x "$bin_dir/buzzbot"
+  fi
+  echo 'BuzzBot CLI installed'
+}
+
 workspace_exists() {
   herdr --session "$SESSION" workspace list | python3 -c 'import json,sys; label=sys.argv[1]; print(any(w.get("label")==label for w in json.load(sys.stdin)["result"]["workspaces"]))' "$1" | grep -qx True
 }
@@ -192,6 +273,7 @@ prime-agent package install git:github.com/opndrm/prime || fail 'The Open Dream 
 configure_ollama_for_prime
 install_prime_buzz_bridge
 install_buzz
+install_buzzbot
 create_root
 start_herdr
 ensure_general_research
@@ -200,3 +282,4 @@ start_prime
 open_visible_workspace
 open -a Buzz >/dev/null 2>&1 || fail 'Buzz could not open. Your workspace was preserved; no Ready claim is made.'
 printf '\nReady: %s is open in WezTerm. PRIME is rooted at %s. Buzz is waiting for your own sign-in. Handy is installed and opened; its owner grants Microphone and Accessibility permissions and chooses its model. The existing local Ollama route was registered without downloading a model or changing the selected default.\n' "$SESSION" "$ROOT"
+printf 'BuzzBot is installed. Run buzzbot show to manage agent VMs.\n'
