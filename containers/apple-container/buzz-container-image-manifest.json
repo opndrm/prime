@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0",
+  "image": {
+    "name": "opndrm-prime/buzz-container",
+    "tag": "0.2.0",
+    "platform": "linux/arm64",
+    "purpose": "Immutable local Apple Container image for future one-bot, one-task Buzz coding VMs.",
+    "tag_policy": "The project build script refuses to overwrite an existing tag. Change this manifest and review the image definition before using a new tag."
+  },
+  "base": {
+    "reference": "docker.io/library/rust:1.97.1-slim-trixie@sha256:8e8cf8f7fd54a2d23d5a743b3a03f56e26b6c774276c33fa0595111704ebb15c"
+  },
+  "runtime": {
+    "user": "opndrm",
+    "workdir": "/workspace",
+    "network_at_task_runtime": "disabled",
+    "host_mounts_at_task_runtime": "disabled",
+    "ports_at_task_runtime": "disabled",
+    "ssh_at_task_runtime": "disabled",
+    "credentials_in_image": "none",
+    "model_route": "not configured",
+    "jcode_telemetry": "disabled",
+    "prime_agent_runtime": "installed-static-only",
+    "graphics_streaming": "unavailable"
+  },
+  "tools": [
+    {
+      "name": "HERDR",
+      "status": "installed",
+      "version": "0.8.0",
+      "source": "https://github.com/herdrdev/herdr/releases/download/v0.8.0/herdr-linux-aarch64",
+      "sha256": "f647ac66468d9efbc642fe534fb284468f0aea60641606fc008dfc0d82a3ca87",
+      "install_path": "/usr/local/bin/herdr",
+      "notes": "Official Linux aarch64 release binary. Terminal use is possible only after a future approved task lifecycle; no graphical desktop is provided."
+    },
+    {
+      "name": "JCode",
+      "status": "installed",
+      "version": "0.76.0",
+      "source": "https://github.com/1jehuang/jcode/releases/download/v0.76.0/jcode-linux-aarch64.tar.gz",
+      "sha256": "605bc2361aeadacb2f1754c5118111181cf14e8b2eca1a42d6a5fe5ecb411a7e",
+      "install_path": "/usr/local/bin/jcode",
+      "notes": "Official Linux aarch64 release archive. Its documented anonymous telemetry is disabled in the image. No model, provider, account, or task configuration is included."
+    },
+    {
+      "name": "WezTerm",
+      "status": "deferred-headless-gui",
+      "reason": "The established Captain HERDR/WezTerm daily driver and its saved layout remain host-local and untouched. This separate headless task image does not install, configure, or recreate a WezTerm GUI or session layout."
+    },
+    {
+      "name": "Prime Agent",
+      "status": "installed-static-only",
+      "version": "0.7.2",
+      "source": "https://pub-728493de92a943e2a9b2d17b4719f318.r2.dev/releases/v0.7.2/prime-agent-0.7.2.tgz",
+      "sha256": "bc5471f2a626d727b88a45eb745fff93b10c554a3c4fc5912f25d8c64b987f5e",
+      "checksum_source": "https://pub-728493de92a943e2a9b2d17b4719f318.r2.dev/releases/v0.7.2/SHA256SUMS",
+      "official_installer": "https://app.primeintellect.ai/prime-agent/install.sh",
+      "install_path": "/usr/local/bin/prime-agent",
+      "runtime": {
+        "name": "Node.js",
+        "version": "22.23.2",
+        "source": "https://nodejs.org/dist/v22.23.2/node-v22.23.2-linux-arm64.tar.xz",
+        "sha256": "fff4078c5def658577f92c88db7db3bc0072924bfb93fe52c1e744a54e94abb8",
+        "checksum_source": "https://nodejs.org/dist/latest-v22.x/SHASUMS256.txt"
+      },
+      "install_mode": "official-verified-tarball-npm-ignore-scripts",
+      "notes": "Uses the official installer’s published release tarball and checksum origin with an exact Node.js Linux arm64 runtime. npm lifecycle scripts are disabled, so Prime Agent does not bootstrap tools/kernel, launch a daemon, create a session, or configure a model/provider. Its CLI is deliberately not executed by the image verifier."
+    },
+    {
+      "name": "No Mistakes",
+      "status": "deferred-inactive-gate",
+      "reason": "It is not installed because the requested image must keep the gate inactive. No Mistakes must not be added until its official Linux installation path can be verified to avoid daemon/pipeline startup and credentials."
+    }
+  ]
+}

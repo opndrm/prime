@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "image": {
+    "name": "opndrm-prime/buzz-container-visual-proof",
+    "tag": "0.2.6",
+    "platform": "linux/arm64",
+    "purpose": "Separate, disposable watch-only Linux desktop proof for Buzz Container. It is not a task image."
+  },
+  "inherits": {
+    "image": "opndrm-prime/buzz-container:0.2.0",
+    "headless_task_image_modified": false
+  },
+  "tools": [
+    {
+      "name": "WezTerm",
+      "status": "installed-visual-proof-only",
+      "version": "20240203-110809-5046fc22",
+      "source": "https://github.com/wez/wezterm/releases/download/20240203-110809-5046fc22/wezterm-20240203-110809-5046fc22.Debian12.arm64.deb",
+      "sha256": "351f8791c6e9561d687afa63834a2132de84800dad6e7c3d035cc6518d6c3744",
+      "license_source": "https://raw.githubusercontent.com/wez/wezterm/20240203-110809-5046fc22/LICENSE.md",
+      "license_sha256": "37db33bbbd7348969eda397b89a16f252d56c1ca7481b6ccaf56ccdcbab5dcca",
+      "notes": "Installed only in the separate visual proof image. It never modifies or mirrors the Captain's macOS WezTerm layout."
+    },
+    {
+      "name": "HERDR",
+      "status": "inherited-isolated-session",
+      "version": "0.8.0",
+      "source": "https://github.com/herdrdev/herdr/releases/download/v0.8.0/herdr-linux-aarch64",
+      "sha256": "f647ac66468d9efbc642fe534fb284468f0aea60641606fc008dfc0d82a3ca87",
+      "license_source": "https://raw.githubusercontent.com/herdrdev/herdr/v0.8.0/LICENSE",
+      "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "notes": "The visual proof uses HERDR's documented --session mode to create or attach one empty named session inside the disposable container's tmpfs-only home. It does not start Prime Agent, JCode, No Mistakes, authentication, providers, models, repositories, or task work."
+    }
+  ],
+  "runtime": {
+    "user": "opndrm",
+    "task_vm": false,
+    "network": "disabled-at-proof-runtime",
+    "dns": "disabled-at-proof-runtime",
+    "host_mounts": "disabled-at-proof-runtime",
+    "tcp_ports": "disabled-at-proof-runtime",
+    "ssh": "disabled-at-proof-runtime",
+    "visual_egress": "future-owner-only-unix-socket",
+    "input": "unavailable",
+    "recording": "unavailable",
+    "prime_agent": "not-launched",
+    "jcode": "not-launched",
+    "no_mistakes": "not-installed"
+  }
+}

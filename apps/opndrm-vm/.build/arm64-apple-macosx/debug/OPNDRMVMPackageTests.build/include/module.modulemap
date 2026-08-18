@@ -1,3 +1,0 @@
-module OPNDRMVMPackageTests {
-    header "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMVMPackageTests.build/include/OPNDRMVMPackageTests-Swift.h"
-}

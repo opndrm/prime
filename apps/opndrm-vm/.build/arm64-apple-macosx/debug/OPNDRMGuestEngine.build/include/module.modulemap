@@ -1,3 +1,0 @@
-module OPNDRMGuestEngine {
-    header "/private/tmp/buzzbot-runtime-src/apps/opndrm-vm/.build/arm64-apple-macosx/debug/OPNDRMGuestEngine.build/include/OPNDRMGuestEngine-Swift.h"
-}

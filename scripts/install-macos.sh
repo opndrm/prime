@@ -99,26 +99,26 @@ install_buzz() {
   hdiutil detach "$mount_dir" >/dev/null
 }
 
-install_opndrm-vm() {
+install_buzzbot() {
   local bin_dir="$HOME/.local/bin" repo_dir="$HOME/Desktop/opndrm_prime" service_src entitlements
   bin_dir="$HOME/.local/bin"
   repo_dir="$HOME/Desktop/opndrm_prime"
-  service_src="$repo_dir/apps/opndrm-vm"
-  entitlements="/tmp/opndrm-vm.entitlements"
+  service_src="$repo_dir/apps/buzzbot-computer-service"
+  entitlements="/tmp/buzzbot.entitlements"
 
-  say 'Installing OPNDRM VM Agent Computer'
+  say 'Installing BuzzBot Agent Computer'
   mkdir -p "$bin_dir"
 
-  # Clone or update the OPNDRM Prime repo (contains OPNDRM VM source)
+  # Clone or update the OPNDRM Prime repo (contains BuzzBot source)
   if [[ ! -d "$repo_dir/.git" ]]; then
-    git clone https://github.com/opndrm/prime.git "$repo_dir" || fail 'Could not clone opndrm/prime for OPNDRM VM source.'
+    git clone https://github.com/opndrm/prime.git "$repo_dir" || fail 'Could not clone opndrm/prime for BuzzBot source.'
   else
     git -C "$repo_dir" pull --ff-only 2>/dev/null || true
   fi
 
-  # Build the OPNDRM VM computer service
+  # Build the BuzzBot computer service
   if [[ -d "$service_src" ]]; then
-    (cd "$service_src" && swift build -c release 2>&1 | tail -3) || fail 'OPNDRM VM service build failed.'
+    (cd "$service_src" && swift build -c release 2>&1 | tail -3) || fail 'BuzzBot service build failed.'
 
     cat > "$entitlements" <<'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -130,29 +130,29 @@ install_opndrm-vm() {
 </dict>
 </plist>
 EOF
-    codesign --sign - --force --entitlements "$entitlements" "$service_src/.build/release/opndrm-vm" 2>/dev/null || true
-    cp "$service_src/.build/release/opndrm-vm" "$bin_dir/opndrm-vm" 2>/dev/null || true
-    echo 'OPNDRM VM service built and codesigned'
+    codesign --sign - --force --entitlements "$entitlements" "$service_src/.build/release/buzzbot-computer-service" 2>/dev/null || true
+    cp "$service_src/.build/release/buzzbot-computer-service" "$bin_dir/buzzbot-computer-service" 2>/dev/null || true
+    echo 'BuzzBot service built and codesigned'
   else
-    fail "OPNDRM VM source not found at $service_src"
+    fail "BuzzBot source not found at $service_src"
   fi
 
   # Install guest bootstrap
   if [[ -f "$service_src/guest-bootstrap.sh" ]]; then
-    cp "$service_src/guest-bootstrap.sh" "$bin_dir/opndrm-vm-guest-bootstrap" 2>/dev/null || true
-    chmod +x "$bin_dir/opndrm-vm-guest-bootstrap" 2>/dev/null || true
+    cp "$service_src/guest-bootstrap.sh" "$bin_dir/buzzbot-guest-bootstrap" 2>/dev/null || true
+    chmod +x "$bin_dir/buzzbot-guest-bootstrap" 2>/dev/null || true
   fi
 
-  # Install opndrm-vm CLI if not present
-  if [[ ! -f "$bin_dir/opndrm-vm" ]]; then
-    cat > "$bin_dir/opndrm-vm" <<'BZ'
+  # Install buzzbot CLI if not present
+  if [[ ! -f "$bin_dir/buzzbot" ]]; then
+    cat > "$bin_dir/buzzbot" <<'BZ'
 #!/bin/bash
 set -e
 PORT=7777
-OPNDRM_VM_DIR="$HOME/Library/Application Support/OPNDRM-VM/AgentComputers"
-SERVICE_BIN="$HOME/.local/bin/opndrm-vm"
-ENTITLEMENTS="/tmp/opndrm-vm.entitlements"
-usage() { echo "Usage: opndrm-vm <show|hide|stop|destroy|list|provision|status|ping> [agent]"; }
+BUZZBOT_DIR="$HOME/Library/Application Support/BuzzBot/AgentComputers"
+SERVICE_BIN="$HOME/.local/bin/buzzbot-computer-service"
+ENTITLEMENTS="/tmp/buzzbot.entitlements"
+usage() { echo "Usage: buzzbot <show|hide|stop|destroy|list|provision|status|ping> [agent]"; }
 send_cmd() { echo "$1" | nc -w 3 localhost $PORT 2>/dev/null || echo "error: daemon not running"; }
 ensure_entitlements() { cat > "$ENTITLEMENTS" << 'E'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -160,24 +160,24 @@ ensure_entitlements() { cat > "$ENTITLEMENTS" << 'E'
 <plist version="1.0"><dict><key>com.apple.security.virtualization</key><true/></dict></plist>
 E
 }
-start_daemon() { local a="${1:-opndrm-vm-mac-002}"; pgrep -f opndrm-vm >/dev/null 2>&1 || { ensure_entitlements; codesign --sign - --force --entitlements "$ENTITLEMENTS" "$SERVICE_BIN" 2>/dev/null || true; "$SERVICE_BIN" --machine "$a" & sleep 2; }; }
-CMD="${1:-}"; AGENT="${2:-opndrm-vm-mac-002}"
+start_daemon() { local a="${1:-buzzbot-mac-002}"; pgrep -f buzzbot-computer-service >/dev/null 2>&1 || { ensure_entitlements; codesign --sign - --force --entitlements "$ENTITLEMENTS" "$SERVICE_BIN" 2>/dev/null || true; "$SERVICE_BIN" --machine "$a" & sleep 2; }; }
+CMD="${1:-}"; AGENT="${2:-buzzbot-mac-002}"
 case "$CMD" in
   show) start_daemon "$AGENT"; send_cmd "show" ;;
   hide) send_cmd "hide" ;;
   stop) send_cmd "stop" ;;
-  destroy) [ -d "$OPNDRM_VM_DIR/TrustedMacStates/$AGENT" ] && { send_cmd "stop"; sleep 2; rm -rf "$OPNDRM_VM_DIR/TrustedMacStates/$AGENT"; echo "Destroyed $AGENT"; } || echo "Not found" ;;
-  list) [ -d "$OPNDRM_VM_DIR/TrustedMacStates" ] && ls -1 "$OPNDRM_VM_DIR/TrustedMacStates" || echo "(none)" ;;
+  destroy) [ -d "$BUZZBOT_DIR/TrustedMacStates/$AGENT" ] && { send_cmd "stop"; sleep 2; rm -rf "$BUZZBOT_DIR/TrustedMacStates/$AGENT"; echo "Destroyed $AGENT"; } || echo "Not found" ;;
+  list) [ -d "$BUZZBOT_DIR/TrustedMacStates" ] && ls -1 "$BUZZBOT_DIR/TrustedMacStates" || echo "(none)" ;;
   provision) echo "Run inside guest: curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- OPNDRM-APP" ;;
   status) echo "Daemon: $(send_cmd ping)"; echo "VM: $(send_cmd status)" ;;
-  connect) mkdir -p "$HOME/.${2:-buzz}/.agents/skills/opndrm-vm" 2>/dev/null; echo "Connected to $2" ;;
+  connect) mkdir -p "$HOME/.${2:-buzz}/.agents/skills/buzzbot" 2>/dev/null; echo "Connected to $2" ;;
   ping) send_cmd "ping" ;;
   *) usage ;;
 esac
 BZ
-    chmod +x "$bin_dir/opndrm-vm"
+    chmod +x "$bin_dir/buzzbot"
   fi
-  echo 'OPNDRM VM CLI installed'
+  echo 'BuzzBot CLI installed'
 }
 
 workspace_exists() {
@@ -246,11 +246,11 @@ prime-agent package install git:github.com/opndrm/prime || fail 'The Open Dream 
 configure_ollama_for_prime
 install_prime_buzz_bridge
 install_buzz
-install_opndrm-vm
+install_buzzbot
 create_root
 start_herdr
 ensure_exact_opndrm_layout
 open_visible_workspace
 open -a Buzz >/dev/null 2>&1 || fail 'Buzz could not open. Your workspace was preserved; no Ready claim is made.'
 printf '\nReady: %s is open in WezTerm with exactly OFFLINE, OPNDRM, OPNDRM JC, and OPNDRM NO-MISTAKES. OPNDRM is rooted at %s. The No Mistakes workspace is an inactive shell. Buzz is waiting for your own sign-in. Handy is installed; its owner grants permissions and chooses its model.\n' "$SESSION" "$ROOT"
-printf 'OPNDRM VM is installed. Run opndrm-vm show to manage agent VMs.\n'
+printf 'BuzzBot is installed. Run buzzbot show to manage agent VMs.\n'
