@@ -299,30 +299,39 @@ final class OPNDRMVMCreator: NSObject {
         ))
 
         let task = URLSession.shared.downloadTask(with: sourceURL) { [weak self] temporaryURL, _, error in
-            let temporaryBox = UnsafeTransfer(temporaryURL)
-            let errorBox = UnsafeTransfer(error)
-            DispatchQueue.main.async {
-                guard let self else { return }
-                self.currentDownloadTask = nil
-                if let error = errorBox.value {
-                    completionBox.value(.failure(error))
-                    return
-                }
-                guard let temporaryURL = temporaryBox.value else {
-                    completionBox.value(.failure(Self.error("Download failed: no temporary file")))
-                    return
-                }
+            // Important: CFNetwork owns the temporary file only for the duration
+            // of this completion callback. Move it to our cache synchronously
+            // before dispatching back to the main actor; otherwise the temp file
+            // may be deleted and FileManager.moveItem will fail.
+            let result: Result<URL, Error>
+            if let error {
+                result = .failure(error)
+            } else if let temporaryURL {
                 do {
                     try? FileManager.default.removeItem(at: destinationURL)
                     try FileManager.default.moveItem(at: temporaryURL, to: destinationURL)
+                    result = .success(destinationURL)
+                } catch {
+                    result = .failure(error)
+                }
+            } else {
+                result = .failure(Self.error("Download failed: no temporary file"))
+            }
+
+            let resultBox = UnsafeTransfer(result)
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.currentDownloadTask = nil
+                switch resultBox.value {
+                case .success(let url):
                     onProgressBox.value?(OPNDRMVMCreateProgress(
                         phase: phase,
                         fraction: 1,
                         detail: "Downloaded \(fileName)",
                         canCancel: false
                     ))
-                    completionBox.value(.success(destinationURL))
-                } catch {
+                    completionBox.value(.success(url))
+                case .failure(let error):
                     completionBox.value(.failure(error))
                 }
             }
