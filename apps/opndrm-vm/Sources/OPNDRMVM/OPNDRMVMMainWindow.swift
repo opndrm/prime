@@ -218,8 +218,14 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         // surface: users choose Prime Agent or JCode in the VM canvas, then chat.
         agentCanvasConsole = OPNDRMAgentCanvasConsoleView(frame: .zero)
         agentCanvasConsole.isHidden = true
-        agentCanvasConsole.onStartRequested = { [weak self] vmName, kind in
-            self?.startFirstMate(vmName: vmName, kind: kind)
+        agentCanvasConsole.onStartRequested = { [weak self] vmName, kind, agentName, emoji, instructions in
+            self?.startFirstMate(
+                vmName: vmName,
+                kind: kind,
+                agentName: agentName,
+                emoji: emoji,
+                instructions: instructions
+            )
         }
         agentCanvasConsole.onHideRequested = { [weak self] in
             self?.window?.makeFirstResponder(nil)
@@ -447,19 +453,27 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
 
     private func showFirstMateConsole(for vmName: String) {
         guard AgentComputerStore.hasVMState(vmName) else { return }
-        let existing = agentHolders.values.first { $0.vmName == vmName && $0.agentName == "First Mate" }
+        let existing = agentHolders.values.first { $0.vmName == vmName }
         agentCanvasConsole.configure(vmName: vmName, existingHolder: existing)
     }
 
     @discardableResult
-    private func startFirstMate(vmName: String, kind: OPNDRMAgentHarnessHolder.Kind) -> OPNDRMAgentHarnessHolder {
-        let key = "\(vmName):\(kind.safeName):First-Mate"
+    private func startFirstMate(
+        vmName: String,
+        kind: OPNDRMAgentHarnessHolder.Kind,
+        agentName: String = "First Mate",
+        emoji: String = "🧭",
+        instructions: String = "Keep the conversation simple and stress-free. Work only inside your assigned VM. Automate inside the VM when possible. Ask before destructive changes. Do not show Prime Agent or JCode terminal output to the user."
+    ) -> OPNDRMAgentHarnessHolder {
+        let safeAgentName = agentName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "First Mate" : agentName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let safeEmoji = emoji.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "🧭" : emoji.trimmingCharacters(in: .whitespacesAndNewlines)
+        let key = "\(vmName):\(kind.safeName):\(safeAgentName)"
         let holder = agentHolders[key] ?? OPNDRMAgentHarnessHolder(
             vmName: vmName,
             kind: kind,
-            agentName: "First Mate",
-            emoji: "🧭",
-            instructions: "Keep the conversation simple and stress-free. Work only inside your assigned VM. Automate inside the VM when possible. Ask before destructive changes. Do not show Prime Agent or JCode terminal output to the user."
+            agentName: safeAgentName,
+            emoji: safeEmoji,
+            instructions: instructions
         )
         holder.stateDidChange = { [weak self] _, status in
             self?.progressLabel.isHidden = false

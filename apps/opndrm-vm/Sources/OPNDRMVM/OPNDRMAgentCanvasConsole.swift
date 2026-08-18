@@ -1,29 +1,38 @@
 import AppKit
 import Foundation
 
-/// Terminal-style agent surface that appears over the VM canvas after boot.
+/// OPNDRM-minimal agent creator for one VM.
 ///
-/// This keeps Prime Agent/JCode hidden: the user only chooses an engine once,
-/// then talks to First Mate in OPNDRM. Handy is used for speech input by focusing
-/// the chat field and letting Handy paste the transcript there.
+/// The VM is still the real Apple Virtualization visualizer. This view is the
+/// calm product surface placed over the canvas while an agent is being created:
+/// profile on the left, chat in the middle, settings/screen on the right.
+/// Prime/JCode stay hidden behind the named agent.
 @MainActor
 final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
-    var onStartRequested: ((String, OPNDRMAgentHarnessHolder.Kind) -> OPNDRMAgentHarnessHolder?)?
+    var onStartRequested: ((String, OPNDRMAgentHarnessHolder.Kind, String, String, String) -> OPNDRMAgentHarnessHolder?)?
     var onHideRequested: (() -> Void)?
 
     private var vmName = ""
     private var holder: OPNDRMAgentHarnessHolder?
+    private var didCreateAgent = false
 
-    private let titleLabel = NSTextField(labelWithString: "")
-    private let bodyLabel = NSTextField(wrappingLabelWithString: "")
+    private let agentRowLabel = NSTextField(labelWithString: "")
+    private let vmStatusLabel = NSTextField(labelWithString: "")
     private let transcriptView = NSTextView()
+    private let messageField = NSTextField()
     private let statusLabel = NSTextField(labelWithString: "")
-    private let inputField = NSTextField()
-    private let primeButton = NSButton(title: "Prime Agent", target: nil, action: nil)
-    private let jcodeButton = NSButton(title: "JCode", target: nil, action: nil)
-    private let handyButton = NSButton(title: "🎙 Handy", target: nil, action: nil)
+    private let avatarLabel = NSTextField(labelWithString: "🧭")
+    private let nameField = NSTextField()
+    private let titleField = NSTextField()
+    private let descriptionText = NSTextView()
+    private let engineControl = NSSegmentedControl(labels: ["Prime Agent", "JCode"], trackingMode: .selectOne, target: nil, action: nil)
+    private let createButton = NSButton(title: "Create Agent", target: nil, action: nil)
+    private let handyButton = NSButton(title: "🎙", target: nil, action: nil)
     private let sendButton = NSButton(title: "Send", target: nil, action: nil)
     private let showVMButton = NSButton(title: "Show VM", target: nil, action: nil)
+    private let teachButton = NSButton(title: "Teach a task", target: nil, action: nil)
+
+    override var acceptsFirstResponder: Bool { true }
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -32,14 +41,36 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
 
     required init?(coder: NSCoder) { nil }
 
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: .arrow)
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        window?.makeFirstResponder(messageField)
+        super.mouseDown(with: event)
+    }
+
     func configure(vmName: String, existingHolder: OPNDRMAgentHarnessHolder? = nil) {
         self.vmName = vmName
         self.holder = existingHolder
+        self.didCreateAgent = existingHolder != nil
         isHidden = false
-        if existingHolder == nil {
-            showChooser()
+
+        if let existingHolder {
+            nameField.stringValue = existingHolder.agentName
+            avatarLabel.stringValue = existingHolder.emoji
+            engineControl.selectedSegment = existingHolder.kind == .prime ? 0 : 1
+            transcriptView.string = existingHolder.transcriptText().isEmpty
+                ? initialTranscript(agentName: existingHolder.agentName)
+                : existingHolder.transcriptText()
         } else {
-            showChat()
+            resetDraft()
+        }
+        updateLabels()
+        updateMode()
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.window?.makeFirstResponder(self.messageField)
         }
     }
 
@@ -50,195 +81,442 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
     func refreshTranscript() {
         guard let holder else { return }
         let text = holder.transcriptText()
-        transcriptView.string = text.isEmpty
-            ? "\(holder.displayTitle): I’m ready inside \(holder.vmName). What should I do?"
-            : text
+        transcriptView.string = text.isEmpty ? initialTranscript(agentName: holder.agentName) : text
         transcriptView.scrollToEndOfDocument(nil)
         statusLabel.stringValue = holder.statusText
+        didCreateAgent = true
+        updateMode()
     }
 
     private func setupUI() {
         translatesAutoresizingMaskIntoConstraints = false
         wantsLayer = true
-        layer?.backgroundColor = NSColor.black.withAlphaComponent(0.92).cgColor
+        layer?.backgroundColor = NSColor(calibratedWhite: 0.015, alpha: 0.98).cgColor
         layer?.zPosition = 20
 
-        let panel = NSView()
-        panel.translatesAutoresizingMaskIntoConstraints = false
-        panel.wantsLayer = true
-        panel.layer?.backgroundColor = NSColor(calibratedWhite: 0.03, alpha: 0.96).cgColor
-        panel.layer?.cornerRadius = 18
-        panel.layer?.borderColor = NSColor.systemGreen.withAlphaComponent(0.35).cgColor
-        panel.layer?.borderWidth = 1
-        addSubview(panel)
+        // Left agent rail.
+        let rail = NSView()
+        rail.translatesAutoresizingMaskIntoConstraints = false
+        rail.wantsLayer = true
+        rail.layer?.backgroundColor = NSColor(calibratedWhite: 0.055, alpha: 1).cgColor
+        addSubview(rail)
 
-        titleLabel.font = NSFont.monospacedSystemFont(ofSize: 20, weight: .semibold)
-        titleLabel.textColor = .systemGreen
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        panel.addSubview(titleLabel)
+        let railTitle = NSTextField(labelWithString: "Agents")
+        railTitle.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
+        railTitle.textColor = .secondaryLabelColor
+        railTitle.translatesAutoresizingMaskIntoConstraints = false
+        rail.addSubview(railTitle)
 
-        bodyLabel.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
-        bodyLabel.textColor = .labelColor
-        bodyLabel.translatesAutoresizingMaskIntoConstraints = false
-        panel.addSubview(bodyLabel)
+        let agentRow = NSView()
+        agentRow.translatesAutoresizingMaskIntoConstraints = false
+        agentRow.wantsLayer = true
+        agentRow.layer?.cornerRadius = 9
+        agentRow.layer?.backgroundColor = NSColor(calibratedWhite: 0.16, alpha: 1).cgColor
+        rail.addSubview(agentRow)
 
-        primeButton.target = self
-        primeButton.action = #selector(primeClicked)
-        primeButton.bezelStyle = .rounded
-        primeButton.translatesAutoresizingMaskIntoConstraints = false
-        panel.addSubview(primeButton)
+        agentRowLabel.font = NSFont.systemFont(ofSize: 13, weight: .medium)
+        agentRowLabel.textColor = .labelColor
+        agentRowLabel.translatesAutoresizingMaskIntoConstraints = false
+        agentRow.addSubview(agentRowLabel)
 
-        jcodeButton.target = self
-        jcodeButton.action = #selector(jcodeClicked)
-        jcodeButton.bezelStyle = .rounded
-        jcodeButton.translatesAutoresizingMaskIntoConstraints = false
-        panel.addSubview(jcodeButton)
+        vmStatusLabel.font = NSFont.systemFont(ofSize: 11, weight: .regular)
+        vmStatusLabel.textColor = .secondaryLabelColor
+        vmStatusLabel.translatesAutoresizingMaskIntoConstraints = false
+        rail.addSubview(vmStatusLabel)
+
+        // Center chat area.
+        let center = NSView()
+        center.translatesAutoresizingMaskIntoConstraints = false
+        center.wantsLayer = true
+        center.layer?.backgroundColor = NSColor.black.cgColor
+        addSubview(center)
+
+        let topBar = NSView()
+        topBar.translatesAutoresizingMaskIntoConstraints = false
+        topBar.wantsLayer = true
+        topBar.layer?.backgroundColor = NSColor(calibratedWhite: 0.025, alpha: 1).cgColor
+        center.addSubview(topBar)
+
+        let topTitle = NSTextField(labelWithString: "New Agent")
+        topTitle.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
+        topTitle.textColor = .labelColor
+        topTitle.translatesAutoresizingMaskIntoConstraints = false
+        topBar.addSubview(topTitle)
+
+        showVMButton.target = self
+        showVMButton.action = #selector(showVMClicked)
+        showVMButton.bezelStyle = .rounded
+        showVMButton.translatesAutoresizingMaskIntoConstraints = false
+        topBar.addSubview(showVMButton)
+
+        teachButton.target = self
+        teachButton.action = #selector(teachClicked)
+        teachButton.bezelStyle = .rounded
+        teachButton.translatesAutoresizingMaskIntoConstraints = false
+        topBar.addSubview(teachButton)
 
         let scrollView = NSScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.hasVerticalScroller = true
-        scrollView.wantsLayer = true
-        scrollView.layer?.backgroundColor = NSColor.black.cgColor
+        scrollView.drawsBackground = true
+        scrollView.backgroundColor = .black
         transcriptView.isEditable = false
         transcriptView.isSelectable = true
-        transcriptView.font = NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)
-        transcriptView.textColor = .labelColor
+        transcriptView.font = NSFont.systemFont(ofSize: 14)
+        transcriptView.textColor = NSColor(calibratedWhite: 0.9, alpha: 1)
         transcriptView.backgroundColor = .black
-        transcriptView.string = ""
+        transcriptView.textContainerInset = NSSize(width: 24, height: 24)
         scrollView.documentView = transcriptView
-        panel.addSubview(scrollView)
+        center.addSubview(scrollView)
 
-        statusLabel.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
-        statusLabel.textColor = .secondaryLabelColor
-        statusLabel.lineBreakMode = .byTruncatingMiddle
-        statusLabel.translatesAutoresizingMaskIntoConstraints = false
-        panel.addSubview(statusLabel)
+        let composer = NSView()
+        composer.translatesAutoresizingMaskIntoConstraints = false
+        composer.wantsLayer = true
+        composer.layer?.cornerRadius = 16
+        composer.layer?.backgroundColor = NSColor(calibratedWhite: 0.17, alpha: 1).cgColor
+        center.addSubview(composer)
 
-        inputField.placeholderString = "Talk to First Mate…"
-        inputField.delegate = self
-        inputField.font = NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)
-        inputField.translatesAutoresizingMaskIntoConstraints = false
-        panel.addSubview(inputField)
+        messageField.placeholderString = "Message your agent"
+        messageField.isBordered = false
+        messageField.backgroundColor = .clear
+        messageField.textColor = .labelColor
+        messageField.font = NSFont.systemFont(ofSize: 14)
+        messageField.delegate = self
+        messageField.translatesAutoresizingMaskIntoConstraints = false
+        composer.addSubview(messageField)
 
         handyButton.target = self
         handyButton.action = #selector(handyClicked)
-        handyButton.bezelStyle = .rounded
+        handyButton.bezelStyle = .circular
         handyButton.translatesAutoresizingMaskIntoConstraints = false
-        panel.addSubview(handyButton)
+        composer.addSubview(handyButton)
 
         sendButton.target = self
         sendButton.action = #selector(sendClicked)
         sendButton.keyEquivalent = "\r"
         sendButton.bezelStyle = .rounded
         sendButton.translatesAutoresizingMaskIntoConstraints = false
-        panel.addSubview(sendButton)
+        composer.addSubview(sendButton)
 
-        showVMButton.target = self
-        showVMButton.action = #selector(showVMClicked)
-        showVMButton.bezelStyle = .rounded
-        showVMButton.translatesAutoresizingMaskIntoConstraints = false
-        panel.addSubview(showVMButton)
+        statusLabel.font = NSFont.systemFont(ofSize: 11)
+        statusLabel.textColor = .secondaryLabelColor
+        statusLabel.lineBreakMode = .byTruncatingMiddle
+        statusLabel.translatesAutoresizingMaskIntoConstraints = false
+        center.addSubview(statusLabel)
+
+        // Right inspector / screen card.
+        let inspector = NSView()
+        inspector.translatesAutoresizingMaskIntoConstraints = false
+        inspector.wantsLayer = true
+        inspector.layer?.backgroundColor = NSColor(calibratedWhite: 0.055, alpha: 1).cgColor
+        addSubview(inspector)
+
+        let settingsLabel = NSTextField(labelWithString: "Settings")
+        settingsLabel.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
+        settingsLabel.textColor = .labelColor
+        settingsLabel.translatesAutoresizingMaskIntoConstraints = false
+        inspector.addSubview(settingsLabel)
+
+        avatarLabel.font = NSFont.systemFont(ofSize: 36, weight: .regular)
+        avatarLabel.alignment = .center
+        avatarLabel.translatesAutoresizingMaskIntoConstraints = false
+        inspector.addSubview(avatarLabel)
+
+        let nameLabel = fieldLabel("Name")
+        inspector.addSubview(nameLabel)
+        nameField.placeholderString = "First Mate"
+        nameField.translatesAutoresizingMaskIntoConstraints = false
+        inspector.addSubview(nameField)
+
+        let titleLabel = fieldLabel("Title")
+        inspector.addSubview(titleLabel)
+        titleField.placeholderString = "What this agent does"
+        titleField.translatesAutoresizingMaskIntoConstraints = false
+        inspector.addSubview(titleField)
+
+        let descriptionLabel = fieldLabel("Description")
+        inspector.addSubview(descriptionLabel)
+        let descriptionScroll = NSScrollView()
+        descriptionScroll.translatesAutoresizingMaskIntoConstraints = false
+        descriptionScroll.hasVerticalScroller = true
+        descriptionScroll.drawsBackground = false
+        descriptionText.font = NSFont.systemFont(ofSize: 12)
+        descriptionText.textColor = .labelColor
+        descriptionText.backgroundColor = NSColor(calibratedWhite: 0.08, alpha: 1)
+        descriptionText.textContainerInset = NSSize(width: 8, height: 8)
+        descriptionScroll.documentView = descriptionText
+        inspector.addSubview(descriptionScroll)
+
+        let engineLabel = fieldLabel("Engine")
+        inspector.addSubview(engineLabel)
+        engineControl.selectedSegment = 0
+        engineControl.translatesAutoresizingMaskIntoConstraints = false
+        inspector.addSubview(engineControl)
+
+        createButton.target = self
+        createButton.action = #selector(createClicked)
+        createButton.bezelStyle = .rounded
+        createButton.translatesAutoresizingMaskIntoConstraints = false
+        inspector.addSubview(createButton)
+
+        let screenCard = NSView()
+        screenCard.translatesAutoresizingMaskIntoConstraints = false
+        screenCard.wantsLayer = true
+        screenCard.layer?.cornerRadius = 10
+        screenCard.layer?.backgroundColor = NSColor(calibratedWhite: 0.10, alpha: 1).cgColor
+        inspector.addSubview(screenCard)
+
+        let screenIcon = NSTextField(labelWithString: "▱")
+        screenIcon.font = NSFont.monospacedSystemFont(ofSize: 30, weight: .regular)
+        screenIcon.textColor = .secondaryLabelColor
+        screenIcon.alignment = .center
+        screenIcon.translatesAutoresizingMaskIntoConstraints = false
+        screenCard.addSubview(screenIcon)
+
+        let screenLabel = NSTextField(labelWithString: "VM visualizer is live behind this setup")
+        screenLabel.font = NSFont.systemFont(ofSize: 11)
+        screenLabel.textColor = .secondaryLabelColor
+        screenLabel.alignment = .center
+        screenLabel.lineBreakMode = .byWordWrapping
+        screenLabel.translatesAutoresizingMaskIntoConstraints = false
+        screenCard.addSubview(screenLabel)
 
         NSLayoutConstraint.activate([
-            panel.centerXAnchor.constraint(equalTo: centerXAnchor),
-            panel.centerYAnchor.constraint(equalTo: centerYAnchor),
-            panel.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor, multiplier: 0.82),
-            panel.widthAnchor.constraint(greaterThanOrEqualToConstant: 520),
-            panel.heightAnchor.constraint(lessThanOrEqualTo: heightAnchor, multiplier: 0.82),
-            panel.heightAnchor.constraint(greaterThanOrEqualToConstant: 420),
+            rail.topAnchor.constraint(equalTo: topAnchor),
+            rail.bottomAnchor.constraint(equalTo: bottomAnchor),
+            rail.leadingAnchor.constraint(equalTo: leadingAnchor),
+            rail.widthAnchor.constraint(equalToConstant: 220),
 
-            titleLabel.topAnchor.constraint(equalTo: panel.topAnchor, constant: 22),
-            titleLabel.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 24),
-            titleLabel.trailingAnchor.constraint(equalTo: showVMButton.leadingAnchor, constant: -12),
+            railTitle.topAnchor.constraint(equalTo: rail.topAnchor, constant: 18),
+            railTitle.leadingAnchor.constraint(equalTo: rail.leadingAnchor, constant: 16),
+            railTitle.trailingAnchor.constraint(equalTo: rail.trailingAnchor, constant: -16),
 
-            showVMButton.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -18),
-            showVMButton.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
+            agentRow.topAnchor.constraint(equalTo: railTitle.bottomAnchor, constant: 14),
+            agentRow.leadingAnchor.constraint(equalTo: rail.leadingAnchor, constant: 12),
+            agentRow.trailingAnchor.constraint(equalTo: rail.trailingAnchor, constant: -12),
+            agentRow.heightAnchor.constraint(equalToConstant: 44),
 
-            bodyLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 18),
-            bodyLabel.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 24),
-            bodyLabel.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -24),
+            agentRowLabel.leadingAnchor.constraint(equalTo: agentRow.leadingAnchor, constant: 12),
+            agentRowLabel.trailingAnchor.constraint(equalTo: agentRow.trailingAnchor, constant: -12),
+            agentRowLabel.centerYAnchor.constraint(equalTo: agentRow.centerYAnchor),
 
-            primeButton.topAnchor.constraint(equalTo: bodyLabel.bottomAnchor, constant: 18),
-            primeButton.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 24),
+            vmStatusLabel.leadingAnchor.constraint(equalTo: rail.leadingAnchor, constant: 16),
+            vmStatusLabel.trailingAnchor.constraint(equalTo: rail.trailingAnchor, constant: -16),
+            vmStatusLabel.bottomAnchor.constraint(equalTo: rail.bottomAnchor, constant: -22),
 
-            jcodeButton.centerYAnchor.constraint(equalTo: primeButton.centerYAnchor),
-            jcodeButton.leadingAnchor.constraint(equalTo: primeButton.trailingAnchor, constant: 12),
+            inspector.topAnchor.constraint(equalTo: topAnchor),
+            inspector.bottomAnchor.constraint(equalTo: bottomAnchor),
+            inspector.trailingAnchor.constraint(equalTo: trailingAnchor),
+            inspector.widthAnchor.constraint(equalToConstant: 300),
 
-            scrollView.topAnchor.constraint(equalTo: primeButton.bottomAnchor, constant: 18),
-            scrollView.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 24),
-            scrollView.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -24),
-            scrollView.bottomAnchor.constraint(equalTo: statusLabel.topAnchor, constant: -8),
+            center.topAnchor.constraint(equalTo: topAnchor),
+            center.bottomAnchor.constraint(equalTo: bottomAnchor),
+            center.leadingAnchor.constraint(equalTo: rail.trailingAnchor),
+            center.trailingAnchor.constraint(equalTo: inspector.leadingAnchor),
 
-            statusLabel.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 24),
-            statusLabel.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -24),
-            statusLabel.bottomAnchor.constraint(equalTo: inputField.topAnchor, constant: -8),
+            topBar.topAnchor.constraint(equalTo: center.topAnchor),
+            topBar.leadingAnchor.constraint(equalTo: center.leadingAnchor),
+            topBar.trailingAnchor.constraint(equalTo: center.trailingAnchor),
+            topBar.heightAnchor.constraint(equalToConstant: 46),
 
-            inputField.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 24),
-            inputField.bottomAnchor.constraint(equalTo: panel.bottomAnchor, constant: -22),
-            inputField.trailingAnchor.constraint(equalTo: handyButton.leadingAnchor, constant: -8),
+            topTitle.leadingAnchor.constraint(equalTo: topBar.leadingAnchor, constant: 18),
+            topTitle.centerYAnchor.constraint(equalTo: topBar.centerYAnchor),
 
-            handyButton.centerYAnchor.constraint(equalTo: inputField.centerYAnchor),
+            showVMButton.trailingAnchor.constraint(equalTo: topBar.trailingAnchor, constant: -12),
+            showVMButton.centerYAnchor.constraint(equalTo: topBar.centerYAnchor),
+            teachButton.trailingAnchor.constraint(equalTo: showVMButton.leadingAnchor, constant: -8),
+            teachButton.centerYAnchor.constraint(equalTo: topBar.centerYAnchor),
+
+            scrollView.topAnchor.constraint(equalTo: topBar.bottomAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: center.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: center.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: composer.topAnchor, constant: -16),
+
+            composer.leadingAnchor.constraint(equalTo: center.leadingAnchor, constant: 70),
+            composer.trailingAnchor.constraint(equalTo: center.trailingAnchor, constant: -70),
+            composer.bottomAnchor.constraint(equalTo: statusLabel.topAnchor, constant: -10),
+            composer.heightAnchor.constraint(equalToConstant: 82),
+
+            messageField.leadingAnchor.constraint(equalTo: composer.leadingAnchor, constant: 16),
+            messageField.trailingAnchor.constraint(equalTo: handyButton.leadingAnchor, constant: -10),
+            messageField.topAnchor.constraint(equalTo: composer.topAnchor, constant: 12),
+            messageField.heightAnchor.constraint(equalToConstant: 24),
+
             handyButton.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor, constant: -8),
+            handyButton.bottomAnchor.constraint(equalTo: composer.bottomAnchor, constant: -12),
+            handyButton.widthAnchor.constraint(equalToConstant: 28),
+            handyButton.heightAnchor.constraint(equalToConstant: 28),
 
-            sendButton.centerYAnchor.constraint(equalTo: inputField.centerYAnchor),
-            sendButton.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -24),
+            sendButton.trailingAnchor.constraint(equalTo: composer.trailingAnchor, constant: -12),
+            sendButton.bottomAnchor.constraint(equalTo: composer.bottomAnchor, constant: -12),
+
+            statusLabel.leadingAnchor.constraint(equalTo: composer.leadingAnchor, constant: 4),
+            statusLabel.trailingAnchor.constraint(equalTo: composer.trailingAnchor, constant: -4),
+            statusLabel.bottomAnchor.constraint(equalTo: center.bottomAnchor, constant: -14),
+
+            settingsLabel.topAnchor.constraint(equalTo: inspector.topAnchor, constant: 18),
+            settingsLabel.leadingAnchor.constraint(equalTo: inspector.leadingAnchor, constant: 18),
+
+            avatarLabel.topAnchor.constraint(equalTo: settingsLabel.bottomAnchor, constant: 16),
+            avatarLabel.centerXAnchor.constraint(equalTo: inspector.centerXAnchor),
+            avatarLabel.widthAnchor.constraint(equalToConstant: 70),
+            avatarLabel.heightAnchor.constraint(equalToConstant: 46),
+
+            nameLabel.topAnchor.constraint(equalTo: avatarLabel.bottomAnchor, constant: 12),
+            nameLabel.leadingAnchor.constraint(equalTo: inspector.leadingAnchor, constant: 18),
+            nameField.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 5),
+            nameField.leadingAnchor.constraint(equalTo: inspector.leadingAnchor, constant: 18),
+            nameField.trailingAnchor.constraint(equalTo: inspector.trailingAnchor, constant: -18),
+
+            titleLabel.topAnchor.constraint(equalTo: nameField.bottomAnchor, constant: 14),
+            titleLabel.leadingAnchor.constraint(equalTo: inspector.leadingAnchor, constant: 18),
+            titleField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 5),
+            titleField.leadingAnchor.constraint(equalTo: inspector.leadingAnchor, constant: 18),
+            titleField.trailingAnchor.constraint(equalTo: inspector.trailingAnchor, constant: -18),
+
+            descriptionLabel.topAnchor.constraint(equalTo: titleField.bottomAnchor, constant: 14),
+            descriptionLabel.leadingAnchor.constraint(equalTo: inspector.leadingAnchor, constant: 18),
+            descriptionScroll.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 5),
+            descriptionScroll.leadingAnchor.constraint(equalTo: inspector.leadingAnchor, constant: 18),
+            descriptionScroll.trailingAnchor.constraint(equalTo: inspector.trailingAnchor, constant: -18),
+            descriptionScroll.heightAnchor.constraint(equalToConstant: 78),
+
+            engineLabel.topAnchor.constraint(equalTo: descriptionScroll.bottomAnchor, constant: 14),
+            engineLabel.leadingAnchor.constraint(equalTo: inspector.leadingAnchor, constant: 18),
+            engineControl.topAnchor.constraint(equalTo: engineLabel.bottomAnchor, constant: 6),
+            engineControl.leadingAnchor.constraint(equalTo: inspector.leadingAnchor, constant: 18),
+            engineControl.trailingAnchor.constraint(equalTo: inspector.trailingAnchor, constant: -18),
+
+            createButton.topAnchor.constraint(equalTo: engineControl.bottomAnchor, constant: 14),
+            createButton.leadingAnchor.constraint(equalTo: inspector.leadingAnchor, constant: 18),
+            createButton.trailingAnchor.constraint(equalTo: inspector.trailingAnchor, constant: -18),
+
+            screenCard.leadingAnchor.constraint(equalTo: inspector.leadingAnchor, constant: 18),
+            screenCard.trailingAnchor.constraint(equalTo: inspector.trailingAnchor, constant: -18),
+            screenCard.bottomAnchor.constraint(equalTo: inspector.bottomAnchor, constant: -22),
+            screenCard.heightAnchor.constraint(equalToConstant: 145),
+
+            screenIcon.centerXAnchor.constraint(equalTo: screenCard.centerXAnchor),
+            screenIcon.centerYAnchor.constraint(equalTo: screenCard.centerYAnchor, constant: -12),
+            screenLabel.leadingAnchor.constraint(equalTo: screenCard.leadingAnchor, constant: 14),
+            screenLabel.trailingAnchor.constraint(equalTo: screenCard.trailingAnchor, constant: -14),
+            screenLabel.topAnchor.constraint(equalTo: screenIcon.bottomAnchor, constant: 8),
         ])
 
-        showChooser()
+        resetDraft()
     }
 
-    private func showChooser() {
-        titleLabel.stringValue = "Welcome to OPNDRM VM"
-        bodyLabel.stringValue = """
-        VM: \(vmName.isEmpty ? "selected VM" : vmName)
+    private func fieldLabel(_ text: String) -> NSTextField {
+        let label = NSTextField(labelWithString: text)
+        label.font = NSFont.systemFont(ofSize: 11, weight: .regular)
+        label.textColor = .secondaryLabelColor
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }
 
-        Run this VM with:
+    private func resetDraft() {
+        didCreateAgent = false
+        holder = nil
+        avatarLabel.stringValue = "🧭"
+        nameField.stringValue = "First Mate"
+        titleField.stringValue = "VM copilot"
+        descriptionText.string = "Help me operate this VM safely. Automate inside the VM when possible. Ask before destructive changes."
+        engineControl.selectedSegment = 0
+        transcriptView.string = """
+        Create an agent for this VM.
 
-        [1] Prime Agent
-        [2] JCode
+        This is the only setup step:
+        - name the agent
+        - describe what it should do
+        - choose Prime Agent or JCode
+        - talk to it here
 
-        First Mate will be created automatically and bound to this VM.
-        You will only see this simple conversation — no Prime/JCode terminal scroll.
+        The VM is already booting/running behind this setup surface.
         """
-        transcriptView.string = ""
-        statusLabel.stringValue = "Choose an engine to begin."
-        primeButton.isHidden = false
-        jcodeButton.isHidden = false
-        inputField.isHidden = true
-        handyButton.isHidden = true
-        sendButton.isHidden = true
-        showVMButton.isHidden = false
+        statusLabel.stringValue = "Edit the profile or just send a message. The agent will be created automatically."
+        updateLabels()
+        updateMode()
     }
 
-    private func showChat() {
-        titleLabel.stringValue = "🧭 First Mate"
-        bodyLabel.stringValue = "Bound to VM: \(vmName)"
-        primeButton.isHidden = true
-        jcodeButton.isHidden = true
-        inputField.isHidden = false
-        handyButton.isHidden = false
-        sendButton.isHidden = false
-        showVMButton.isHidden = false
+    private func updateLabels() {
+        let display = displayName()
+        agentRowLabel.stringValue = "\(avatarLabel.stringValue)  \(display)"
+        vmStatusLabel.stringValue = vmName.isEmpty ? "No VM selected" : "Assigned VM: \(vmName)"
+        messageField.placeholderString = "Message \(display)"
+    }
+
+    private func updateMode() {
+        createButton.title = didCreateAgent ? "Agent Created" : "Create Agent"
+        createButton.isEnabled = !didCreateAgent
+    }
+
+    private func displayName() -> String {
+        let raw = nameField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        return raw.isEmpty ? "First Mate" : raw
+    }
+
+    private func selectedKind() -> OPNDRMAgentHarnessHolder.Kind {
+        engineControl.selectedSegment == 1 ? .jcode : .prime
+    }
+
+    private func instructions() -> String {
+        let title = titleField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let description = descriptionText.string.trimmingCharacters(in: .whitespacesAndNewlines)
+        return """
+        Agent title: \(title.isEmpty ? "VM copilot" : title)
+        User description: \(description.isEmpty ? "Help operate this VM safely." : description)
+
+        Keep the conversation simple and stress-free. Work only inside your assigned VM. Do not show Prime Agent or JCode terminal output to the user.
+        """
+    }
+
+    @discardableResult
+    private func ensureAgentCreated() -> OPNDRMAgentHarnessHolder? {
+        if let holder { return holder }
+        let name = displayName()
+        let emoji = avatarLabel.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "🧭" : avatarLabel.stringValue
+        let kind = selectedKind()
+        statusLabel.stringValue = "Creating \(emoji) \(name) with \(kind.displayName)…"
+        transcriptView.string = """
+        \(emoji) \(name)
+        \(titleField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines))
+
+        Booting up the computer…
+        Binding to \(vmName)…
+        Starting hidden \(kind.displayName)…
+        """
+        let created = onStartRequested?(vmName, kind, name, emoji, instructions())
+        holder = created
+        didCreateAgent = created != nil
+        updateLabels()
+        updateMode()
         refreshTranscript()
-        window?.makeFirstResponder(inputField)
+        return created
     }
 
-    @objc private func primeClicked() { choose(.prime) }
-    @objc private func jcodeClicked() { choose(.jcode) }
+    private func initialTranscript(agentName: String) -> String {
+        """
+        🧭 \(agentName) is ready.
 
-    private func choose(_ kind: OPNDRMAgentHarnessHolder.Kind) {
-        guard !vmName.isEmpty else { return }
-        statusLabel.stringValue = "Starting First Mate with \(kind.displayName)…"
-        holder = onStartRequested?(vmName, kind)
-        showChat()
+        Assigned VM: \(vmName)
+        Engine: \(selectedKind().displayName)
+
+        What should I do?
+        """
+    }
+
+    @objc private func createClicked() {
+        _ = ensureAgentCreated()
+        window?.makeFirstResponder(messageField)
     }
 
     @objc private func sendClicked() {
-        let message = inputField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !message.isEmpty, let holder else { return }
+        let message = messageField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !message.isEmpty else { return }
+        guard let holder = ensureAgentCreated() else { return }
         do {
             try holder.appendUserMessage(message)
-            inputField.stringValue = ""
+            messageField.stringValue = ""
             statusLabel.stringValue = "Sent to \(holder.displayTitle)."
             refreshTranscript()
         } catch {
@@ -252,13 +530,18 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
             NSWorkspace.shared.open(handyURL)
         }
         NSApp.activate(ignoringOtherApps: true)
-        window?.makeFirstResponder(inputField)
+        window?.makeFirstResponder(messageField)
         statusLabel.stringValue = "Handy ready: press your Handy shortcut, speak, stop recording, then Send."
     }
 
     @objc private func showVMClicked() {
         isHidden = true
         onHideRequested?()
+    }
+
+    @objc private func teachClicked() {
+        statusLabel.stringValue = "Teach mode will record the VM soon. For now, tell the agent what to learn/do."
+        window?.makeFirstResponder(messageField)
     }
 
     func controlTextDidEndEditing(_ obj: Notification) {
