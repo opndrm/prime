@@ -21,3 +21,5 @@ vendor/orchard/
 .opndrm/orchard-vm-derived/
 apps/buzzbot-computer-service/.build/
 vendor/openadapt-desktop/
+
+apps/opndrm-vm/.build/
