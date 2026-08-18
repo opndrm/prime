@@ -17,6 +17,10 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
     private var progressCancelButton: NSButton!
     private var layoutView: OPNDRMVMLayoutView!
     private var agentCanvasConsole: OPNDRMAgentCanvasConsoleView!
+    private var sidebarWidthConstraint: NSLayoutConstraint!
+    private var sidebarToggleButton: NSButton!
+    private var sidebarCollapsibleViews: [NSView] = []
+    private var isSidebarCollapsed = false
     private var isCreationCancelled = false
     private var agentHolders: [String: OPNDRMAgentHarnessHolder] = [:]
 
@@ -74,6 +78,12 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         titleLabel.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         vmListView.addSubview(titleLabel)
+
+        sidebarToggleButton = NSButton(title: "‹", target: self, action: #selector(toggleSidebarClicked))
+        sidebarToggleButton.bezelStyle = .texturedRounded
+        sidebarToggleButton.toolTip = "Collapse sidebar"
+        sidebarToggleButton.translatesAutoresizingMaskIntoConstraints = false
+        vmListView.addSubview(sidebarToggleButton)
 
         tableView = NSTableView()
         tableView.dataSource = self
@@ -133,6 +143,14 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         progressCancelButton.isHidden = true
         vmListView.addSubview(progressCancelButton)
 
+        sidebarCollapsibleViews = [
+            titleLabel,
+            scrollView,
+            layoutControl,
+            bootLayoutButton,
+            newButton,
+        ]
+
         // Content area - holds the layout view
         contentView = NSView()
         contentView.translatesAutoresizingMaskIntoConstraints = false
@@ -145,11 +163,13 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         separator.translatesAutoresizingMaskIntoConstraints = false
         rootView.addSubview(separator)
 
+        sidebarWidthConstraint = vmListView.widthAnchor.constraint(equalToConstant: 280)
+
         NSLayoutConstraint.activate([
             vmListView.topAnchor.constraint(equalTo: rootView.topAnchor),
             vmListView.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
             vmListView.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
-            vmListView.widthAnchor.constraint(equalToConstant: 280),
+            sidebarWidthConstraint,
 
             separator.topAnchor.constraint(equalTo: rootView.topAnchor),
             separator.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
@@ -161,9 +181,14 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             contentView.leadingAnchor.constraint(equalTo: separator.trailingAnchor),
             contentView.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
 
+            sidebarToggleButton.topAnchor.constraint(equalTo: vmListView.topAnchor, constant: 8),
+            sidebarToggleButton.trailingAnchor.constraint(equalTo: vmListView.trailingAnchor, constant: -8),
+            sidebarToggleButton.widthAnchor.constraint(equalToConstant: 30),
+            sidebarToggleButton.heightAnchor.constraint(equalToConstant: 26),
+
             titleLabel.topAnchor.constraint(equalTo: vmListView.topAnchor, constant: 12),
             titleLabel.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor, constant: 12),
-            titleLabel.trailingAnchor.constraint(equalTo: vmListView.trailingAnchor, constant: -12),
+            titleLabel.trailingAnchor.constraint(equalTo: sidebarToggleButton.leadingAnchor, constant: -8),
 
             scrollView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
             scrollView.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor),
@@ -230,7 +255,8 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         agentCanvasConsole.onHideRequested = { [weak self] in
             self?.window?.makeFirstResponder(nil)
         }
-        contentView.addSubview(agentCanvasConsole)
+        contentView.addSubview(agentCanvasConsole, positioned: .above, relativeTo: layoutView)
+        agentCanvasConsole.layer?.zPosition = 9_999
         NSLayoutConstraint.activate([
             agentCanvasConsole.topAnchor.constraint(equalTo: contentView.topAnchor),
             agentCanvasConsole.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
@@ -436,6 +462,20 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         }
     }
 
+    @objc private func toggleSidebarClicked() {
+        isSidebarCollapsed.toggle()
+        sidebarWidthConstraint.constant = isSidebarCollapsed ? 48 : 280
+        for view in sidebarCollapsibleViews {
+            view.isHidden = isSidebarCollapsed
+        }
+        sidebarToggleButton.title = isSidebarCollapsed ? "›" : "‹"
+        sidebarToggleButton.toolTip = isSidebarCollapsed ? "Open sidebar" : "Collapse sidebar"
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.18
+            self.window?.contentView?.layoutSubtreeIfNeeded()
+        }
+    }
+
     @objc private func bootLayoutClicked() {
         let mode = VMLayoutMode(rawValue: layoutControl.selectedSegment) ?? .single
         let bootable = vmNames.filter { AgentComputerStore.hasVMState($0) }
@@ -454,6 +494,8 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
     private func showFirstMateConsole(for vmName: String) {
         guard AgentComputerStore.hasVMState(vmName) else { return }
         let existing = agentHolders.values.first { $0.vmName == vmName }
+        agentCanvasConsole.layer?.zPosition = 9_999
+        contentView.addSubview(agentCanvasConsole, positioned: .above, relativeTo: layoutView)
         agentCanvasConsole.configure(vmName: vmName, existingHolder: existing)
     }
 

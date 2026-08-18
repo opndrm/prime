@@ -45,6 +45,11 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         addCursorRect(bounds, cursor: .arrow)
     }
 
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        guard !isHidden, alphaValue > 0 else { return nil }
+        return super.hitTest(point) ?? self
+    }
+
     override func mouseDown(with event: NSEvent) {
         window?.makeFirstResponder(messageField)
         super.mouseDown(with: event)
