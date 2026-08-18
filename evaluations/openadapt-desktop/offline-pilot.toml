@@ -1,9 +1,0 @@
-# Process-scoped OpenAdapt Desktop Beta pilot configuration.
-# `managed-vision.sh --launch` supplies the project-local data directory by
-# environment variable, so this file never redirects or mutates ~/.openadapt.
-
-storage_mode = "air-gapped"
-upload_require_review = true
-upload_schedule = "manual"
-runner_enabled = false
-network_audit_log = true

@@ -1,3 +1,0 @@
-# TEMPLATE ONLY — deliberately invalid. Do not use as a consent record.
-# Required one-line fields: contract<TAB>consent-id<TAB>guest-owner-id<TAB>literal-scope
-acp-gateway-v1	REPLACE_CONSENT_ID	REPLACE_GUEST_OWNER_ID	I-CONSENT-TO-ONE-GUEST-LOCAL-ACP-SESSION
