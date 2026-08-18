@@ -48,6 +48,9 @@ final class OPNDRMVMApp: NSObject, NSApplicationDelegate, OPNDRMVMSocketDelegate
             mainWindowController = OPNDRMVMMainWindowController()
             mainWindowController?.window?.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+                self?.mainWindowController?.autoBootDefaultVM()
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Manages the BuzzBot directory structure for agent VMs.
+/// Manages the OPNDRM VM directory structure for agent VMs.
 struct AgentComputerStore {
     static let baseDir: URL = {
         let appSupport = (try? FileManager.default.url(
@@ -10,7 +10,7 @@ struct AgentComputerStore {
         return appSupport.appendingPathComponent("OPNDRM-VM/AgentComputers", isDirectory: true)
     }()
 
-    // Legacy path for backward compatibility with existing BuzzBot VMs
+    // Legacy path for backward compatibility with older local VM states
     static let legacyBaseDir: URL = {
         let appSupport = (try? FileManager.default.url(
             for: .applicationSupportDirectory, in: .userDomainMask,
@@ -39,7 +39,7 @@ struct AgentComputerStore {
         if let items = try? FileManager.default.contentsOfDirectory(at: trustedMacStates, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]) {
             names.append(contentsOf: items.filter { $0.hasDirectoryPath }.map { $0.lastPathComponent })
         }
-        // Legacy path (BuzzBot)
+        // Legacy path
         if let items = try? FileManager.default.contentsOfDirectory(at: legacyTrustedMacStates, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]) {
             for item in items where item.hasDirectoryPath {
                 let name = item.lastPathComponent

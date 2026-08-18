@@ -19,8 +19,11 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
     private var agentCanvasConsole: OPNDRMAgentCanvasConsoleView!
     private var sidebarWidthConstraint: NSLayoutConstraint!
     private var sidebarToggleButton: NSButton!
+    private var agentButton: NSButton!
     private var sidebarCollapsibleViews: [NSView] = []
     private var isSidebarCollapsed = false
+    private let expandedSidebarWidth: CGFloat = 280
+    private let collapsedSidebarWidth: CGFloat = 56
     private var isCreationCancelled = false
     private var agentHolders: [String: OPNDRMAgentHarnessHolder] = [:]
 
@@ -45,10 +48,16 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             defer: false
         )
         window.title = "OPNDRM VM"
-        window.minSize = NSSize(width: 800, height: 500)
+        window.minSize = NSSize(width: 900, height: 560)
+        // Keep the green button as a sane zoom action, not native fullscreen/tiling.
+        // The VM surface has its own visualizer/layout and should stay inside
+        // the visible desktop frame instead of overlapping the menu bar/dock.
+        window.collectionBehavior = [.fullScreenNone]
+        window.tabbingMode = .disallowed
         super.init(window: window)
         window.delegate = self
         setupUI()
+        fitWindowToVisibleScreen()
         refreshVMList()
     }
 
@@ -72,9 +81,10 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         vmListView.translatesAutoresizingMaskIntoConstraints = false
         vmListView.wantsLayer = true
         vmListView.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+        vmListView.layer?.masksToBounds = true
         rootView.addSubview(vmListView)
 
-        let titleLabel = NSTextField(labelWithString: "Virtual Machines")
+        let titleLabel = NSTextField(labelWithString: "VM")
         titleLabel.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         vmListView.addSubview(titleLabel)
@@ -113,6 +123,11 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         bootLayoutButton.translatesAutoresizingMaskIntoConstraints = false
         vmListView.addSubview(bootLayoutButton)
 
+        agentButton = NSButton(title: "Agent", target: self, action: #selector(showAgentClicked))
+        agentButton.bezelStyle = .rounded
+        agentButton.toolTip = "Open the named agent for the selected VM"
+        agentButton.translatesAutoresizingMaskIntoConstraints = false
+        vmListView.addSubview(agentButton)
 
         layoutControl = NSSegmentedControl(labels: ["Single", "Split", "Triple", "Quad"],
                                             trackingMode: .selectOne, target: self,
@@ -148,6 +163,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             scrollView,
             layoutControl,
             bootLayoutButton,
+            agentButton,
             newButton,
         ]
 
@@ -163,7 +179,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         separator.translatesAutoresizingMaskIntoConstraints = false
         rootView.addSubview(separator)
 
-        sidebarWidthConstraint = vmListView.widthAnchor.constraint(equalToConstant: 280)
+        sidebarWidthConstraint = vmListView.widthAnchor.constraint(equalToConstant: expandedSidebarWidth)
 
         NSLayoutConstraint.activate([
             vmListView.topAnchor.constraint(equalTo: rootView.topAnchor),
@@ -183,8 +199,8 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
 
             sidebarToggleButton.topAnchor.constraint(equalTo: vmListView.topAnchor, constant: 8),
             sidebarToggleButton.trailingAnchor.constraint(equalTo: vmListView.trailingAnchor, constant: -8),
-            sidebarToggleButton.widthAnchor.constraint(equalToConstant: 30),
-            sidebarToggleButton.heightAnchor.constraint(equalToConstant: 26),
+            sidebarToggleButton.widthAnchor.constraint(equalToConstant: 28),
+            sidebarToggleButton.heightAnchor.constraint(equalToConstant: 24),
 
             titleLabel.topAnchor.constraint(equalTo: vmListView.topAnchor, constant: 12),
             titleLabel.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor, constant: 12),
@@ -211,13 +227,17 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             layoutControl.bottomAnchor.constraint(equalTo: bootLayoutButton.topAnchor, constant: -8),
 
             bootLayoutButton.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor, constant: 12),
-            bootLayoutButton.bottomAnchor.constraint(equalTo: newButton.topAnchor, constant: -8),
+            bootLayoutButton.bottomAnchor.constraint(equalTo: agentButton.topAnchor, constant: -8),
+
+            agentButton.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor, constant: 12),
+            agentButton.trailingAnchor.constraint(lessThanOrEqualTo: vmListView.trailingAnchor, constant: -12),
+            agentButton.bottomAnchor.constraint(equalTo: newButton.topAnchor, constant: -8),
 
             newButton.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor, constant: 12),
             newButton.bottomAnchor.constraint(equalTo: vmListView.bottomAnchor, constant: -12),
         ])
 
-        welcomeLabel = NSTextField(labelWithString: "Select a VM or create a new one")
+        welcomeLabel = NSTextField(labelWithString: "Starting your VM…")
         welcomeLabel.font = NSFont.systemFont(ofSize: 16, weight: .medium)
         welcomeLabel.textColor = .secondaryLabelColor
         welcomeLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -254,6 +274,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         }
         agentCanvasConsole.onHideRequested = { [weak self] in
             self?.window?.makeFirstResponder(nil)
+            self?.displayVMInLayout()
         }
         contentView.addSubview(agentCanvasConsole, positioned: .above, relativeTo: layoutView)
         agentCanvasConsole.layer?.zPosition = 9_999
@@ -265,6 +286,110 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         ])
 
         window.contentView = rootView
+    }
+
+    func windowShouldZoom(_ window: NSWindow, toFrame newFrame: NSRect) -> Bool {
+        window.setFrame(standardVisibleFrame(for: window), display: true, animate: true)
+        return false
+    }
+
+    func windowWillUseStandardFrame(_ window: NSWindow, defaultFrame newFrame: NSRect) -> NSRect {
+        standardVisibleFrame(for: window)
+    }
+
+    func windowDidResize(_ notification: Notification) {
+        // Do not clamp continuously while the user drags a resize handle; it
+        // feels sticky. Clamp only after live resize completes.
+    }
+
+    func windowDidEndLiveResize(_ notification: Notification) {
+        clampWindowToVisibleScreen(animated: true)
+    }
+
+    func windowDidMove(_ notification: Notification) {
+        clampWindowToVisibleScreen(animated: false)
+    }
+
+    private func standardVisibleFrame(for window: NSWindow) -> NSRect {
+        let visible = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? window.frame
+        let margin: CGFloat = 14
+        var frame = visible.insetBy(dx: margin, dy: margin)
+        frame.size.width = max(window.minSize.width, frame.width)
+        frame.size.height = max(window.minSize.height, frame.height)
+        if frame.width > visible.width { frame.size.width = visible.width }
+        if frame.height > visible.height { frame.size.height = visible.height }
+        frame.origin.x = visible.midX - frame.width / 2
+        frame.origin.y = visible.midY - frame.height / 2
+        return frame
+    }
+
+    private func fitWindowToVisibleScreen() {
+        guard let window else { return }
+        let screenFrame = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame
+        guard let screenFrame else { return }
+        let margin: CGFloat = 14
+        let maxWidth = max(window.minSize.width, screenFrame.width - margin * 2)
+        let maxHeight = max(window.minSize.height, screenFrame.height - margin * 2)
+        var frame = window.frame
+        frame.size.width = min(frame.width, maxWidth)
+        frame.size.height = min(frame.height, maxHeight)
+        frame.origin.x = min(max(frame.origin.x, screenFrame.minX + margin), screenFrame.maxX - frame.width - margin)
+        frame.origin.y = min(max(frame.origin.y, screenFrame.minY + margin), screenFrame.maxY - frame.height - margin)
+        window.setFrame(frame, display: true)
+    }
+
+    private func clampWindowToVisibleScreen(animated: Bool = false) {
+        guard let window else { return }
+        let screenFrame = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame
+        guard let screenFrame else { return }
+        var frame = window.frame
+        var changed = false
+        if frame.width > screenFrame.width {
+            frame.size.width = screenFrame.width
+            frame.origin.x = screenFrame.minX
+            changed = true
+        }
+        if frame.height > screenFrame.height {
+            frame.size.height = screenFrame.height
+            frame.origin.y = screenFrame.minY
+            changed = true
+        }
+        if frame.minX < screenFrame.minX {
+            frame.origin.x = screenFrame.minX
+            changed = true
+        }
+        if frame.maxX > screenFrame.maxX {
+            frame.origin.x = screenFrame.maxX - frame.width
+            changed = true
+        }
+        if frame.minY < screenFrame.minY {
+            frame.origin.y = screenFrame.minY
+            changed = true
+        }
+        if frame.maxY > screenFrame.maxY {
+            frame.origin.y = screenFrame.maxY - frame.height
+            changed = true
+        }
+        if changed {
+            window.setFrame(frame, display: true, animate: animated)
+        }
+    }
+
+    func autoBootDefaultVM() {
+        guard vmInstances.values.allSatisfy({ $0.controller.lifecycle != .running && $0.controller.lifecycle != .starting }) else { return }
+        let bootable = vmNames.filter { AgentComputerStore.hasVMState($0) }
+        let preferred = selectedVM.flatMap { AgentComputerStore.hasVMState($0) ? $0 : nil }
+            ?? bootable.first(where: { $0 == "linux-1" })
+            ?? bootable.first(where: { AgentComputerStore.vmType($0) == .linux })
+            ?? bootable.first
+        guard let preferred else {
+            welcomeLabel.stringValue = "Create a Linux Quick Start VM to begin."
+            return
+        }
+        selectedVM = preferred
+        progressLabel.isHidden = false
+        progressLabel.stringValue = "Booting \(preferred)…"
+        bootVM(preferred)
     }
 
     // MARK: - VM List
@@ -464,16 +589,52 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
 
     @objc private func toggleSidebarClicked() {
         isSidebarCollapsed.toggle()
-        sidebarWidthConstraint.constant = isSidebarCollapsed ? 48 : 280
-        for view in sidebarCollapsibleViews {
-            view.isHidden = isSidebarCollapsed
-        }
+        let targetWidth = isSidebarCollapsed ? collapsedSidebarWidth : expandedSidebarWidth
         sidebarToggleButton.title = isSidebarCollapsed ? "›" : "‹"
         sidebarToggleButton.toolTip = isSidebarCollapsed ? "Open sidebar" : "Collapse sidebar"
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.18
-            self.window?.contentView?.layoutSubtreeIfNeeded()
+
+        if !isSidebarCollapsed {
+            for view in sidebarCollapsibleViews {
+                view.isHidden = false
+                view.alphaValue = 0
+            }
         }
+
+        let collapsed = isSidebarCollapsed
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.22
+            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            self.sidebarWidthConstraint.animator().constant = targetWidth
+            for view in self.sidebarCollapsibleViews {
+                view.animator().alphaValue = collapsed ? 0 : 1
+            }
+            self.window?.contentView?.layoutSubtreeIfNeeded()
+        } completionHandler: {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                for view in self.sidebarCollapsibleViews {
+                    view.isHidden = collapsed
+                    view.alphaValue = collapsed ? 0 : 1
+                }
+            }
+        }
+    }
+
+    @objc private func showAgentClicked() {
+        let candidate = selectedVM
+            ?? vmNames.first(where: { AgentComputerStore.vmType($0) == .linux && AgentComputerStore.hasVMState($0) })
+            ?? vmNames.first(where: { AgentComputerStore.hasVMState($0) })
+        guard let vmName = candidate else {
+            showError("Create a Linux Quick Start VM first. Then the agent has a real computer to use.")
+            return
+        }
+        selectedVM = vmName
+        if vmInstances[vmName] == nil || vmInstances[vmName]?.controller.lifecycle == .ready || vmInstances[vmName]?.controller.lifecycle == .stopped {
+            bootVM(vmName)
+        } else {
+            displayVMInLayout()
+        }
+        showFirstMateConsole(for: vmName)
     }
 
     @objc private func bootLayoutClicked() {
@@ -538,6 +699,9 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         } catch {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(holder.bindingPrompt(), forType: .string)
+            selectedVM = vmName
+            displayVMInLayout()
+            showFirstMateConsole(for: vmName)
             agentCanvasConsole.setStatus("Hidden \(kind.displayName) could not start yet. The VM-bound prompt was copied; no terminal output will be shown.")
         }
         return holder
@@ -712,6 +876,8 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
     // MARK: - VM Boot and Display
 
     func bootVM(_ machineID: String) {
+        progressLabel.isHidden = false
+        progressLabel.stringValue = "Booting \(machineID)…"
         if let existing = vmInstances[machineID] {
             if existing.isInstalling {
                 selectedVM = machineID
@@ -724,7 +890,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             selectedVM = machineID
             refreshVMList()
             displayVMInLayout()
-            showFirstMateConsole(for: machineID)
+            progressLabel.stringValue = existing.controller.lifecycle == .running ? "\(machineID) is running." : "\(machineID): \(existing.controller.statusText)"
             return
         }
 
@@ -737,21 +903,21 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             let prepared = try OPNDRMVMCreator.shared.loadExistingVM(name: machineID)
             let instance = VMInstance(name: machineID, controller: prepared.controller)
             instance.vmView = prepared.view
-            prepared.controller.stateDidChange = { [weak self] _, _ in
+            prepared.controller.stateDidChange = { [weak self] lifecycle, status in
                 self?.refreshVMList()
                 self?.displayVMInLayout()
+                self?.progressLabel.isHidden = false
+                self?.progressLabel.stringValue = lifecycle == .running ? "\(machineID) is running." : "\(machineID): \(status)"
             }
             prepared.controller.machineDidStart = { [weak self] _ in
                 self?.refreshVMList()
                 self?.displayVMInLayout()
-                self?.showFirstMateConsole(for: machineID)
             }
             vmInstances[machineID] = instance
             selectedVM = machineID
             prepared.controller.start()
             refreshVMList()
             displayVMInLayout()
-            showFirstMateConsole(for: machineID)
         } catch {
             showError("Cannot boot \(machineID): \(error.localizedDescription)")
         }

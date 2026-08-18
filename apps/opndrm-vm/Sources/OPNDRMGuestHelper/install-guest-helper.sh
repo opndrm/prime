@@ -13,8 +13,8 @@ LAUNCH_AGENT_DIR="${HOME}/Library/LaunchAgents"
 PLIST_DEST="${LAUNCH_AGENT_DIR}/${PLIST_NAME}"
 USER_BIN_DIR="${HOME}/.local/bin"
 BIN_DEST="${USER_BIN_DIR}/opndrm-guest-helper"
-LOG_DIR="${HOME}/Library/Logs/BuzzBot"
-RECORDINGS_DIR="${HOME}/Library/Application Support/BuzzBot/OpenAdapt/Recordings"
+LOG_DIR="${HOME}/Library/Logs/OPNDRM-VM"
+RECORDINGS_DIR="${HOME}/Library/Application Support/OPNDRM-VM/OpenAdapt/Recordings"
 
 find_openadapt() {
     local discovered=""
@@ -102,4 +102,4 @@ else
 fi
 
 echo
-echo "   BuzzBot guest helper installed for user $(id -un)."
+echo "   OPNDRM VM guest helper installed for user $(id -un)."

@@ -30,13 +30,15 @@ final class OPNDRMAgentHarnessHolder {
 
     let vmName: String
     let kind: Kind
-    let agentName: String
-    let emoji: String
-    let instructions: String
+    private let rootAgentName: String
+    private(set) var agentName: String
+    private(set) var emoji: String
+    private(set) var instructions: String
 
     private(set) var state: State = .stopped
     private(set) var statusText = "Agent not started."
     private var process: Process?
+    private var replyProcess: Process?
 
     var stateDidChange: ((State, String) -> Void)?
 
@@ -49,6 +51,7 @@ final class OPNDRMAgentHarnessHolder {
     ) {
         self.vmName = vmName
         self.kind = kind
+        self.rootAgentName = agentName
         self.agentName = agentName
         self.emoji = emoji
         self.instructions = instructions.isEmpty ? "Help the user inside your assigned VM." : instructions
@@ -57,7 +60,7 @@ final class OPNDRMAgentHarnessHolder {
     var isRunning: Bool { process?.isRunning == true }
 
     var agentID: String {
-        "\(vmName):\(kind.safeName):\(Self.safeFileComponent(agentName))"
+        "\(vmName):\(kind.safeName):\(Self.safeFileComponent(rootAgentName))"
     }
 
     var displayTitle: String {
@@ -65,13 +68,6 @@ final class OPNDRMAgentHarnessHolder {
     }
 
     func start() throws {
-        if isRunning {
-            state = .running
-            statusText = "\(displayTitle) is already running for \(vmName)."
-            stateDidChange?(state, statusText)
-            return
-        }
-
         let command = Self.agentCommand(kind: kind)
         guard FileManager.default.isExecutableFile(atPath: command.path) else {
             throw Self.error("\(kind.displayName) executable not found at \(command.path). Set \(Self.commandOverrideName(kind: kind)) to override.")
@@ -79,99 +75,90 @@ final class OPNDRMAgentHarnessHolder {
 
         let root = try self.agentRoot()
         let promptURL = root.appendingPathComponent("vm-binding-prompt.md")
-        let launchURL = root.appendingPathComponent("launch.sh")
-        let logURL = root.appendingPathComponent("agent.log")
-        let errURL = root.appendingPathComponent("agent.err.log")
         try bindingPrompt().write(to: promptURL, atomically: true, encoding: .utf8)
-        try Self.launchScript(command: command, kind: kind, promptURL: promptURL).write(to: launchURL, atomically: true, encoding: .utf8)
-        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: launchURL.path)
+        try writeProfile(root: root)
 
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/bin/zsh")
-        process.arguments = [launchURL.path]
-        process.currentDirectoryURL = root
-
-        var environment = ProcessInfo.processInfo.environment
-        environment["OPNDRM_AGENT_NAME"] = agentName
-        environment["OPNDRM_AGENT_EMOJI"] = emoji
-        environment["OPNDRM_VM_NAME"] = vmName
-        environment["OPNDRM_VM_SOCKET"] = "127.0.0.1:7777"
-        environment["OPNDRM_VM_BINDING_PROMPT"] = promptURL.path
-        environment["OPNDRM_AGENT_CHAT"] = root.appendingPathComponent("chat.jsonl").path
-        environment["OPNDRM_GHOST_MODE"] = "1"
-        environment["OPNDRM_HARNESS_KIND"] = kind.safeName
-        process.environment = environment
-
-        FileManager.default.createFile(atPath: logURL.path, contents: nil)
-        FileManager.default.createFile(atPath: errURL.path, contents: nil)
-        let stdout = try FileHandle(forWritingTo: logURL)
-        let stderr = try FileHandle(forWritingTo: errURL)
-        process.standardOutput = stdout
-        process.standardError = stderr
-        process.standardInput = FileHandle.nullDevice
-
-        state = .starting
-        statusText = "Starting \(displayTitle) on \(vmName)…"
+        state = .running
+        switch kind {
+        case .jcode:
+            statusText = "\(displayTitle) is awake. JCode will run each message through \(vmName)."
+        case .prime:
+            statusText = "\(displayTitle) is awake. Prime Agent will use \(vmName) when its run command is available."
+        }
         stateDidChange?(state, statusText)
-
-        process.terminationHandler = { [weak self] proc in
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                stdout.closeFile()
-                stderr.closeFile()
-                if proc.terminationStatus == 0 {
-                    self.state = .stopped
-                    self.statusText = "\(self.displayTitle) stopped."
-                } else {
-                    self.state = .failed
-                    self.statusText = "\(self.displayTitle) exited (status \(proc.terminationStatus)). See \(errURL.path)."
-                }
-                self.process = nil
-                self.stateDidChange?(self.state, self.statusText)
-            }
-        }
-
-        do {
-            try process.run()
-            self.process = process
-            state = .running
-            statusText = "\(displayTitle) is running silently on \(vmName)."
-            stateDidChange?(state, statusText)
-        } catch {
-            stdout.closeFile()
-            stderr.closeFile()
-            state = .failed
-            statusText = error.localizedDescription
-            stateDidChange?(state, statusText)
-            throw error
-        }
     }
 
     func stop() {
-        guard let process else {
-            state = .stopped
-            statusText = "\(displayTitle) is not running."
-            stateDidChange?(state, statusText)
-            return
-        }
-        if process.isRunning { process.terminate() }
+        if let process, process.isRunning { process.terminate() }
+        if let replyProcess, replyProcess.isRunning { replyProcess.terminate() }
         self.process = nil
+        self.replyProcess = nil
         state = .stopped
         statusText = "\(displayTitle) stopped."
         stateDidChange?(state, statusText)
     }
 
+    private func writeProfile(root: URL) throws {
+        let profile: [String: Any] = [
+            "agentName": self.agentName,
+            "emoji": self.emoji,
+            "instructions": self.instructions,
+            "vmName": self.vmName,
+            "harness": self.kind.displayName,
+            "updatedAt": ISO8601DateFormatter().string(from: Date())
+        ]
+        let data = try JSONSerialization.data(withJSONObject: profile, options: [.prettyPrinted, .sortedKeys])
+        try data.write(to: root.appendingPathComponent("profile.json"), options: .atomic)
+    }
+
+    func updateProfile(agentName: String? = nil, emoji: String? = nil, instructions: String? = nil) {
+        let newName = agentName?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let newName, !newName.isEmpty {
+            self.agentName = newName
+        }
+        let newEmoji = emoji?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let newEmoji, !newEmoji.isEmpty {
+            self.emoji = newEmoji
+        }
+        let newInstructions = instructions?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let newInstructions, !newInstructions.isEmpty {
+            self.instructions = newInstructions
+        }
+
+        if let root = try? agentRoot() {
+            try? bindingPrompt().write(to: root.appendingPathComponent("vm-binding-prompt.md"), atomically: true, encoding: .utf8)
+            try? writeProfile(root: root)
+            _ = try? appendSystemMessage("Profile updated. The agent is now \(displayTitle).")
+        }
+        statusText = "\(displayTitle) updated."
+        stateDidChange?(state, statusText)
+    }
+
+    @discardableResult
+    private func appendSystemMessage(_ message: String) throws -> URL {
+        try appendChatMessage(role: "system", content: message)
+    }
+
     @discardableResult
     func appendUserMessage(_ message: String) throws -> URL {
+        let chatURL = try appendChatMessage(role: "user", content: message)
+        let root = try agentRoot()
+        try message.write(to: root.appendingPathComponent("latest-user-message.txt"), atomically: true, encoding: .utf8)
+        runReply(for: message, root: root)
+        return chatURL
+    }
+
+    @discardableResult
+    private func appendChatMessage(role: String, content: String) throws -> URL {
         let root = try agentRoot()
         let chatURL = root.appendingPathComponent("chat.jsonl")
         let object: [String: Any] = [
             "time": ISO8601DateFormatter().string(from: Date()),
-            "role": "user",
+            "role": role,
             "agent": agentName,
             "emoji": emoji,
             "vm": vmName,
-            "content": message
+            "content": content
         ]
         let data = try JSONSerialization.data(withJSONObject: object, options: [])
         if FileManager.default.fileExists(atPath: chatURL.path) {
@@ -183,8 +170,138 @@ final class OPNDRMAgentHarnessHolder {
         } else {
             try (data + Data("\n".utf8)).write(to: chatURL, options: .atomic)
         }
-        try message.write(to: root.appendingPathComponent("latest-user-message.txt"), atomically: true, encoding: .utf8)
         return chatURL
+    }
+
+    private func runReply(for message: String, root: URL) {
+        guard replyProcess?.isRunning != true else {
+            _ = try? appendSystemMessage("Still working — one tiny robot foot in front of the other.")
+            return
+        }
+
+        _ = try? appendSystemMessage("Working on it in \(vmName)…")
+        let prompt = oneShotPrompt(userMessage: message)
+        switch kind {
+        case .jcode:
+            runJCode(prompt: prompt, root: root)
+        case .prime:
+            runPrime(prompt: prompt, root: root)
+        }
+    }
+
+    private func runJCode(prompt: String, root: URL) {
+        let command = Self.agentCommand(kind: .jcode)
+        let process = Process()
+        process.executableURL = command
+        process.currentDirectoryURL = root
+        var args = ["run", "--quiet", "--no-update", "-C", root.path, "--tools", "bash", prompt]
+        if let extra = ProcessInfo.processInfo.environment["OPNDRM_JCODE_RUN_ARGS"], !extra.isEmpty {
+            args = extra.split(separator: " ").map(String.init) + args
+        }
+        process.arguments = args
+        var env = ProcessInfo.processInfo.environment
+        env["OPNDRM_VM_NAME"] = vmName
+        env["OPNDRM_VM_SOCKET"] = "127.0.0.1:7777"
+        env["OPNDRM_AGENT_CHAT"] = root.appendingPathComponent("chat.jsonl").path
+        process.environment = env
+        runReplyProcess(process, root: root, engineName: "JCode")
+    }
+
+    private func runPrime(prompt: String, root: URL) {
+        guard let command = Self.primeRunCommand() else {
+            let message = "Prime Agent is not connected yet. macOS is blocking the local Prime bundle; set OPNDRM_PRIME_AGENT_RUN_COMMAND and I will use it. JCode can run this VM now."
+            _ = try? appendSystemMessage(message)
+            statusText = message
+            state = .failed
+            stateDidChange?(state, statusText)
+            return
+        }
+        let process = Process()
+        process.executableURL = command
+        process.currentDirectoryURL = root
+        var args = Self.primeRunArguments(prompt: prompt)
+        if args.isEmpty { args = [prompt] }
+        process.arguments = args
+        var env = ProcessInfo.processInfo.environment
+        env["OPNDRM_VM_NAME"] = vmName
+        env["OPNDRM_VM_SOCKET"] = "127.0.0.1:7777"
+        env["OPNDRM_AGENT_CHAT"] = root.appendingPathComponent("chat.jsonl").path
+        process.environment = env
+        runReplyProcess(process, root: root, engineName: "Prime Agent")
+    }
+
+    private func runReplyProcess(_ process: Process, root: URL, engineName: String) {
+        let outPipe = Pipe()
+        let errPipe = Pipe()
+        process.standardOutput = outPipe
+        process.standardError = errPipe
+        process.standardInput = FileHandle.nullDevice
+
+        state = .starting
+        statusText = "\(displayTitle) is working in \(vmName)…"
+        stateDidChange?(state, statusText)
+
+        let outURL = root.appendingPathComponent("agent.log")
+        let errURL = root.appendingPathComponent("agent.err.log")
+        process.terminationHandler = { [weak self] proc in
+            let output = String(data: outPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+            let errorText = String(data: errPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+            try? output.write(to: outURL, atomically: true, encoding: .utf8)
+            try? errorText.write(to: errURL, atomically: true, encoding: .utf8)
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.replyProcess = nil
+                self.state = proc.terminationStatus == 0 ? .running : .failed
+                let cleanOutput = Self.cleanEngineOutput(output)
+                if proc.terminationStatus == 0, !cleanOutput.isEmpty {
+                    _ = try? self.appendChatMessage(role: "assistant", content: cleanOutput)
+                    self.statusText = "\(self.displayTitle) answered from \(engineName)."
+                } else {
+                    let reason = Self.cleanEngineOutput(errorText).isEmpty ? "No response." : Self.cleanEngineOutput(errorText)
+                    _ = try? self.appendSystemMessage("\(engineName) could not answer yet: \(reason)")
+                    self.statusText = "\(engineName) could not answer yet."
+                }
+                self.stateDidChange?(self.state, self.statusText)
+            }
+        }
+
+        do {
+            try process.run()
+            replyProcess = process
+            DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self, weak process] in
+                guard let self, let process, process.isRunning else { return }
+                self.statusText = "Still working in \(self.vmName)… no ghosting, just gears."
+                self.stateDidChange?(self.state, self.statusText)
+            }
+        } catch {
+            state = .failed
+            let message = "\(engineName) could not start: \(error.localizedDescription)"
+            _ = try? appendSystemMessage(message)
+            statusText = message
+            stateDidChange?(state, statusText)
+        }
+    }
+
+    private func oneShotPrompt(userMessage: String) -> String {
+        """
+        \(bindingPrompt())
+
+        User message:
+        \(userMessage)
+
+        First verify/control the assigned VM through OPNDRM's local socket if needed:
+        printf '{"action":"boot","name":"\(vmName)"}\n' | nc -w 2 127.0.0.1 7777
+        printf '{"action":"status"}\n' | nc -w 2 127.0.0.1 7777
+
+        Reply in the OPNDRM voice: curious, helpful, minimal, truthful. A tiny smart joke is okay; fake certainty is not.
+        If a requested guest action is not available through the current VM API, say that clearly and offer the next useful step.
+        """
+    }
+
+    private static func cleanEngineOutput(_ raw: String) -> String {
+        raw
+            .replacingOccurrences(of: "\u{001B}\\[[0-9;]*[A-Za-z]", with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     func transcriptText() -> String {
@@ -199,6 +316,7 @@ final class OPNDRMAgentHarnessHolder {
             let role = obj["role"] as? String ?? "message"
             let content = obj["content"] as? String ?? ""
             if role == "user" { return "You: \(content)" }
+            if role == "system" { return "OPNDRM: \(content)" }
             return "\(displayTitle): \(content)"
         }.joined(separator: "\n\n")
     }
@@ -245,6 +363,12 @@ final class OPNDRMAgentHarnessHolder {
         - OPNDRM_AGENT_CHAT points to the in-app chat log for this agent.
         - Read new user messages from that file when available.
         - Keep replies short and focused on work inside \(vmName).
+        - Stay alive: give small status updates while working, and never pretend a capability exists.
+
+        Voice:
+        - Curious, helpful, and calm.
+        - Minimal output, but enough that the user knows you are working.
+        - Tiny intelligent jokes are welcome when they reduce stress. No clown car.
 
         Policy:
         - One named agent per VM assignment.
@@ -254,13 +378,20 @@ final class OPNDRMAgentHarnessHolder {
     }
 
     private func agentRoot() throws -> URL {
-        try Self.agentRoot(for: vmName, kind: kind, agentName: agentName)
+        try Self.agentRoot(for: vmName, kind: kind, agentName: rootAgentName)
     }
 
     private static func launchScript(command: URL, kind: Kind, promptURL: URL) -> String {
         let quotedCommand = shellQuote(command.path)
         let workdir = shellQuote(promptURL.deletingLastPathComponent().path)
         let extraArgs = agentArguments(kind: kind, promptURL: promptURL).map(shellQuote).joined(separator: " ")
+        let execLine: String
+        switch kind {
+        case .jcode:
+            execLine = "exec /usr/bin/script -q -F agent.pty.log \(quotedCommand) \(extraArgs)"
+        case .prime:
+            execLine = "exec \(quotedCommand) \(extraArgs)"
+        }
         return """
         #!/bin/zsh
         set -euo pipefail
@@ -268,7 +399,7 @@ final class OPNDRMAgentHarnessHolder {
         echo "OPNDRM VM ghost harness starting: kind=\(kind.safeName) vm=${OPNDRM_VM_NAME:-} agent=${OPNDRM_AGENT_NAME:-}"
         echo "Binding prompt: ${OPNDRM_VM_BINDING_PROMPT:-}"
         echo "Chat file: ${OPNDRM_AGENT_CHAT:-}"
-        exec \(quotedCommand) \(extraArgs)
+        \(execLine)
         """
     }
 
@@ -283,6 +414,23 @@ final class OPNDRMAgentHarnessHolder {
         case .jcode:
             return FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".local/bin/jcode")
         }
+    }
+
+    private static func primeRunCommand() -> URL? {
+        if let raw = ProcessInfo.processInfo.environment["OPNDRM_PRIME_AGENT_RUN_COMMAND"], !raw.isEmpty {
+            let url = URL(fileURLWithPath: NSString(string: raw).expandingTildeInPath)
+            return FileManager.default.isExecutableFile(atPath: url.path) ? url : nil
+        }
+        // The bundled prime-agent-acp is an ACP adapter, not a one-shot runner.
+        // Do not pretend it can chat until a runnable Prime command is configured.
+        return nil
+    }
+
+    private static func primeRunArguments(prompt: String) -> [String] {
+        if let raw = ProcessInfo.processInfo.environment["OPNDRM_PRIME_AGENT_RUN_ARGS"], !raw.isEmpty {
+            return raw.split(separator: " ").map(String.init) + [prompt]
+        }
+        return []
     }
 
     private static func commandOverrideName(kind: Kind) -> String {

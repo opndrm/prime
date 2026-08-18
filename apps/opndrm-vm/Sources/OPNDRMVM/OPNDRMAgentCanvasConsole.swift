@@ -18,6 +18,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
     private var cursorTrackingArea: NSTrackingArea?
 
     private let agentRowLabel = NSTextField(labelWithString: "")
+    private let renameField = NSTextField()
     private let vmStatusLabel = NSTextField(labelWithString: "")
     private let transcriptView = NSTextView()
     private let messageField = NSTextField()
@@ -28,6 +29,8 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
     private let descriptionText = NSTextView()
     private let engineControl = NSSegmentedControl(labels: ["Prime Agent", "JCode"], trackingMode: .selectOne, target: nil, action: nil)
     private let createButton = NSButton(title: "Create Agent", target: nil, action: nil)
+    private let screenCard = NSView()
+    private var previewView: NSView?
     private let handyButton = NSButton(title: "🎙", target: nil, action: nil)
     private let sendButton = NSButton(title: "Send", target: nil, action: nil)
     private let showVMButton = NSButton(title: "Show VM", target: nil, action: nil)
@@ -89,12 +92,12 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
 
     override func hitTest(_ point: NSPoint) -> NSView? {
         guard !isHidden, alphaValue > 0 else { return nil }
-        return super.hitTest(point) ?? self
+        let hit = super.hitTest(point)
+        return hit === self ? nil : hit
     }
 
     override func mouseDown(with event: NSEvent) {
         showHostCursor()
-        window?.makeFirstResponder(messageField)
         super.mouseDown(with: event)
     }
 
@@ -138,10 +141,15 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         updateMode()
     }
 
+    func setPreviewView(_ view: NSView?) {
+        // Deliberately no-op: the real Apple Virtualization visualizer must stay
+        // in the main VM canvas. Do not move it into a decorative card.
+    }
+
     private func setupUI() {
         translatesAutoresizingMaskIntoConstraints = false
         wantsLayer = true
-        layer?.backgroundColor = NSColor(calibratedWhite: 0.015, alpha: 0.98).cgColor
+        layer?.backgroundColor = NSColor.clear.cgColor
         layer?.zPosition = 20
 
         // Left agent rail.
@@ -169,22 +177,35 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         agentRowLabel.translatesAutoresizingMaskIntoConstraints = false
         agentRow.addSubview(agentRowLabel)
 
+        renameField.font = NSFont.systemFont(ofSize: 13, weight: .medium)
+        renameField.textColor = .labelColor
+        renameField.backgroundColor = .clear
+        renameField.isBordered = false
+        renameField.isHidden = true
+        renameField.delegate = self
+        renameField.translatesAutoresizingMaskIntoConstraints = false
+        agentRow.addSubview(renameField)
+
+        let renameGesture = NSClickGestureRecognizer(target: self, action: #selector(beginInlineRename))
+        renameGesture.numberOfClicksRequired = 2
+        agentRow.addGestureRecognizer(renameGesture)
+
         vmStatusLabel.font = NSFont.systemFont(ofSize: 11, weight: .regular)
         vmStatusLabel.textColor = .secondaryLabelColor
         vmStatusLabel.translatesAutoresizingMaskIntoConstraints = false
         rail.addSubview(vmStatusLabel)
 
         // Center chat area.
-        let center = NSView()
+        let center = OPNDRMClickThroughView()
         center.translatesAutoresizingMaskIntoConstraints = false
         center.wantsLayer = true
-        center.layer?.backgroundColor = NSColor.black.cgColor
+        center.layer?.backgroundColor = NSColor.clear.cgColor
         addSubview(center)
 
-        let topBar = NSView()
+        let topBar = OPNDRMClickThroughView()
         topBar.translatesAutoresizingMaskIntoConstraints = false
         topBar.wantsLayer = true
-        topBar.layer?.backgroundColor = NSColor(calibratedWhite: 0.025, alpha: 1).cgColor
+        topBar.layer?.backgroundColor = NSColor.clear.cgColor
         center.addSubview(topBar)
 
         let topTitle = NSTextField(labelWithString: "New Agent")
@@ -209,12 +230,12 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.hasVerticalScroller = true
         scrollView.drawsBackground = true
-        scrollView.backgroundColor = .black
+        scrollView.backgroundColor = .clear
         transcriptView.isEditable = false
         transcriptView.isSelectable = true
         transcriptView.font = NSFont.systemFont(ofSize: 14)
         transcriptView.textColor = NSColor(calibratedWhite: 0.9, alpha: 1)
-        transcriptView.backgroundColor = .black
+        transcriptView.backgroundColor = .clear
         transcriptView.textContainerInset = NSSize(width: 24, height: 24)
         scrollView.documentView = transcriptView
         center.addSubview(scrollView)
@@ -223,7 +244,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         composer.translatesAutoresizingMaskIntoConstraints = false
         composer.wantsLayer = true
         composer.layer?.cornerRadius = 16
-        composer.layer?.backgroundColor = NSColor(calibratedWhite: 0.17, alpha: 1).cgColor
+        composer.layer?.backgroundColor = NSColor(calibratedWhite: 0.12, alpha: 0.92).cgColor
         center.addSubview(composer)
 
         messageField.placeholderString = "Message your agent"
@@ -275,6 +296,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         let nameLabel = fieldLabel("Name")
         inspector.addSubview(nameLabel)
         nameField.placeholderString = "First Mate"
+        nameField.delegate = self
         nameField.translatesAutoresizingMaskIntoConstraints = false
         inspector.addSubview(nameField)
 
@@ -299,7 +321,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
 
         let engineLabel = fieldLabel("Engine")
         inspector.addSubview(engineLabel)
-        engineControl.selectedSegment = 0
+        engineControl.selectedSegment = 1
         engineControl.translatesAutoresizingMaskIntoConstraints = false
         inspector.addSubview(engineControl)
 
@@ -309,11 +331,12 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         createButton.translatesAutoresizingMaskIntoConstraints = false
         inspector.addSubview(createButton)
 
-        let screenCard = NSView()
         screenCard.translatesAutoresizingMaskIntoConstraints = false
         screenCard.wantsLayer = true
         screenCard.layer?.cornerRadius = 10
+        screenCard.layer?.masksToBounds = true
         screenCard.layer?.backgroundColor = NSColor(calibratedWhite: 0.10, alpha: 1).cgColor
+        screenCard.isHidden = true
         inspector.addSubview(screenCard)
 
         let screenIcon = NSTextField(labelWithString: "▱")
@@ -350,6 +373,10 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
             agentRowLabel.trailingAnchor.constraint(equalTo: agentRow.trailingAnchor, constant: -12),
             agentRowLabel.centerYAnchor.constraint(equalTo: agentRow.centerYAnchor),
 
+            renameField.leadingAnchor.constraint(equalTo: agentRow.leadingAnchor, constant: 44),
+            renameField.trailingAnchor.constraint(equalTo: agentRow.trailingAnchor, constant: -12),
+            renameField.centerYAnchor.constraint(equalTo: agentRow.centerYAnchor),
+
             vmStatusLabel.leadingAnchor.constraint(equalTo: rail.leadingAnchor, constant: 16),
             vmStatusLabel.trailingAnchor.constraint(equalTo: rail.trailingAnchor, constant: -16),
             vmStatusLabel.bottomAnchor.constraint(equalTo: rail.bottomAnchor, constant: -22),
@@ -385,7 +412,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
             composer.leadingAnchor.constraint(equalTo: center.leadingAnchor, constant: 70),
             composer.trailingAnchor.constraint(equalTo: center.trailingAnchor, constant: -70),
             composer.bottomAnchor.constraint(equalTo: statusLabel.topAnchor, constant: -10),
-            composer.heightAnchor.constraint(equalToConstant: 82),
+            composer.heightAnchor.constraint(equalToConstant: 72),
 
             messageField.leadingAnchor.constraint(equalTo: composer.leadingAnchor, constant: 16),
             messageField.trailingAnchor.constraint(equalTo: handyButton.leadingAnchor, constant: -10),
@@ -467,23 +494,20 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
     private func resetDraft() {
         didCreateAgent = false
         holder = nil
+        renameField.isHidden = true
+        agentRowLabel.isHidden = false
         avatarLabel.stringValue = "🧭"
         nameField.stringValue = "First Mate"
         titleField.stringValue = "VM copilot"
         descriptionText.string = "Help me operate this VM safely. Automate inside the VM when possible. Ask before destructive changes."
-        engineControl.selectedSegment = 0
+        engineControl.selectedSegment = 1
         transcriptView.string = """
-        Create an agent for this VM.
+        I’m awake. Pick a name, then send a message.
 
-        This is the only setup step:
-        - name the agent
-        - describe what it should do
-        - choose Prime Agent or JCode
-        - talk to it here
-
-        The VM is already booting/running behind this setup surface.
+        The VM gets the real screen. I’ll keep the chat short, useful, and honest.
+        Tiny jokes allowed; fake magic banned.
         """
-        statusLabel.stringValue = "Edit the profile or just send a message. The agent will be created automatically."
+        statusLabel.stringValue = "Ready. Send a message and I’ll create the agent automatically."
         updateLabels()
         updateMode()
     }
@@ -494,6 +518,17 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         vmStatusLabel.stringValue = vmName.isEmpty ? "No VM selected" : "Assigned VM: \(vmName)"
         messageField.placeholderString = "Message \(display)"
     }
+
+    private func applyProfileEdits() {
+        updateLabels()
+        holder?.updateProfile(
+            agentName: displayName(),
+            emoji: avatarLabel.stringValue,
+            instructions: instructions()
+        )
+        refreshTranscript()
+    }
+
 
     private func updateMode() {
         createButton.title = didCreateAgent ? "Agent Created" : "Create Agent"
@@ -516,7 +551,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         Agent title: \(title.isEmpty ? "VM copilot" : title)
         User description: \(description.isEmpty ? "Help operate this VM safely." : description)
 
-        Keep the conversation simple and stress-free. Work only inside your assigned VM. Do not show Prime Agent or JCode terminal output to the user.
+        Keep the conversation simple, curious, and stress-free. Work only inside your assigned VM. Keep output minimal but informative. Never ghost the user; give honest status if blocked. Do not show Prime Agent or JCode terminal output to the user.
         """
     }
 
@@ -531,9 +566,9 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         \(emoji) \(name)
         \(titleField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines))
 
-        Booting up the computer…
         Binding to \(vmName)…
-        Starting hidden \(kind.displayName)…
+        Starting \(kind.displayName)…
+        I’ll report honestly if the bridge blocks. No smoke machine.
         """
         let created = onStartRequested?(vmName, kind, name, emoji, instructions())
         holder = created
@@ -547,12 +582,29 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
     private func initialTranscript(agentName: String) -> String {
         """
         🧭 \(agentName) is ready.
+        VM: \(vmName) • Engine: \(selectedKind().displayName)
 
-        Assigned VM: \(vmName)
-        Engine: \(selectedKind().displayName)
-
-        What should I do?
+        What should we try first?
         """
+    }
+
+    @objc private func beginInlineRename() {
+        renameField.stringValue = displayName()
+        renameField.isHidden = false
+        agentRowLabel.isHidden = true
+        window?.makeFirstResponder(renameField)
+        renameField.currentEditor()?.selectAll(nil)
+    }
+
+    private func commitInlineRename() {
+        let newName = renameField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !newName.isEmpty {
+            nameField.stringValue = newName
+        }
+        renameField.isHidden = true
+        agentRowLabel.isHidden = false
+        applyProfileEdits()
+        statusLabel.stringValue = "Renamed agent to \(displayName())."
     }
 
     @objc private func createClicked() {
@@ -595,9 +647,39 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
     }
 
     func controlTextDidEndEditing(_ obj: Notification) {
-        if let movement = obj.userInfo?["NSTextMovement"] as? Int,
-           movement == NSReturnTextMovement {
-            sendClicked()
+        if let field = obj.object as? NSTextField {
+            if field === renameField {
+                commitInlineRename()
+                return
+            }
+            if field === nameField {
+                applyProfileEdits()
+                if let movement = obj.userInfo?["NSTextMovement"] as? Int,
+                   movement == NSReturnTextMovement {
+                    window?.makeFirstResponder(messageField)
+                }
+                return
+            }
+            if field === messageField,
+               let movement = obj.userInfo?["NSTextMovement"] as? Int,
+               movement == NSReturnTextMovement {
+                sendClicked()
+            }
         }
+    }
+}
+
+
+@MainActor
+private final class OPNDRMClickThroughView: NSView {
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        guard !isHidden, alphaValue > 0 else { return nil }
+        for subview in subviews.reversed() where !subview.isHidden && subview.alphaValue > 0 {
+            let converted = convert(point, to: subview)
+            if let hit = subview.hitTest(converted) {
+                return hit
+            }
+        }
+        return nil
     }
 }
