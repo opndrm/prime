@@ -148,7 +148,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
     private func setupUI() {
         translatesAutoresizingMaskIntoConstraints = false
         wantsLayer = true
-        layer?.backgroundColor = NSColor(calibratedWhite: 0.015, alpha: 0.98).cgColor
+        layer?.backgroundColor = NSColor(calibratedWhite: 0.06, alpha: 1).cgColor
         layer?.zPosition = 20
 
         // Left agent rail.
@@ -156,6 +156,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         rail.translatesAutoresizingMaskIntoConstraints = false
         rail.wantsLayer = true
         rail.layer?.backgroundColor = NSColor(calibratedWhite: 0.055, alpha: 1).cgColor
+        rail.isHidden = true
         addSubview(rail)
 
         let railTitle = NSTextField(labelWithString: "Agents")
@@ -229,12 +230,12 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.hasVerticalScroller = true
         scrollView.drawsBackground = true
-        scrollView.backgroundColor = .black
+        scrollView.backgroundColor = NSColor(calibratedWhite: 0.06, alpha: 1)
         transcriptView.isEditable = false
         transcriptView.isSelectable = true
         transcriptView.font = NSFont.systemFont(ofSize: 14)
         transcriptView.textColor = NSColor(calibratedWhite: 0.9, alpha: 1)
-        transcriptView.backgroundColor = .black
+        transcriptView.backgroundColor = NSColor(calibratedWhite: 0.06, alpha: 1)
         transcriptView.textContainerInset = NSSize(width: 24, height: 24)
         scrollView.documentView = transcriptView
         center.addSubview(scrollView)
@@ -279,6 +280,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
         inspector.translatesAutoresizingMaskIntoConstraints = false
         inspector.wantsLayer = true
         inspector.layer?.backgroundColor = NSColor(calibratedWhite: 0.055, alpha: 1).cgColor
+        inspector.isHidden = true
         addSubview(inspector)
 
         let settingsLabel = NSTextField(labelWithString: "Settings")
@@ -357,7 +359,7 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
             rail.topAnchor.constraint(equalTo: topAnchor),
             rail.bottomAnchor.constraint(equalTo: bottomAnchor),
             rail.leadingAnchor.constraint(equalTo: leadingAnchor),
-            rail.widthAnchor.constraint(equalToConstant: 220),
+            rail.widthAnchor.constraint(equalToConstant: 0),
 
             railTitle.topAnchor.constraint(equalTo: rail.topAnchor, constant: 18),
             railTitle.leadingAnchor.constraint(equalTo: rail.leadingAnchor, constant: 16),
@@ -383,12 +385,12 @@ final class OPNDRMAgentCanvasConsoleView: NSView, NSTextFieldDelegate {
             inspector.topAnchor.constraint(equalTo: topAnchor),
             inspector.bottomAnchor.constraint(equalTo: bottomAnchor),
             inspector.trailingAnchor.constraint(equalTo: trailingAnchor),
-            inspector.widthAnchor.constraint(equalToConstant: 300),
+            inspector.widthAnchor.constraint(equalToConstant: 0),
 
             center.topAnchor.constraint(equalTo: topAnchor),
             center.bottomAnchor.constraint(equalTo: bottomAnchor),
-            center.leadingAnchor.constraint(equalTo: rail.trailingAnchor),
-            center.trailingAnchor.constraint(equalTo: inspector.leadingAnchor),
+            center.leadingAnchor.constraint(equalTo: leadingAnchor),
+            center.trailingAnchor.constraint(equalTo: trailingAnchor),
 
             topBar.topAnchor.constraint(equalTo: center.topAnchor),
             topBar.leadingAnchor.constraint(equalTo: center.leadingAnchor),

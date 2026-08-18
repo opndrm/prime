@@ -72,7 +72,6 @@ struct AgentComputerStore {
         case .linux:
             return FileManager.default.fileExists(atPath: dir.appendingPathComponent("Disk.img").path)
                 && FileManager.default.fileExists(atPath: dir.appendingPathComponent("LinuxKernel").path)
-                && FileManager.default.fileExists(atPath: dir.appendingPathComponent("LinuxInitrd").path)
         case .apple:
             return FileManager.default.fileExists(atPath: dir.appendingPathComponent("Disk.img").path)
                 && FileManager.default.fileExists(atPath: dir.appendingPathComponent("MachineIdentifier").path)

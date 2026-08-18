@@ -11,7 +11,6 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
     private var welcomeLabel: NSTextField!
     private var vmInstances: [String: VMInstance] = [:]
     private(set) var selectedVM: String?
-    private var layoutControl: NSSegmentedControl!
     private var progressLabel: NSTextField!
     private var progressBar: NSProgressIndicator!
     private var progressCancelButton: NSButton!
@@ -47,7 +46,8 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             backing: .buffered,
             defer: false
         )
-        window.title = "OPNDRM VM"
+        window.title = "OPNDRM"
+        window.backgroundColor = NSColor(calibratedWhite: 0.06, alpha: 1)
         window.minSize = NSSize(width: 900, height: 560)
         // Keep the green button as a sane zoom action, not native fullscreen/tiling.
         // The VM surface has its own visualizer/layout and should stay inside
@@ -80,17 +80,18 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         vmListView = NSView()
         vmListView.translatesAutoresizingMaskIntoConstraints = false
         vmListView.wantsLayer = true
-        vmListView.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+        vmListView.layer?.backgroundColor = NSColor(calibratedWhite: 0.04, alpha: 1).cgColor
         vmListView.layer?.masksToBounds = true
         rootView.addSubview(vmListView)
 
-        let titleLabel = NSTextField(labelWithString: "VM")
+        let titleLabel = NSTextField(labelWithString: "")
         titleLabel.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         vmListView.addSubview(titleLabel)
 
         sidebarToggleButton = NSButton(title: "‹", target: self, action: #selector(toggleSidebarClicked))
         sidebarToggleButton.bezelStyle = .texturedRounded
+        sidebarToggleButton.controlSize = .small
         sidebarToggleButton.toolTip = "Collapse sidebar"
         sidebarToggleButton.translatesAutoresizingMaskIntoConstraints = false
         vmListView.addSubview(sidebarToggleButton)
@@ -100,7 +101,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         tableView.delegate = self
         tableView.headerView = nil
         tableView.backgroundColor = .clear
-        tableView.rowHeight = 52
+        tableView.rowHeight = 56
         tableView.selectionHighlightStyle = .regular
 
         let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("vm"))
@@ -113,28 +114,17 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         vmListView.addSubview(scrollView)
 
-        let newButton = NSButton(title: "+ New VM", target: self, action: #selector(newVMClicked))
+        let newButton = NSButton(title: "+ New Computer", target: self, action: #selector(newVMClicked))
         newButton.bezelStyle = .rounded
         newButton.translatesAutoresizingMaskIntoConstraints = false
         vmListView.addSubview(newButton)
 
-        let bootLayoutButton = NSButton(title: "Boot Layout", target: self, action: #selector(bootLayoutClicked))
-        bootLayoutButton.bezelStyle = .rounded
-        bootLayoutButton.translatesAutoresizingMaskIntoConstraints = false
-        vmListView.addSubview(bootLayoutButton)
-
-        agentButton = NSButton(title: "Agent", target: self, action: #selector(showAgentClicked))
+        agentButton = NSButton(title: "💬 Agent", target: self, action: #selector(showAgentClicked))
         agentButton.bezelStyle = .rounded
+        agentButton.controlSize = .large
         agentButton.toolTip = "Open the named agent for the selected VM"
         agentButton.translatesAutoresizingMaskIntoConstraints = false
         vmListView.addSubview(agentButton)
-
-        layoutControl = NSSegmentedControl(labels: ["Single", "Split", "Triple", "Quad"],
-                                            trackingMode: .selectOne, target: self,
-                                            action: #selector(layoutChanged))
-        layoutControl.selectedSegment = 0
-        layoutControl.translatesAutoresizingMaskIntoConstraints = false
-        vmListView.addSubview(layoutControl)
 
         // Progress indicator
         progressBar = NSProgressIndicator(frame: .zero)
@@ -144,8 +134,8 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         vmListView.addSubview(progressBar)
 
         progressLabel = NSTextField(labelWithString: "")
-        progressLabel.font = NSFont.systemFont(ofSize: 10)
-        progressLabel.textColor = .secondaryLabelColor
+        progressLabel.font = NSFont.systemFont(ofSize: 11, weight: .medium)
+        progressLabel.textColor = NSColor(calibratedWhite: 0.45, alpha: 1)
         progressLabel.lineBreakMode = .byWordWrapping
         progressLabel.maximumNumberOfLines = 3
         progressLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -161,8 +151,6 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         sidebarCollapsibleViews = [
             titleLabel,
             scrollView,
-            layoutControl,
-            bootLayoutButton,
             agentButton,
             newButton,
         ]
@@ -171,7 +159,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         contentView = NSView()
         contentView.translatesAutoresizingMaskIntoConstraints = false
         contentView.wantsLayer = true
-        contentView.layer?.backgroundColor = NSColor.black.cgColor
+        contentView.layer?.backgroundColor = NSColor(calibratedWhite: 0.03, alpha: 1).cgColor
         rootView.addSubview(contentView)
 
         let separator = NSBox()
@@ -220,14 +208,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             progressLabel.bottomAnchor.constraint(equalTo: progressCancelButton.topAnchor, constant: -4),
 
             progressCancelButton.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor, constant: 12),
-            progressCancelButton.bottomAnchor.constraint(equalTo: layoutControl.topAnchor, constant: -8),
-
-            layoutControl.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor, constant: 12),
-            layoutControl.trailingAnchor.constraint(lessThanOrEqualTo: vmListView.trailingAnchor, constant: -12),
-            layoutControl.bottomAnchor.constraint(equalTo: bootLayoutButton.topAnchor, constant: -8),
-
-            bootLayoutButton.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor, constant: 12),
-            bootLayoutButton.bottomAnchor.constraint(equalTo: agentButton.topAnchor, constant: -8),
+            progressCancelButton.bottomAnchor.constraint(equalTo: agentButton.topAnchor, constant: -8),
 
             agentButton.leadingAnchor.constraint(equalTo: vmListView.leadingAnchor, constant: 12),
             agentButton.trailingAnchor.constraint(lessThanOrEqualTo: vmListView.trailingAnchor, constant: -12),
@@ -237,9 +218,9 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             newButton.bottomAnchor.constraint(equalTo: vmListView.bottomAnchor, constant: -12),
         ])
 
-        welcomeLabel = NSTextField(labelWithString: "Starting your VM…")
-        welcomeLabel.font = NSFont.systemFont(ofSize: 16, weight: .medium)
-        welcomeLabel.textColor = .secondaryLabelColor
+        welcomeLabel = NSTextField(labelWithString: "Starting your agent's computer…")
+        welcomeLabel.font = NSFont.systemFont(ofSize: 15, weight: .medium)
+        welcomeLabel.textColor = NSColor(calibratedWhite: 0.5, alpha: 1)
         welcomeLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(welcomeLabel)
         NSLayoutConstraint.activate([
@@ -281,7 +262,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             agentCanvasConsole.topAnchor.constraint(equalTo: contentView.topAnchor),
             agentCanvasConsole.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             agentCanvasConsole.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            agentCanvasConsole.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            agentCanvasConsole.widthAnchor.constraint(equalToConstant: 380),
         ])
 
         window.contentView = rootView
@@ -416,7 +397,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             return [
                 "ok": true,
                 "mode": "manager",
-                "layout": (VMLayoutMode(rawValue: layoutControl.selectedSegment) ?? .single).description,
+                "layout": "single",
                 "selectedVM": selectedVM ?? "",
                 "vms": machines
             ]
@@ -473,13 +454,9 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
             case "quad", "4": mode = .quad
             default: mode = .single
             }
-            layoutControl.selectedSegment = mode.rawValue
             layoutView.layoutMode = mode
             displayVMInLayout()
             return ["ok": true, "message": "layout set to \(mode.description)"]
-        case "bootLayout":
-            bootLayoutClicked()
-            return ["ok": true, "message": "boot layout requested"]
         default:
             return ["ok": false, "message": "unknown action: \(action)"]
         }
@@ -670,28 +647,13 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         showFirstMateConsole(for: vmName)
     }
 
-    @objc private func bootLayoutClicked() {
-        let mode = VMLayoutMode(rawValue: layoutControl.selectedSegment) ?? .single
-        let bootable = vmNames.filter { AgentComputerStore.hasVMState($0) }
-        let targets = Array(bootable.prefix(mode.tileCount))
-        guard !targets.isEmpty else {
-            showError("No bootable VMs yet. Use + New VM to create macOS or Linux VMs first.")
-            return
-        }
-        selectedVM = targets.first
-        for name in targets {
-            bootVM(name)
-        }
-        displayVMInLayout()
-    }
+
 
     private func hideAgentConsole() {
         window?.makeFirstResponder(nil)
         agentCanvasConsole.alphaValue = 0
         agentCanvasConsole.isHidden = true
         displayVMInLayout()
-        progressLabel.isHidden = false
-        progressLabel.stringValue = selectedVM.map { "Showing \($0)." } ?? "Showing VM."
     }
 
     private func showFirstMateConsole(for vmName: String) {
@@ -699,6 +661,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         let existing = agentHolders.values.first { $0.vmName == vmName }
         agentCanvasConsole.layer?.zPosition = 9_999
         agentCanvasConsole.alphaValue = 1
+        agentCanvasConsole.isHidden = false
         contentView.addSubview(agentCanvasConsole, positioned: .above, relativeTo: layoutView)
         agentCanvasConsole.configure(vmName: vmName, existingHolder: existing)
     }
@@ -911,10 +874,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
         progressCancelButton.isHidden = true
     }
 
-    @objc private func layoutChanged(_ control: NSSegmentedControl) {
-        layoutView.layoutMode = VMLayoutMode(rawValue: control.selectedSegment) ?? .single
-        displayVMInLayout()
-    }
+
 
     // MARK: - VM Boot and Display
 
@@ -1010,7 +970,7 @@ final class OPNDRMVMMainWindowController: NSWindowController, NSWindowDelegate, 
 
         // Collect VM views for the layout
         var views: [VZVirtualMachineView] = []
-        let layoutMode = VMLayoutMode(rawValue: layoutControl.selectedSegment) ?? .single
+        let layoutMode: VMLayoutMode = .single
 
         // Add selected VM first, then others up to tileCount
         if let selectedVM = selected, let instance = vmInstances[selectedVM], let view = instance.vmView {

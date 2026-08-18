@@ -547,7 +547,7 @@ final class OPNDRMVMCreator: NSObject {
 
         guard FileManager.default.fileExists(atPath: diskURL.path) else { throw Self.error("Missing Disk.img for \(name)") }
         guard FileManager.default.fileExists(atPath: kernelURL.path) else { throw Self.error("Missing LinuxKernel for \(name)") }
-        guard FileManager.default.fileExists(atPath: initrdURL.path) else { throw Self.error("Missing LinuxInitrd for \(name)") }
+        // Initrd is optional - the container kernel has virtio drivers built in
         try ensureLinuxKernelIsBootable(at: kernelURL)
 
         let platform = VZGenericPlatformConfiguration()
@@ -561,7 +561,9 @@ final class OPNDRMVMCreator: NSObject {
         }
 
         let bootLoader = VZLinuxBootLoader(kernelURL: kernelURL)
-        bootLoader.initialRamdiskURL = initrdURL
+        if FileManager.default.fileExists(atPath: initrdURL.path) {
+            bootLoader.initialRamdiskURL = initrdURL
+        }
         var commandLine = (try? String(contentsOf: commandLineURL, encoding: .utf8)) ?? "console=tty0 console=hvc0"
         if !commandLine.contains("init=/bin/sh") {
             commandLine += " init=/bin/sh"
