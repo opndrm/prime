@@ -513,10 +513,13 @@ final class OPNDRMVMCreator: NSObject {
         try createSparseRawDisk(at: diskURL, sizeGB: diskGB, overwrite: true)
 
         let localKernel = stateDir.appendingPathComponent("LinuxKernel")
+        let localKernelSource = stateDir.appendingPathComponent("LinuxKernelSource")
         let localInitrd = stateDir.appendingPathComponent("LinuxInitrd")
         try? FileManager.default.removeItem(at: localKernel)
+        try? FileManager.default.removeItem(at: localKernelSource)
         try? FileManager.default.removeItem(at: localInitrd)
-        try FileManager.default.copyItem(at: kernelURL, to: localKernel)
+        try FileManager.default.copyItem(at: kernelURL, to: localKernelSource)
+        try writeBootableLinuxKernel(from: kernelURL, to: localKernel)
         try FileManager.default.copyItem(at: initrdURL, to: localInitrd)
 
         let machineIdentifier = VZGenericMachineIdentifier()
@@ -545,6 +548,7 @@ final class OPNDRMVMCreator: NSObject {
         guard FileManager.default.fileExists(atPath: diskURL.path) else { throw Self.error("Missing Disk.img for \(name)") }
         guard FileManager.default.fileExists(atPath: kernelURL.path) else { throw Self.error("Missing LinuxKernel for \(name)") }
         guard FileManager.default.fileExists(atPath: initrdURL.path) else { throw Self.error("Missing LinuxInitrd for \(name)") }
+        try ensureLinuxKernelIsBootable(at: kernelURL)
 
         let platform = VZGenericPlatformConfiguration()
         if let machineIdentifierData = try? Data(contentsOf: machineIDURL),
@@ -598,6 +602,62 @@ final class OPNDRMVMCreator: NSObject {
     }
 
     // MARK: - Helpers
+
+    private func ensureLinuxKernelIsBootable(at kernelURL: URL) throws {
+        let data = try Data(contentsOf: kernelURL, options: [.mappedIfSafe])
+        guard Self.gzipPayloadOffset(in: data) != nil else { return }
+        let temporaryURL = kernelURL.deletingLastPathComponent()
+            .appendingPathComponent("LinuxKernel.uncompressed")
+        try? FileManager.default.removeItem(at: temporaryURL)
+        try writeBootableLinuxKernel(from: kernelURL, to: temporaryURL)
+        try FileManager.default.removeItem(at: kernelURL)
+        try FileManager.default.moveItem(at: temporaryURL, to: kernelURL)
+    }
+
+    private func writeBootableLinuxKernel(from sourceURL: URL, to destinationURL: URL) throws {
+        let data = try Data(contentsOf: sourceURL, options: [.mappedIfSafe])
+        guard let offset = Self.gzipPayloadOffset(in: data) else {
+            try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: destinationURL.path)
+            return
+        }
+
+        let gzipPayload = data.subdata(in: offset..<data.endIndex)
+        let tempGzip = FileManager.default.temporaryDirectory
+            .appendingPathComponent("opndrm-linux-kernel-\(UUID().uuidString).gz")
+        try gzipPayload.write(to: tempGzip, options: .atomic)
+        defer { try? FileManager.default.removeItem(at: tempGzip) }
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/gzip")
+        process.arguments = ["-dc", tempGzip.path]
+        let stdoutPipe = Pipe()
+        let stderrPipe = Pipe()
+        process.standardOutput = stdoutPipe
+        process.standardError = stderrPipe
+        try process.run()
+        let output = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+        let stderr = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+        process.waitUntilExit()
+        guard !output.isEmpty else {
+            let detail = String(data: stderr, encoding: .utf8) ?? "gzip failed"
+            throw Self.error("Could not extract bootable Linux kernel image: \(detail)")
+        }
+        if process.terminationStatus != 0 {
+            let detail = String(data: stderr, encoding: .utf8) ?? ""
+            let toleratedTrailingGarbage = detail.localizedCaseInsensitiveContains("trailing garbage ignored")
+            guard toleratedTrailingGarbage else {
+                throw Self.error("Could not extract bootable Linux kernel image: \(detail)")
+            }
+        }
+        try output.write(to: destinationURL, options: .atomic)
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: destinationURL.path)
+    }
+
+    nonisolated private static func gzipPayloadOffset(in data: Data) -> Data.Index? {
+        let magic = Data([0x1f, 0x8b, 0x08])
+        return data.range(of: magic)?.lowerBound
+    }
 
     private func createSparseRawDisk(at url: URL, sizeGB: Int, overwrite: Bool) throws {
         if overwrite { try? FileManager.default.removeItem(at: url) }
