@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "platform": "macOS",
+  "session": "opndrm",
   "workspaces": [
     {
       "label": "OFFLINE",
@@ -8,50 +9,26 @@
       "agent": "prime-agent"
     },
     {
-      "label": "AUDITOR PRIME",
-      "root": "home",
+      "label": "OPNDRM",
+      "root": "opndrm",
       "agent": "prime-agent"
     },
     {
-      "label": "AUDITOR JCODE",
-      "root": "home",
+      "label": "OPNDRM JC",
+      "root": "opndrm",
       "agent": "jcode"
     },
     {
-      "label": "ADAM PRIME",
-      "root": "adam",
-      "agent": "prime-agent"
-    },
-    {
-      "label": "ADAM JCODE",
-      "root": "adam",
-      "agent": "jcode"
-    },
-    {
-      "label": "ADAM NO-MISTAKES",
-      "root": "adam",
-      "agent": "inactive-gate"
-    },
-    {
-      "label": "FRNKLY PRIME",
-      "root": "frnkly-one",
-      "agent": "prime-agent"
-    },
-    {
-      "label": "FRNKLY JCODE",
-      "root": "frnkly-one",
-      "agent": "jcode"
-    },
-    {
-      "label": "FRNKLY NO-MISTAKES",
-      "root": "frnkly-one",
+      "label": "OPNDRM NO-MISTAKES",
+      "root": "opndrm",
       "agent": "inactive-gate"
     }
   ],
   "rules": [
-    "One workspace per role.",
-    "JCode is the primary coding executor; Prime Agent orchestrates.",
-    "Inactive gates never start during installation.",
-    "Only create an app workspace after its owner checkout exists."
+    "Preserve this exact workspace order.",
+    "Prime Agent runs in OFFLINE and OPNDRM.",
+    "JCode runs only in OPNDRM JC.",
+    "OPNDRM NO-MISTAKES remains an inactive shell until an authorized gate exists.",
+    "Installation never starts or controls a No Mistakes run."
   ]
 }

@@ -1,21 +1,22 @@
 ---
 name: opndrm-prime
-description: Open and operate the local-first Open Dream Prime workflow: WezTerm, HERDR, Prime Agent, Buzz, and the selected repository.
+description: Open and operate the local-first OPNDRM workflow: WezTerm, HERDR, Prime Agent, JCode, Buzz, and the OPNDRM workspace.
 ---
 
 # Open Dream Prime
 
-Use the teammate's language. Open only the named local lane and confirm its repository root before acting.
+Use the teammate's language. Open only the local OPNDRM workspace and confirm its root before acting.
 
 ## Local topology
 
-One person → one repository checkout → one named HERDR session → one Prime Agent root workspace.
+One person → one `~/Desktop/opndrm` workspace → one `opndrm` HERDR session → exactly four ordered workspaces.
 
-| Lane | Root | HERDR session |
-| --- | --- | --- |
-| OPNDRM APP | `~/Desktop/OPNDRM APP` | `opndrm-opndrm-app` |
-| ADAM | `~/OPNDRM/ADAM` | `opndrm-adam` |
-| FRNKLY.ONE | `~/OPNDRM/FRNKLY.ONE` | `opndrm-frnkly-one` |
+| Order | Workspace | Root | Client/state |
+|---:|---|---|---|
+| 1 | OFFLINE | home | Prime Agent |
+| 2 | OPNDRM | `~/Desktop/opndrm` | Prime Agent |
+| 3 | OPNDRM JC | `~/Desktop/opndrm` | JCode |
+| 4 | OPNDRM NO-MISTAKES | `~/Desktop/opndrm` | inactive gate |
 
 ## Execution roles
 
@@ -25,9 +26,9 @@ One person → one repository checkout → one named HERDR session → one Prime
 
 ## Workflow
 
-1. Confirm the requested lane, root, branch, and visible HERDR workspace.
+1. Confirm the OPNDRM root, branch, and visible HERDR workspace.
 2. Turn the request into one work card: outcome, write boundary, quality gate, evidence, and stop condition.
-3. Run Prime Agent only in the selected root.
+3. Run Prime Agent only in the OPNDRM root.
 4. Use Buzz only after the teammate completes personal sign-in and explicitly approves the named agent. Keep GitHub as the code and review record.
 
 ## Hard boundaries

@@ -12,14 +12,15 @@ Prime is not a dashboard, remote-run service, model host, or shared terminal. It
 curl -fsSL https://opndrm.com/install-macos.sh | bash -s -- OPNDRM-APP
 ```
 
-Choose `ADAM` or `FRNKLY.ONE` only when you have been assigned that private repository and can authenticate with your own GitHub account.
+The public installer creates only the OPNDRM lane shown below.
 
 ## What the installer does
 
 - verifies Apple Command Line Tools and Homebrew;
 - installs or verifies WezTerm, HERDR, Git, GitHub CLI, Prime Agent, and Buzz;
-- creates one named HERDR session for the selected lane;
-- starts one Prime Agent workspace in the exact selected root;
+- creates one `opndrm` HERDR session with exactly four ordered workspaces;
+- starts Prime Agent in **OFFLINE** and **OPNDRM**, and JCode in **OPNDRM JC**;
+- leaves **OPNDRM NO-MISTAKES** as an inactive visible shell;
 - opens Buzz for the person’s own sign-in; and
 - stops clearly if a prerequisite, checkout, visible workspace, or authentication step fails.
 
@@ -51,7 +52,7 @@ Prime Agent orchestrates approved work; JCode is installed from its official ins
 
 ## Standard HERDR layout
 
-The installer preserves two General Research workspaces—**GENERAL RESEARCH** for Prime Agent and **JCODE — GENERAL RESEARCH** for JCode—then creates a separate **JCODE — <LANE>** and **PRIME — <LANE>** pair for the selected app. General Research JCode uses the owner-selected local Ollama route; this Mac uses DeepSeek V4 Flash with High effort.
+The installer creates exactly four workspaces in order: **OFFLINE**, **OPNDRM**, **OPNDRM JC**, and **OPNDRM NO-MISTAKES**. It creates no Auditor, ADAM, FRNKLY.ONE, or General Research workspaces. The No Mistakes workspace remains inactive during installation.
 
 ## Handy dictation
 

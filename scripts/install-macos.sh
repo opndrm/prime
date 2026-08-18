@@ -2,32 +2,18 @@
 set -euo pipefail
 
 LANE="${1:-}"
-case "$LANE" in
-  OPNDRM-APP|ADAM|FRNKLY.ONE) ;;
-  *) printf 'Usage: install-macos.sh OPNDRM-APP|ADAM|FRNKLY.ONE\n' >&2; exit 2 ;;
-esac
+[[ "$LANE" == "OPNDRM-APP" ]] || {
+  printf 'Usage: install-macos.sh OPNDRM-APP\n' >&2
+  exit 2
+}
 [[ "$(uname -s)" == "Darwin" ]] || { printf 'Open Dream Prime is currently supported on macOS only.\n' >&2; exit 1; }
 
 say() { printf '\n==> %s\n' "$*"; }
 fail() { printf '\nOpen Dream Prime stopped: %s\n' "$*" >&2; exit 1; }
 
-case "$LANE" in
-  OPNDRM-APP)
-    ROOT="$HOME/Desktop/OPNDRM APP"
-    SESSION="opndrm-opndrm-app"
-    REPOSITORY="opndrm/prime"
-    ;;
-  ADAM)
-    ROOT="${OPNDRM_PROJECTS_DIR:-$HOME/OPNDRM}/ADAM"
-    SESSION="opndrm-adam"
-    REPOSITORY="opndrm/ADAM"
-    ;;
-  FRNKLY.ONE)
-    ROOT="${OPNDRM_PROJECTS_DIR:-$HOME/OPNDRM}/FRNKLY.ONE"
-    SESSION="opndrm-frnkly-one"
-    REPOSITORY="opndrm/Frnkly.one"
-    ;;
-esac
+ROOT="${OPNDRM_ROOT:-$HOME/Desktop/opndrm}"
+SESSION="opndrm"
+REPOSITORY="opndrm/prime"
 
 require_clt() {
   xcode-select -p >/dev/null 2>&1 && return
@@ -40,7 +26,8 @@ require_clt() {
 require_brew() {
   if ! command -v brew >/dev/null 2>&1; then
     say 'Installing Homebrew'
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    [[ -r /dev/tty ]] || fail 'Homebrew needs an interactive Terminal for administrator approval.'
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" </dev/tty
   fi
   if [[ -x /opt/homebrew/bin/brew ]]; then eval "$(/opt/homebrew/bin/brew shellenv)"; fi
   if [[ -x /usr/local/bin/brew ]]; then eval "$(/usr/local/bin/brew shellenv)"; fi
@@ -57,24 +44,15 @@ start_herdr() {
   fail "HERDR did not start for $SESSION. See $log."
 }
 
-require_github_for_private_lane() {
-  [[ "$LANE" == OPNDRM-APP ]] && return
-  if ! gh auth status --hostname github.com >/dev/null 2>&1; then
-    say 'Sign in to GitHub with your own account'
-    gh auth login --hostname github.com --git-protocol https --web || fail 'GitHub sign-in was not completed.'
-  fi
-  gh api --hostname github.com "repos/$REPOSITORY" --silent >/dev/null 2>&1 || fail "Your GitHub account cannot read $REPOSITORY. Stop here and request normal collaborator access."
-  gh auth setup-git --hostname github.com
-}
+
 
 create_root() {
-  [[ ! -e "$ROOT" ]] || fail "Workspace already exists at $ROOT. It was not changed."
-  if [[ "$LANE" == OPNDRM-APP ]]; then
+  if [[ -e "$ROOT" && ! -d "$ROOT" ]]; then
+    fail "Workspace path exists but is not a directory: $ROOT"
+  fi
+  if [[ ! -d "$ROOT" ]]; then
     mkdir -p "$ROOT"
     printf '# Open Dream Prime workspace\n' > "$ROOT/README.md"
-  else
-    mkdir -p "$(dirname "$ROOT")"
-    git clone "https://github.com/$REPOSITORY.git" "$ROOT"
   fi
 }
 
@@ -83,7 +61,9 @@ configure_ollama_for_prime() {
   open -gja Ollama >/dev/null 2>&1 || true
   for _ in {1..30}; do curl -fsS http://127.0.0.1:11434/api/tags >/dev/null 2>&1 && break; sleep 1; done
   curl -fsS http://127.0.0.1:11434/api/tags >/dev/null 2>&1 || fail 'Ollama is not reachable. Configure it locally, then rerun this installer.'
-  python3 "$(dirname "$0")/configure-prime-ollama.py" "${PRIME_AGENT_CONFIG_DIR:-$HOME/.prime/agent}"
+  if ! python3 "$(dirname "$0")/configure-prime-ollama.py" "${PRIME_AGENT_CONFIG_DIR:-$HOME/.prime/agent}"; then
+    printf 'Ollama is running without a configured model. Continuing without changing Prime Agent defaults; sign in to Ollama and rerun later to register the route.\n'
+  fi
 }
 
 install_prime_buzz_bridge() {
@@ -204,34 +184,26 @@ workspace_exists() {
   herdr --session "$SESSION" workspace list | python3 -c 'import json,sys; label=sys.argv[1]; print(any(w.get("label")==label for w in json.load(sys.stdin)["result"]["workspaces"]))' "$1" | grep -qx True
 }
 
-ensure_general_research() {
-  local result pane
-  if ! workspace_exists 'GENERAL RESEARCH'; then
-    result="$(herdr --session "$SESSION" workspace create --cwd "$HOME" --label 'GENERAL RESEARCH' --no-focus)" || fail 'HERDR could not create General Research.'
-    pane="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])' <<<"$result")"
-    herdr --session "$SESSION" pane run "$pane" "exec prime-agent --cwd $(printf '%q' "$HOME")" >/dev/null || fail 'HERDR could not launch General Research Prime Agent.'
+create_workspace() {
+  local label="$1" cwd="$2" command="$3" focus="$4" result pane
+  workspace_exists "$label" && return
+  if [[ "$focus" == "focus" ]]; then
+    result="$(herdr --session "$SESSION" workspace create --cwd "$cwd" --label "$label" --focus)" || fail "HERDR could not create $label."
+  else
+    result="$(herdr --session "$SESSION" workspace create --cwd "$cwd" --label "$label" --no-focus)" || fail "HERDR could not create $label."
   fi
-  if ! workspace_exists 'JCODE — GENERAL RESEARCH'; then
-    result="$(herdr --session "$SESSION" workspace create --cwd "$HOME" --label 'JCODE — GENERAL RESEARCH' --no-focus)" || fail 'HERDR could not create General Research JCode.'
-    pane="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])' <<<"$result")"
-    herdr --session "$SESSION" pane run "$pane" "exec jcode -C $(printf '%q' "$HOME")" >/dev/null || fail 'HERDR could not launch General Research JCode.'
-  fi
+  [[ -n "$command" ]] || return
+  pane="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])' <<<"$result")" || fail "HERDR did not return a pane for $label."
+  herdr --session "$SESSION" pane run "$pane" "$command" >/dev/null || fail "HERDR could not launch $label."
 }
 
-start_jcode() {
-  local result pane
-  result="$(herdr --session "$SESSION" workspace create --cwd "$ROOT" --label "JCODE — $LANE" --no-focus)" || fail 'HERDR could not create the JCode workspace.'
-  pane="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])' <<<"$result")" || fail 'HERDR did not return a JCode pane.'
-  herdr --session "$SESSION" pane run "$pane" "exec jcode -C $(printf '%q' "$ROOT")" >/dev/null || fail 'HERDR could not launch JCode.'
+ensure_exact_opndrm_layout() {
+  create_workspace 'OFFLINE' "$HOME" "exec prime-agent --cwd $(printf '%q' "$HOME")" no-focus
+  create_workspace 'OPNDRM' "$ROOT" "exec prime-agent --cwd $(printf '%q' "$ROOT")" focus
+  create_workspace 'OPNDRM JC' "$ROOT" "exec jcode -C $(printf '%q' "$ROOT")" no-focus
+  create_workspace 'OPNDRM NO-MISTAKES' "$ROOT" '' no-focus
 }
 
-start_prime() {
-  local result pane command
-  result="$(herdr --session "$SESSION" workspace create --cwd "$ROOT" --label "PRIME — $LANE" --focus)" || fail 'HERDR could not create the PRIME workspace.'
-  pane="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])' <<<"$result")" || fail 'HERDR did not return a PRIME pane.'
-  command="exec prime-agent --cwd $(printf '%q' "$ROOT")"
-  herdr --session "$SESSION" pane run "$pane" "$command" >/dev/null || fail 'HERDR could not launch Prime Agent.'
-}
 
 open_visible_workspace() {
   nohup wezterm start --cwd "$ROOT" --workspace "$SESSION" -- herdr --session "$SESSION" >"${XDG_STATE_HOME:-$HOME/.local/state}/opndrm/prime/$SESSION-wezterm.log" 2>&1 </dev/null &
@@ -241,8 +213,9 @@ require_clt
 require_brew
 say 'Installing or verifying WezTerm, Ollama, and Handy'
 brew install git gh python herdr
-brew install --cask wezterm ollama handy
-require_github_for_private_lane
+[[ -d /Applications/WezTerm.app ]] || brew install --cask wezterm
+[[ -d /Applications/Ollama.app ]] || brew install --cask ollama
+[[ -d /Applications/Handy.app ]] || brew install --cask handy
 install_jcode() {
   command -v jcode >/dev/null 2>&1 && return
   say 'Installing JCode'
@@ -276,10 +249,8 @@ install_buzz
 install_buzzbot
 create_root
 start_herdr
-ensure_general_research
-start_jcode
-start_prime
+ensure_exact_opndrm_layout
 open_visible_workspace
 open -a Buzz >/dev/null 2>&1 || fail 'Buzz could not open. Your workspace was preserved; no Ready claim is made.'
-printf '\nReady: %s is open in WezTerm. PRIME is rooted at %s. Buzz is waiting for your own sign-in. Handy is installed and opened; its owner grants Microphone and Accessibility permissions and chooses its model. The existing local Ollama route was registered without downloading a model or changing the selected default.\n' "$SESSION" "$ROOT"
+printf '\nReady: %s is open in WezTerm with exactly OFFLINE, OPNDRM, OPNDRM JC, and OPNDRM NO-MISTAKES. OPNDRM is rooted at %s. The No Mistakes workspace is an inactive shell. Buzz is waiting for your own sign-in. Handy is installed; its owner grants permissions and chooses its model.\n' "$SESSION" "$ROOT"
 printf 'BuzzBot is installed. Run buzzbot show to manage agent VMs.\n'

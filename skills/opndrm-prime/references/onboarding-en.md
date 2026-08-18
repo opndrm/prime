@@ -1,10 +1,10 @@
 # Open Dream Prime onboarding
 
-1. Choose one lane: OPNDRM APP, ADAM, or FRNKLY.ONE.
-2. Run the macOS installer from opndrm.com. It stops rather than overwriting an existing checkout.
-3. For a private lane, complete GitHub sign-in with your own account and obtain ordinary repository access before cloning.
-4. Confirm WezTerm shows the named HERDR session and Prime Agent is rooted in the selected checkout.
-5. Complete Buzz sign-in yourself. Create or connect an agent only with explicit owner approval.
+1. Run the macOS installer from opndrm.com for `OPNDRM-APP`.
+2. Use the existing `~/Desktop/opndrm` directory or let the installer create it.
+3. Confirm WezTerm shows exactly **OFFLINE**, **OPNDRM**, **OPNDRM JC**, and **OPNDRM NO-MISTAKES**, in that order.
+4. Complete Buzz sign-in yourself. Create or connect an agent only with explicit owner approval.
+5. Sign in to Ollama yourself when you want cloud models; rerun the installer afterward to register available routes without changing the selected default.
 6. Give Prime Agent one bounded work card. Keep code and reviews in GitHub.
 
-The installer registers an existing local Ollama route for Prime Agent and Buzz without downloading a model, handling credentials, or changing the selected default.
+The installer does not handle credentials, download a model, change the selected default, or start a No Mistakes pipeline. The No Mistakes workspace is an inactive visible shell until an authorized gate exists.
