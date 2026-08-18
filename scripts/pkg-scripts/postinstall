@@ -1,0 +1,16 @@
+#!/bin/bash
+# Post-install script for OPNDRM VM.pkg
+set -e
+
+# Create Application Support directories
+mkdir -p "$HOME/Library/Application Support/OPNDRM-VM/AgentComputers/TrustedMacStates"
+mkdir -p "$HOME/Library/Application Support/OPNDRM-VM/Snapshots"
+mkdir -p "$HOME/Library/Application Support/OPNDRM-VM/Golden"
+chmod 700 "$HOME/Library/Application Support/OPNDRM-VM"
+
+# Create CLI symlink if it doesn't exist
+if [[ ! -f /usr/local/bin/opndrm-vm ]]; then
+    ln -sf "/Applications/OPNDRM VM.app/Contents/MacOS/opndrm-vm" /usr/local/bin/opndrm-vm 2>/dev/null || true
+fi
+
+echo "OPNDRM VM installed. Run: opndrm-vm to start."
