@@ -23,6 +23,7 @@ public final class OpenAdaptGuestEngine {
     private let startupTimeout: TimeInterval
     private let stopTimeout: TimeInterval
     private let commandTimeout: TimeInterval
+    private let captureScript: URL?
     private var activeCapture: CaptureSession?
 
     public init(
@@ -31,7 +32,8 @@ public final class OpenAdaptGuestEngine {
         consentProvider: RecordingConsentProviding,
         startupTimeout: TimeInterval = 15,
         stopTimeout: TimeInterval = 30,
-        commandTimeout: TimeInterval = 60
+        commandTimeout: TimeInterval = 60,
+        captureScript: URL? = nil
     ) throws {
         guard openAdaptExecutable.path.hasPrefix("/"),
               FileManager.default.isExecutableFile(atPath: openAdaptExecutable.path) else {
@@ -46,6 +48,7 @@ public final class OpenAdaptGuestEngine {
         self.startupTimeout = startupTimeout
         self.stopTimeout = stopTimeout
         self.commandTimeout = commandTimeout
+        self.captureScript = captureScript
         try Self.preparePrivateDirectory(self.recordingsDirectory)
     }
 
@@ -107,12 +110,23 @@ public final class OpenAdaptGuestEngine {
         }
 
         let process = Process()
-        process.executableURL = openAdaptExecutable
-        process.arguments = [
-            "capture", "start", "--name", name,
-            video ? "--video" : "--no-video",
-            audio ? "--audio" : "--no-audio",
-        ]
+        if let captureScript, FileManager.default.isExecutableFile(atPath: captureScript.path) {
+            // FFmpeg-based capture (VM-compatible, no multiprocessing spawn)
+            process.executableURL = captureScript
+            process.arguments = [
+                recordingsDirectory.path,
+                name,
+                audio ? "--audio" : "",
+            ].filter { !$0.isEmpty }
+        } else {
+            // OpenAdapt capture (original path)
+            process.executableURL = openAdaptExecutable
+            process.arguments = [
+                "capture", "start", "--name", name,
+                video ? "--video" : "--no-video",
+                audio ? "--audio" : "--no-audio",
+            ]
+        }
         process.currentDirectoryURL = recordingsDirectory
         var environment = ProcessInfo.processInfo.environment
         environment["PYTHONUNBUFFERED"] = "1"
@@ -179,7 +193,8 @@ public final class OpenAdaptGuestEngine {
         }
 
         let database = session.artifactDirectory.appendingPathComponent("recording.db")
-        guard Self.isRegularNonSymlinkFile(database) else {
+        let videoFile = session.artifactDirectory.appendingPathComponent("recording.mp4")
+        guard Self.isRegularNonSymlinkFile(database) || Self.isRegularNonSymlinkFile(videoFile) else {
             logGuestOnly("OpenAdapt exited without recording.db for \(session.name)")
             return failure("OpenAdapt stopped without a complete guest recording artifact")
         }

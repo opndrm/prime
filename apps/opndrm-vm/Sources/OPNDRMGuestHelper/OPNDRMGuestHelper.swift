@@ -113,7 +113,7 @@ private final class GuestVisibleRecordingConsent: RecordingConsentProviding {
 
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "Allow guest-only OpenAdapt recording?"
+        alert.messageText = "Allow guest-only recording?"
         let media = [
             capturesVideo ? "guest display and input events" : nil,
             capturesAudio ? "guest audio" : nil,
@@ -166,10 +166,24 @@ private struct OPNDRMGuestHelper {
         }
 
         do {
+            let captureScript: URL? = {
+                if let path = ProcessInfo.processInfo.environment["CAPTURE_SCRIPT"],
+                   !path.isEmpty {
+                    let url = URL(fileURLWithPath: path)
+                    return FileManager.default.isExecutableFile(atPath: url.path) ? url : nil
+                }
+                // Default: look for ff-record.sh next to the helper
+                let defaultScript = URL(fileURLWithPath: openAdaptPath)
+                    .deletingLastPathComponent()
+                    .appendingPathComponent("ff-record.sh")
+                return FileManager.default.isExecutableFile(atPath: defaultScript.path) ? defaultScript : nil
+            }()
+
             let engine = try OpenAdaptGuestEngine(
                 openAdaptExecutable: URL(fileURLWithPath: openAdaptPath),
                 recordingsDirectory: recordingRoot,
-                consentProvider: GuestVisibleRecordingConsent()
+                consentProvider: GuestVisibleRecordingConsent(),
+                captureScript: captureScript
             )
             try VsockServer(engine: engine).start()
         } catch {
